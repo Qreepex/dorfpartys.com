@@ -99,7 +99,7 @@
 	</label>
 
 	<label>
-		<input type="checkbox" name="allowsMuttizettel" /> Muttizettel akzeptiert
+		<input type="checkbox" name="requiresMuttizettel" /> Muttizettel erforderlich
 	</label>
 
 	<label>

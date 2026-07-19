@@ -1,5 +1,5 @@
 {
-  "id": "ca8b096f-592a-492d-a4ee-a19e323c9e3f",
+  "id": "ebe32e9a-d8a1-4a59-8932-7f63021c2004",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -149,8 +149,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "allows_muttizettel": {
-          "name": "allows_muttizettel",
+        "requires_muttizettel": {
+          "name": "requires_muttizettel",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,

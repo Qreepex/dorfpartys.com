@@ -12,7 +12,7 @@ import {
 import { event, eventLink, eventPhoto, kreis, userProfile } from '../db/schema.js';
 import { generateUniqueEventSlug } from '../slug/index.js';
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from '../seo/index.js';
-import { buildPublicStorageUrl } from '../storage/index.js';
+import { buildPublicStorageUrl, deleteS3Object } from '../storage/index.js';
 import { moderatorProcedure, protectedProcedure, publicProcedure, router } from '../trpc/trpc.js';
 import type { Database } from '../db/index.js';
 
@@ -40,12 +40,23 @@ async function replacePhotosAndLinks(
 	links: Array<{ url: string; label: string; position: 1 | 2 | 3 }> | undefined
 ) {
 	if (photos) {
+		const previousPhotos = await db
+			.select({ s3Key: eventPhoto.s3Key })
+			.from(eventPhoto)
+			.where(eq(eventPhoto.eventId, eventId));
+
 		await db.delete(eventPhoto).where(eq(eventPhoto.eventId, eventId));
 		if (photos.length > 0) {
 			await db
 				.insert(eventPhoto)
 				.values(photos.map((p) => ({ eventId, s3Key: p.s3Key, position: p.position })));
 		}
+
+		// Alte Keys, die nicht in der neuen Auswahl wiederverwendet werden, aktiv
+		// aus S3 entfernen — keine verwaisten öffentlichen Dateien (AGENTS.md 7.1).
+		const nextKeys = new Set(photos.map((p) => p.s3Key));
+		const staleKeys = previousPhotos.map((p) => p.s3Key).filter((key) => !nextKeys.has(key));
+		await Promise.all(staleKeys.map((key) => deleteS3Object(key)));
 	}
 	if (links) {
 		await db.delete(eventLink).where(eq(eventLink.eventId, eventId));
@@ -64,6 +75,9 @@ export const eventsRouter = router({
 		const [row] = await ctx.db
 			.insert(event)
 			.values({
+				// Vom Client vorab generierte ID, falls Event-Fotos schon vor dem
+				// Anlegen unter diesem Pfad hochgeladen wurden (AGENTS.md 7.1).
+				...(input.id ? { id: input.id } : {}),
 				title: input.title,
 				organizerUserId: ctx.user.id,
 				description: input.description,
@@ -77,7 +91,7 @@ export const eventsRouter = router({
 				...(input.customColor ? { customColor: input.customColor } : {}),
 				priceInfo: input.priceInfo ?? null,
 				minAge: input.minAge ?? null,
-				allowsMuttizettel: input.allowsMuttizettel ?? false,
+				requiresMuttizettel: input.requiresMuttizettel ?? false,
 				isOutdoor: input.isOutdoor ?? false,
 				tags: input.tags ?? [],
 				customFields: input.customFields ?? {},
@@ -121,7 +135,7 @@ export const eventsRouter = router({
 				...(input.customColor ? { customColor: input.customColor } : {}),
 				priceInfo: input.priceInfo ?? null,
 				minAge: input.minAge ?? null,
-				allowsMuttizettel: input.allowsMuttizettel ?? false,
+				requiresMuttizettel: input.requiresMuttizettel ?? false,
 				isOutdoor: input.isOutdoor ?? false,
 				tags: input.tags ?? [],
 				customFields: input.customFields ?? {},
@@ -210,6 +224,8 @@ export const eventsRouter = router({
 				.update(event)
 				.set({ status: 'rejected', updatedAt: new Date() })
 				.where(eq(event.id, input.id));
+			// Hook für Review-Status-Benachrichtigung an existing.createdBy — bewusst
+			// nicht implementiert (AGENTS.md Abschnitt 9).
 			return { id: input.id, status: 'rejected' as const };
 		}
 
@@ -229,6 +245,8 @@ export const eventsRouter = router({
 			})
 			.where(eq(event.id, input.id));
 
+		// Hook für Review-Status-Benachrichtigung an existing.createdBy — bewusst
+		// nicht implementiert (AGENTS.md Abschnitt 9).
 		return { id: input.id, status: 'approved' as const, slug };
 	})
 });

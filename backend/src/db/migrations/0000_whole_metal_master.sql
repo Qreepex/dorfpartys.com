@@ -26,7 +26,7 @@ CREATE TABLE "event" (
 	"custom_color" text DEFAULT '#ff6b35' NOT NULL,
 	"price_info" text,
 	"min_age" integer,
-	"allows_muttizettel" boolean DEFAULT false,
+	"requires_muttizettel" boolean DEFAULT false,
 	"is_outdoor" boolean DEFAULT false,
 	"tags" text[] DEFAULT '{}' NOT NULL,
 	"custom_fields" jsonb DEFAULT '{}'::jsonb NOT NULL,

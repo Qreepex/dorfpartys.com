@@ -323,9 +323,7 @@ profiles/{user_id}/{avatar_id}.{ext}
 
 ### Bekannter Implementierungsstand vs. aktueller Spezifikation
 
-Diese Punkte in AGENTS.md wurden nach oder während der Erstimplementierung ergänzt/geändert und sind im Code noch **nicht** nachgezogen:
-
-- **`requires_muttizettel`** (Abschnitt 2): Code verwendet noch den alten Namen `allows_muttizettel`/`allowsMuttizettel` durchgängig (Drizzle-Schema, Zod-Schema, Typen, Submit-Formular). Erfordert eine neue Migration bei Umbenennung.
-- **S3-Struktur** (Abschnitt 7.1): Aktuelle Implementierung (`backend/src/storage/presign.ts`) legt Keys unter `events/{ownerUserId}/{uuid}.{ext}` bzw. `profiles/{ownerUserId}/{uuid}.{ext}` ab (User-basiert), nicht `events/{event_id}/{event_photo_id}.{ext}`. Dateigrößen-Validierung vor Ausstellen der presigned URL sowie aktives Löschen alter S3-Keys beim Ersetzen eines Fotos sind ebenfalls noch nicht implementiert.
-- **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): An der Review-Entscheidung (`backend/src/routers/events.ts`, `review`-Mutation) fehlt noch der explizit geforderte Code-Kommentar/Marker als Ansatzpunkt für eine spätere Implementierung.
-- **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ ergänzt, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.
+- **`requires_muttizettel`** (Abschnitt 2): umgesetzt (Drizzle-Schema/Migration, Zod-Schema, Typen, Submit-/Detailseite). Migrationshistorie wurde dabei auf eine einzige saubere Erstmigration zurückgesetzt, da noch kein echtes Deployment mit Daten existiert.
+- **S3-Struktur** (Abschnitt 7.1): umgesetzt — `events/{event_id}/{event_photo_id}.{ext}` bzw. `profiles/{user_id}/{avatar_id}.{ext}` (`backend/src/storage/presign.ts`), Dateigrößen-Validierung (Server-seitiger Grenzwert-Check auf den vom Client angegebenen Wert — SigV4-presignte PUT-URLs erzwingen keine Content-Length-Range kryptographisch) sowie aktives Löschen alter S3-Keys beim Ersetzen eines Event-Fotos/Avatars (`backend/src/storage/delete.ts`). Die Event-ID wird dafür vom Client vor `events.create` generiert (`submitEventInputSchema.id`) — ein clientseitiges Upload-Widget (Datei-Picker + presigned PUT) ist noch **nicht** gebaut, nur die Backend-Endpunkte (`uploads.requestEventPhotoUploadUrl`/`requestAvatarUploadUrl`).
+- **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): Kommentar an beiden Review-Entscheidungen ergänzt (`backend/src/routers/events.ts`, `review`-Mutation).
+- **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.

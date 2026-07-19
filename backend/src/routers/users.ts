@@ -1,8 +1,8 @@
-import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { updateProfileInputSchema } from '@dorfpartys/shared';
 import { userLink, userProfile } from '../db/schema.js';
+import { deleteS3Object } from '../storage/index.js';
 import { protectedProcedure, publicProcedure, router } from '../trpc/trpc.js';
 
 export const usersRouter = router({
@@ -21,6 +21,18 @@ export const usersRouter = router({
 
 	updateMyProfile: protectedProcedure.input(updateProfileInputSchema).mutation(async ({ ctx, input }) => {
 		const { links, ...profileFields } = input;
+
+		if (profileFields.avatarS3Key) {
+			const [existing] = await ctx.db
+				.select({ avatarS3Key: userProfile.avatarS3Key })
+				.from(userProfile)
+				.where(eq(userProfile.userId, ctx.user.id));
+			// Alter Avatar-Key wird aktiv aus S3 entfernt — keine verwaisten
+			// öffentlichen Dateien (AGENTS.md 7.1).
+			if (existing?.avatarS3Key && existing.avatarS3Key !== profileFields.avatarS3Key) {
+				await deleteS3Object(existing.avatarS3Key);
+			}
+		}
 
 		await ctx.db
 			.insert(userProfile)

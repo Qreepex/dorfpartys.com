@@ -21,6 +21,11 @@ export const eventLinkInputSchema = z.object({
 // Approve serverseitig vergeben und ist daher hier bewusst nicht Teil des Inputs.
 export const submitEventInputSchema = z
 	.object({
+		// Vom Client vorab generierte ID (crypto.randomUUID()), damit Event-Fotos
+		// schon vor dem eigentlichen Anlegen unter dem endgültigen event_id-Pfad
+		// hochgeladen werden können (AGENTS.md 7.1). Optional, damit updateEventInputSchema
+		// weiterhin über die separate `id` unten arbeitet.
+		id: z.string().uuid().optional(),
 		title: z.string().trim().min(3).max(140),
 		description: z.string().trim().min(10).max(5000),
 		startDate: z.string().datetime({ offset: true }),
@@ -33,7 +38,7 @@ export const submitEventInputSchema = z
 
 		priceInfo: z.string().trim().max(200).optional(),
 		minAge: z.number().int().nonnegative().max(99).optional(),
-		allowsMuttizettel: z.boolean().optional(),
+		requiresMuttizettel: z.boolean().optional(),
 		isOutdoor: z.boolean().optional(),
 		tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
 		customFields: z.record(z.string(), z.unknown()).optional(),

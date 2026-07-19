@@ -43,7 +43,7 @@ export const actions: Actions = {
 			customColor: formData.get('customColor') || undefined,
 			priceInfo: formData.get('priceInfo') || undefined,
 			minAge: minAgeRaw ? Number(minAgeRaw) : undefined,
-			allowsMuttizettel: formData.get('allowsMuttizettel') === 'on',
+			requiresMuttizettel: formData.get('requiresMuttizettel') === 'on',
 			isOutdoor: formData.get('isOutdoor') === 'on'
 		};
 

@@ -17,7 +17,7 @@ export interface Event {
 
 	priceInfo: string | null;
 	minAge: number | null;
-	allowsMuttizettel: boolean | null;
+	requiresMuttizettel: boolean | null;
 	isOutdoor: boolean | null;
 	tags: string[];
 	customFields: Record<string, unknown>;
