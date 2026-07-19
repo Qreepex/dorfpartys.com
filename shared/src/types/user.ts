@@ -5,6 +5,8 @@ export interface User {
 	authentikSubject: string;
 	email: string;
 	role: UserRole;
+	/** null = Onboarding-Flow nach dem Login noch nicht abgeschlossen/übersprungen. */
+	onboardingCompletedAt: string | null;
 	createdAt: string;
 }
 

@@ -17,3 +17,14 @@ export const updateProfileInputSchema = z.object({
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
+
+// Registrierungs-/Onboarding-Formular nach dem ersten Login — im Gegensatz zu
+// `updateProfileInputSchema` ist `displayName` hier verpflichtend.
+export const completeOnboardingInputSchema = z.object({
+	displayName: z.string().trim().min(1).max(80),
+	websiteUrl: z.string().trim().url().optional(),
+	instagramUrl: z.string().trim().url().optional(),
+	bio: z.string().trim().max(2000).optional()
+});
+
+export type CompleteOnboardingInput = z.infer<typeof completeOnboardingInputSchema>;

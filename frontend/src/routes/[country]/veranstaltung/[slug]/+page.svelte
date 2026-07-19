@@ -51,8 +51,22 @@
 </nav>
 
 <article class="event" style={`--event-color: ${event.customColor}`}>
-	<p class="tag">{event.partyArtName}</p>
-	<h1>{event.title}</h1>
+	<div class="title-row">
+		<div>
+			<p class="tag">{event.partyArtName}</p>
+			<h1>{event.title}</h1>
+		</div>
+		<form method="POST" action="?/toggleSave">
+			<input type="hidden" name="eventId" value={event.id} />
+			<input type="hidden" name="isSaved" value={event.isSaved} />
+			<button type="submit" class="save-toggle" class:saved={event.isSaved} aria-pressed={event.isSaved}>
+				<svg width="16" height="16" viewBox="0 0 24 24" fill={event.isSaved ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2">
+					<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+				</svg>
+				{event.isSaved ? 'Gemerkt' : 'Merken'}
+			</button>
+		</form>
+	</div>
 	<p class="datetime">
 		{new Date(event.startDate).toLocaleString('de-DE', {
 			weekday: 'long',
@@ -136,6 +150,40 @@
 
 	.event {
 		max-width: 68ch;
+	}
+
+	.title-row {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16px;
+	}
+
+	.save-toggle {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 44px;
+		padding: 0 16px;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		color: var(--color-text);
+		font-family: 'Inter', system-ui, sans-serif;
+		font-weight: 600;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.save-toggle:hover {
+		border-color: var(--color-primary);
+		color: var(--color-primary);
+	}
+
+	.save-toggle.saved {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-ink);
 	}
 
 	.tag {

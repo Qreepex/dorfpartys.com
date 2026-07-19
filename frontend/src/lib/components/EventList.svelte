@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import type { Snippet } from 'svelte';
 	import type { Country } from '@dorfpartys/shared';
 
 	interface DisplayEvent {
@@ -12,15 +13,19 @@
 		partyArtName: string;
 		/** Nur nötig bei DACH-weiten Listen mit gemischten Ländern — sonst wird `country` (Prop) verwendet. */
 		country?: Country;
+		/** Für `itemExtra`-Aktionen, die die Event-DB-ID brauchen (z.B. Entfernen auf /partyliste). */
+		eventId?: string;
 	}
 
 	interface Props {
 		events: DisplayEvent[];
 		/** Fallback-Land für Events ohne eigenes `country`-Feld. */
 		country: Country;
+		/** Optionale Zusatz-Aktion pro Zeile, z.B. "Entfernen" auf /partyliste. */
+		itemExtra?: Snippet<[DisplayEvent]>;
 	}
 
-	let { events, country }: Props = $props();
+	let { events, country, itemExtra }: Props = $props();
 
 	function eventHref(item: DisplayEvent) {
 		if (!item.slug) return null;
@@ -69,6 +74,9 @@
 					<span class="event-meta">{item.kreisName} · {item.bundeslandName}</span>
 				</span>
 				<span class="event-tag" style={`border-color: ${item.customColor}`}>{item.partyArtName}</span>
+				{#if itemExtra}
+					{@render itemExtra(item)}
+				{/if}
 			</li>
 		{/each}
 	</ul>
@@ -162,3 +170,4 @@
 		}
 	}
 </style>
+

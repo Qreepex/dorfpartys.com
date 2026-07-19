@@ -1,6 +1,7 @@
 import { router } from "../trpc/trpc.js";
 import { eventsRouter } from "./events.js";
 import { resolverRouter } from "./resolver.js";
+import { savedEventsRouter } from "./saved-events.js";
 import { sitemapRouter } from "./sitemap.js";
 import { statsRouter } from "./stats.js";
 import { taxonomyRouter } from "./taxonomy.js";
@@ -15,6 +16,7 @@ export const appRouter = router({
   uploads: uploadsRouter,
   sitemap: sitemapRouter,
   stats: statsRouter,
+  savedEvents: savedEventsRouter,
 });
 
 export type AppRouter = typeof appRouter;

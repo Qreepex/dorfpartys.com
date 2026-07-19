@@ -67,6 +67,11 @@ export const user = pgTable("user", {
   authentikSubject: text("authentik_subject").notNull().unique(),
   email: text("email").notNull().unique(),
   role: userRoleEnum("role").notNull().default("user"),
+  // null = Registrierungs-/Onboarding-Flow nach dem ersten Authentik-Login noch
+  // nicht durchlaufen bzw. bewusst übersprungen (siehe auth/callback).
+  onboardingCompletedAt: timestamp("onboarding_completed_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -177,6 +182,24 @@ export const eventLink = pgTable(
   ],
 );
 
+// Gemerkte/gespeicherte Veranstaltungen, angezeigt unter /partyliste.
+export const savedEvent = pgTable(
+  "saved_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("saved_event_user_event_idx").on(t.userId, t.eventId)],
+);
+
 // --- Relations ---------------------------------------------------------
 
 export const bundeslandRelations = relations(bundesland, ({ many }) => ({
@@ -238,4 +261,9 @@ export const eventPhotoRelations = relations(eventPhoto, ({ one }) => ({
 
 export const eventLinkRelations = relations(eventLink, ({ one }) => ({
   event: one(event, { fields: [eventLink.eventId], references: [event.id] }),
+}));
+
+export const savedEventRelations = relations(savedEvent, ({ one }) => ({
+  user: one(user, { fields: [savedEvent.userId], references: [user.id] }),
+  event: one(event, { fields: [savedEvent.eventId], references: [event.id] }),
 }));

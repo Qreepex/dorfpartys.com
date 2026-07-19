@@ -14,7 +14,7 @@
 		ch: 'Schweiz'
 	};
 
-	let country = $state<Country>('de');
+	let country = $state<Country>(data.country);
 	let bundeslandSlug = $state('');
 	let artSlug = $state('');
 	let monatSlug = $state('');
@@ -22,6 +22,9 @@
 	const bundeslaenderForCountry = $derived(
 		data.bundeslaenderByCountry.find((g) => g.country === country)?.bundeslaender ?? []
 	);
+
+	const homeHref = resolve('/');
+	const allCountriesHref = resolve('/?alle');
 
 	function handleSearch(event: SubmitEvent) {
 		event.preventDefault();
@@ -137,12 +140,24 @@
 </section>
 
 <section class="lineup">
-	<h2>Nächste Partys</h2>
+	<div class="lineup-header">
+		<h2>
+			Nächste Partys{#if !data.showAllCountries} in {COUNTRY_LABELS[data.country]}{/if}
+		</h2>
+		{#if data.showAllCountries}
+			<a href={homeHref}>Nur {COUNTRY_LABELS[data.country]} anzeigen</a>
+		{:else}
+			<a href={allCountriesHref}>Alle Länder anzeigen</a>
+		{/if}
+	</div>
 	{#if data.upcoming.length === 0}
-		<p class="sub">Noch keine Termine eingetragen — sei die erste Person, die eine einträgt.</p>
+		<p class="sub">
+			Noch keine Termine{#if !data.showAllCountries} in {COUNTRY_LABELS[data.country]}{/if} eingetragen
+			— sei die erste Person, die eine einträgt.
+		</p>
 	{:else}
-		<p class="sub">{data.upcoming.length} von {data.stats.upcomingEvents} kommenden Terminen</p>
-		<EventList events={data.upcoming} country="de" />
+		<p class="sub">{data.upcoming.length} kommende Termine</p>
+		<EventList events={data.upcoming} country={data.country} />
 	{/if}
 </section>
 
@@ -327,6 +342,25 @@
 
 	.lineup {
 		margin-top: 48px;
+	}
+
+	.lineup-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+	}
+
+	.lineup-header a {
+		font-size: 0.85rem;
+		color: var(--color-primary);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.lineup-header a:hover {
+		text-decoration: underline;
 	}
 
 	.lineup h2 {

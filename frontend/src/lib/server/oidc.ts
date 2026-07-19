@@ -39,7 +39,7 @@ export async function buildAuthorizationUrl(state: string, codeChallenge: string
 
 export interface TokenResponse {
 	access_token: string;
-	id_token?: string;
+	id_token: string;
 	refresh_token?: string;
 	expires_in: number;
 }

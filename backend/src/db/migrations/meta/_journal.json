@@ -8,6 +8,13 @@
       "when": 1784462926827,
       "tag": "0000_dizzy_slyde",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784466352905,
+      "tag": "0001_cultured_pretty_boy",
+      "breakpoints": true
     }
   ]
 }

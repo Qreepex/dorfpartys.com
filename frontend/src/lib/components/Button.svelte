@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-	interface Props {
+	interface Props extends Omit<HTMLButtonAttributes & HTMLAnchorAttributes, 'type'> {
 		variant?: 'primary' | 'secondary' | 'ghost';
 		type?: 'button' | 'submit' | 'reset';
 		href?: string;
@@ -18,7 +19,8 @@
 		disabled = false,
 		fullWidth = false,
 		onclick,
-		children
+		children,
+		...rest
 	}: Props = $props();
 </script>
 
@@ -30,11 +32,19 @@
 		{href}
 		aria-disabled={disabled}
 		onclick={disabled ? (event) => event.preventDefault() : onclick}
+		{...rest}
 	>
 		{@render children()}
 	</a>
 {:else}
-	<button class="button button-{variant}" class:full-width={fullWidth} {type} {disabled} {onclick}>
+	<button
+		class="button button-{variant}"
+		class:full-width={fullWidth}
+		{type}
+		{disabled}
+		{onclick}
+		{...rest}
+	>
 		{@render children()}
 	</button>
 {/if}

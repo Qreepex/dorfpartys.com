@@ -186,6 +186,7 @@ party_art       (id, slug, name, active)
 
 user (
   id, authentik_subject, email, role [user | moderator | admin],
+  onboarding_completed_at,          -- null = Registrierungs-Flow (Abschnitt 5) noch nicht durchlaufen/übersprungen
   created_at
 )
 
@@ -236,6 +237,8 @@ event_link      (id, event_id → event, url, label, position [1–3])  -- max. 
                                                                        -- label z.B. "Veranstalter", "Website", "Instagram"
 
 slug_registry   (slug, type [bundesland|kreis|party_art|monat], entity_id)   -- Unique-Constraint auf slug
+
+saved_event     (id, user_id → user, event_id → event, created_at)   -- "Partyliste", Unique(user_id, event_id)
 ```
 
 Constraints/Validierung im Backend (nicht nur UI):
@@ -262,17 +265,36 @@ Constraints/Validierung im Backend (nicht nur UI):
 ## 5. Auth & Submission-Workflow
 
 - **SSO via Authentik**, OpenID Connect.
-- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie).
+- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie, `dp_session` = ID-Token — die angefragten Scopes email/profile/groups landen laut OIDC-Spec im ID-Token, nicht im Access-Token; `backend/src/auth/verify.ts` erwartet diese Claims direkt im verifizierten Token).
 - **Backend** verifiziert eingehende Requests anhand des von Authentik ausgestellten JWT (Verifizierung über Authentik-JWKS-Endpoint, zustandslos). Rollen (`user`/`moderator`/`admin`) werden aus Authentik-Gruppen/Claims gemappt.
 - Rollen: `user` (einreichen/eigenes Profil & eigene Events bearbeiten), `moderator`/`admin` (Review-Dashboard unter `/review`).
+- **Registrierungs-Flow für neue Nutzer:innen:** `/auth/callback` prüft nach dem Token-Austausch `user.onboarding_completed_at`; ist es `null` (neuer oder noch nicht eingerichteter User), erfolgt Redirect zu `/willkommen?redirectTo=...` statt direkt zum ursprünglichen Ziel. `/willkommen` ist ein Multi-Step-Formular (Anzeigename → optionale Profildetails → Zusammenfassung, clientseitig gesteuert über `hidden`-Fieldsets, ein einziger Form-POST) und setzt `display_name`/`user_profile` sowie `onboarding_completed_at`. "Später einrichten" überspringt die Profildaten, markiert das Onboarding aber ebenfalls als gesehen (kein wiederholtes Nerven bei jedem Login). tRPC: `users.completeOnboarding` / `users.skipOnboarding`.
 - Einreichungsformular: Titel, Beschreibung, Start-/Enddatum, Bundesland, Kreis, Adress-Beschreibung, Party-Art, max. 3 Fotos, max. 3 Links, optionale Felder (Preis, Altersbeschränkung/Muttizettel, Open Air, Tags, ...), Farbe.
 - Status-Flow: `draft` → `in_review` → `approved` (öffentlich) oder `rejected`.
 - Slug-Generierung + Kollisions-Disambiguierung findet beim Approve-Schritt statt, nicht bei Einreichung.
 
+## 5a. Gemerkte Veranstaltungen ("Partyliste")
+
+- Eingeloggte Nutzer:innen können Events merken/entmerken (Button auf der Event-Detailseite) — Tabelle `saved_event`, tRPC-Router `savedEvents` (`save`/`unsave`/`listMine`).
+- Eigene Übersicht unter `/partyliste` (geschützt, `requireUser`) — kommende/vergangene gemerkte Events, analog zur Veranstalter-Seite (Abschnitt 3) mit zusätzlichem "Entfernen"-Button pro Zeile.
+- `events.getBySlug` liefert zusätzlich `isSaved` (nur wenn eingeloggt) für den Merken/Gemerkt-Toggle-Zustand.
+- `noindex,nofollow` (rein personenbezogen, kein SEO-Wert).
+
+## 5b. Land-Erkennung & -Fokus
+
+- Beim ersten Request ohne `country`-Cookie wird das Land serverseitig aus dem `Accept-Language`-Header geraten (`de-AT`/`fr-CH`/... → `at`/`ch`, sonst `de`) und als Cookie (1 Jahr, nicht `httpOnly`) gesetzt — **bewusst ohne externen IP-Geolocation-Dienst**, um die "kein Tracking"-Positionierung der Seite nicht zu unterlaufen (Abwägung, falls doch ein Geolocation-Dienst gewünscht ist: das wäre ein externer Request pro Erstbesuch).
+- Clientseitig wird die Vermutung einmalig per `Intl.DateTimeFormat().resolvedOptions().timeZone` verfeinert (`Europe/Vienna`/`Europe/Zurich` → `at`/`ch`), solange die Nutzerin das Land noch nie explizit gewechselt hat (`country_explicit`-Cookie).
+- **Explizites Wechseln:** Land-Switcher in der Navbar (DE/AT/CH) verlinkt auf `/land/{country}` (als `+page.server.ts`-Load implementiert, nicht `+server.ts` — sonst behandelt SvelteKits clientseitiger Router den Klick fälschlich als 404, siehe Hinweis in Abschnitt 5c) und setzt beide Cookies dauerhaft.
+- Wirkung des bevorzugten Landes: Die Startseite (`/`) fokussiert Hero-Suchformular und "Nächste Partys"-Lineup auf dieses Land; ein Link ("Alle Länder anzeigen" / "Nur {Land} anzeigen") wechselt explizit dazwischen. Die Länder-Baum-URLs (`/de/`, `/at/`, `/ch/`, Abschnitt 1.1) bleiben davon unabhängig direkt browsbar — das bevorzugte Land ist nur der **Startseiten**-Default, keine Umleitung/Sperre der anderen Länder.
+
+## 5c. Hinweis: `+server.ts` vs. `+page.server.ts` für interne Navigationsziele
+
+SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu einer Route, die **nur** ein `+server.ts` (kein `+page.svelte`) hat, fälschlich als 404 — der automatische Fallback auf eine volle Seitennavigation greift nur bei tatsächlich externen URLs, nicht bei internen Routen ohne Client-Page. Betroffen waren `/auth/login`, `/auth/logout` (jetzt `+page.server.ts`-Loads mit trivialem `+page.svelte`-Fallback) sowie `/land/{country}` (von Anfang an so gebaut). Bei jeder neuen Route, die nur redirectet/Cookies setzt und von einem `<a href>` aus verlinkt wird, dieses Muster verwenden, nicht `+server.ts`.
+
 ## 6. SEO-Implementierungsregeln (verbindlich)
 
 - **Alle öffentlichen Seiten serverseitig gerendert** (SvelteKit SSR), kein Client-only-Rendering für crawlbaren Content.
-- Robots-Meta dynamisch: `index,follow` nur bei Treffern > 0, sonst `noindex,follow`.
+- Robots-Meta: `index,follow` für jede gültige Filter-/Event-Kombination, auch ohne aktuelle Treffer (bewusste Abweichung, siehe 1.6); `noindex,nofollow` für rein personenbezogene Seiten (`/willkommen`, `/partyliste`, `/profil`).
 - `schema.org/Event` JSON-LD auf jeder Event-Seite.
 - `BreadcrumbList` JSON-LD auf Filter- und Event-Seiten.
 - Filter-/Suchseiten verlinken Events als serverseitig gerenderte `<a href>`.
@@ -337,3 +359,5 @@ profiles/{user_id}/{avatar_id}.{ext}
 - **Landingpage** (Abschnitt 9 hebt den Design-Ausschluss für diese Phase auf, sobald DESIGN.md gilt): umgesetzt (`frontend/src/routes/+page.svelte`) — Hero mit Land/Bundesland/Art/Monat-Suchformular (Poster-/Lineup-Ästhetik nach `brand-mockup.html`), Stats-Leiste, DACH-weite "Nächste Partys"-Lineup-Sektion (`events.listUpcoming`) sowie ein Erklärungsblock (Herkunft der Events, Vorteile fürs Eintragen: kostenlos, werbefrei, kein Tracking, bessere Sichtbarkeit).
 - **Demo-Daten** (für lokales Testen): `pnpm --filter backend db:seed:demo` (nach `db:seed`) legt einen Demo-Veranstalter mit öffentlichem Profil und 5 bereits freigeschaltete Beispiel-Events in unterschiedlichen Ländern/Bundesländern/Party-Arten an (`backend/src/db/seed/demo-events.ts`) — nicht Teil des Produktions-Seeds.
 - **Legal-Seiten** `/impressum`, `/datenschutz`, `/nutzungsbedingungen`: Routen existierten als leere Verzeichnisse ohne `+page.svelte` (von Footer verlinkt, aber ohne Inhalt). Jetzt mit Platzhaltertexten befüllt — **vor Livegang durch rechtsverbindliche Inhalte ersetzen** (insbesondere Anbieterkennzeichnung nach § 5 TMG).
+- **Registrierungs-Flow, Partyliste, Land-Erkennung**: umgesetzt, siehe Abschnitte 5/5a/5b.
+- **Fastify `maxParamLength`**: tRPCs `httpBatchLink` fügt bei parallelen Queries alle Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter ein (z.B. Startseite: `stats.overview,events.listUpcoming,taxonomy.partyArten,taxonomy.bundeslaender,...`). Fastifys Default-Limit von 100 Zeichen wird dabei schnell überschritten (`FST_ERR_MAX_PARAM_LENGTH`, führt clientseitig zu einem irreführenden `TRPCClientError: Unable to transform response from server`, da die 414-Fehlerantwort kein gültiges Batch-JSON ist). Behoben über `Fastify({ maxParamLength: 5000 })` in `backend/src/index.ts` — bei neuen Seiten mit vielen parallelen tRPC-Calls im Hinterkopf behalten.

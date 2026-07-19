@@ -18,6 +18,7 @@ import {
   eventPhoto,
   kreis,
   partyArt,
+  savedEvent,
   userProfile,
 } from "../db/schema.js";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "../seo/index.js";
@@ -239,7 +240,7 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      const [photos, links, [organizerProfile], [partyArtRow]] = await Promise.all([
+      const [photos, links, [organizerProfile], [partyArtRow], isSaved] = await Promise.all([
         ctx.db
           .select()
           .from(eventPhoto)
@@ -258,6 +259,13 @@ export const eventsRouter = router({
           .select({ name: partyArt.name })
           .from(partyArt)
           .where(eq(partyArt.id, row.partyArtId)),
+        ctx.user
+          ? ctx.db
+              .select({ id: savedEvent.id })
+              .from(savedEvent)
+              .where(and(eq(savedEvent.userId, ctx.user.id), eq(savedEvent.eventId, row.id)))
+              .then((rows) => rows.length > 0)
+          : Promise.resolve(false),
       ]);
 
       // Ohne gepflegten display_name generischer Platzhalter (AGENTS.md Abschnitt 3).
@@ -300,15 +308,22 @@ export const eventsRouter = router({
         organizerName,
         organizerSlug: organizerProfile?.slug ?? null,
         partyArtName: partyArtRow?.name ?? "",
+        isSaved,
         jsonLd,
         breadcrumbJsonLd,
       };
     }),
 
-  // Für die Landingpage-Lineup-Sektion (AGENTS.md item 7) — nächste Termine
-  // DACH-weit, unabhängig vom Land.
+  // Für die Landingpage-Lineup-Sektion (AGENTS.md item 7) — nächste Termine,
+  // optional auf das bevorzugte Land des Nutzers gefiltert (item 3: "Seite
+  // fokussiert sich auf das erkannte Land, bis explizit gewechselt wird").
   listUpcoming: publicProcedure
-    .input(z.object({ limit: z.number().int().min(1).max(24).default(6) }))
+    .input(
+      z.object({
+        limit: z.number().int().min(1).max(24).default(6),
+        country: z.enum(COUNTRIES).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db
         .select({
@@ -327,7 +342,11 @@ export const eventsRouter = router({
         .innerJoin(kreis, eq(event.kreisId, kreis.id))
         .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
         .where(
-          and(eq(event.status, "approved"), sql`${event.endDate} >= now()`),
+          and(
+            eq(event.status, "approved"),
+            sql`${event.endDate} >= now()`,
+            input.country ? eq(bundeslandTable.country, input.country) : undefined,
+          ),
         )
         .orderBy(event.startDate)
         .limit(input.limit);

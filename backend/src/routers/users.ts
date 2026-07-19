@@ -1,10 +1,59 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { updateProfileInputSchema } from "@dorfpartys/shared";
-import { bundesland, event, kreis, partyArt, userLink, userProfile } from "../db/schema.js";
+import {
+  completeOnboardingInputSchema,
+  updateProfileInputSchema,
+  type UpdateProfileInput,
+} from "@dorfpartys/shared";
+import { bundesland, event, kreis, partyArt, user, userLink, userProfile } from "../db/schema.js";
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
+import type { Database } from "../db/index.js";
+
+/**
+ * Gemeinsame Upsert-Logik für `updateMyProfile` und `completeOnboarding`
+ * (Onboarding-Formular, AGENTS.md Abschnitt 5) — inkl. Slug-Neuvergabe bei
+ * geändertem Anzeigenamen (Veranstalter-Seite, AGENTS.md 3/8).
+ */
+async function upsertProfile(
+  db: Database,
+  userId: string,
+  profileFields: Omit<UpdateProfileInput, "links">,
+) {
+  if (profileFields.avatarS3Key) {
+    const [existing] = await db
+      .select({ avatarS3Key: userProfile.avatarS3Key })
+      .from(userProfile)
+      .where(eq(userProfile.userId, userId));
+    // Alter Avatar-Key wird aktiv aus S3 entfernt — keine verwaisten
+    // öffentlichen Dateien (AGENTS.md 7.1).
+    if (existing?.avatarS3Key && existing.avatarS3Key !== profileFields.avatarS3Key) {
+      await deleteS3Object(existing.avatarS3Key);
+    }
+  }
+
+  let slugUpdate: { slug: string } | Record<string, never> = {};
+  if (profileFields.displayName) {
+    const [existing] = await db
+      .select({ displayName: userProfile.displayName, slug: userProfile.slug })
+      .from(userProfile)
+      .where(eq(userProfile.userId, userId));
+    if (!existing?.slug || existing.displayName !== profileFields.displayName) {
+      slugUpdate = {
+        slug: await generateUniqueOrganizerSlug(db, profileFields.displayName, userId),
+      };
+    }
+  }
+
+  await db
+    .insert(userProfile)
+    .values({ userId, ...profileFields, ...slugUpdate, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: userProfile.userId,
+      set: { ...profileFields, ...slugUpdate, updatedAt: new Date() },
+    });
+}
 
 export const usersRouter = router({
   me: protectedProcedure.query(({ ctx }) => ctx.user),
@@ -87,53 +136,7 @@ export const usersRouter = router({
     .input(updateProfileInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { links, ...profileFields } = input;
-
-      if (profileFields.avatarS3Key) {
-        const [existing] = await ctx.db
-          .select({ avatarS3Key: userProfile.avatarS3Key })
-          .from(userProfile)
-          .where(eq(userProfile.userId, ctx.user.id));
-        // Alter Avatar-Key wird aktiv aus S3 entfernt — keine verwaisten
-        // öffentlichen Dateien (AGENTS.md 7.1).
-        if (
-          existing?.avatarS3Key &&
-          existing.avatarS3Key !== profileFields.avatarS3Key
-        ) {
-          await deleteS3Object(existing.avatarS3Key);
-        }
-      }
-
-      // Slug wird bei jeder Änderung des Anzeigenamens neu aus diesem
-      // abgeleitet (Veranstalter-Seite, AGENTS.md 3/8).
-      let slugUpdate: { slug: string } | Record<string, never> = {};
-      if (profileFields.displayName) {
-        const [existing] = await ctx.db
-          .select({ displayName: userProfile.displayName, slug: userProfile.slug })
-          .from(userProfile)
-          .where(eq(userProfile.userId, ctx.user.id));
-        if (!existing?.slug || existing.displayName !== profileFields.displayName) {
-          slugUpdate = {
-            slug: await generateUniqueOrganizerSlug(
-              ctx.db,
-              profileFields.displayName,
-              ctx.user.id,
-            ),
-          };
-        }
-      }
-
-      await ctx.db
-        .insert(userProfile)
-        .values({
-          userId: ctx.user.id,
-          ...profileFields,
-          ...slugUpdate,
-          updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: userProfile.userId,
-          set: { ...profileFields, ...slugUpdate, updatedAt: new Date() },
-        });
+      await upsertProfile(ctx.db, ctx.user.id, profileFields);
 
       if (links) {
         await ctx.db.delete(userLink).where(eq(userLink.userId, ctx.user.id));
@@ -153,4 +156,27 @@ export const usersRouter = router({
 
       return { userId: ctx.user.id };
     }),
+
+  // Registrierungs-Multi-Step-Formular nach dem ersten Authentik-Login
+  // (AGENTS.md Abschnitt 5) — legt den Anzeigenamen/Veranstalter-Profil an
+  // und markiert das Onboarding als abgeschlossen.
+  completeOnboarding: protectedProcedure
+    .input(completeOnboardingInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      await upsertProfile(ctx.db, ctx.user.id, input);
+      await ctx.db
+        .update(user)
+        .set({ onboardingCompletedAt: new Date() })
+        .where(eq(user.id, ctx.user.id));
+      return { userId: ctx.user.id };
+    }),
+
+  // "Später einrichten" — Onboarding gilt als gesehen, ohne Profildaten zu setzen.
+  skipOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
+    await ctx.db
+      .update(user)
+      .set({ onboardingCompletedAt: new Date() })
+      .where(eq(user.id, ctx.user.id));
+    return { userId: ctx.user.id };
+  }),
 });

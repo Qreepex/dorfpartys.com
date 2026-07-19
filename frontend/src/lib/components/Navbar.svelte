@@ -1,13 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { User } from '@dorfpartys/shared';
+	import { page } from '$app/state';
+	import { COUNTRIES, type Country, type User } from '@dorfpartys/shared';
 
 	interface Props {
 		user?: Pick<User, 'role'> | null;
+		country?: Country;
 	}
 
-	let { user = null }: Props = $props();
+	let { user = null, country = 'de' }: Props = $props();
+
+	const COUNTRY_LABELS: Record<Country, string> = { de: 'DE', at: 'AT', ch: 'CH' };
+	const TIMEZONE_COUNTRY: Record<string, Country> = {
+		'Europe/Vienna': 'at',
+		'Europe/Zurich': 'ch'
+	};
 
 	let theme: 'dark' | 'light' = $state('dark');
 
@@ -21,6 +29,16 @@
 					: 'dark';
 		theme = preferred;
 		document.documentElement.setAttribute('data-theme', preferred);
+
+		// Zeitzonen-Verfeinerung der Land-Erkennung (AGENTS.md item 3) — nur
+		// solange der Nutzer das Land noch nie explizit selbst gewählt hat.
+		if (!document.cookie.includes('country_explicit=1')) {
+			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			const refined = TIMEZONE_COUNTRY[timezone];
+			if (refined && refined !== country) {
+				document.cookie = `country=${refined}; path=/; max-age=31536000; samesite=lax`;
+			}
+		}
 	});
 
 	function toggleTheme() {
@@ -30,6 +48,13 @@
 	}
 
 	const isModerator = $derived(user?.role === 'moderator' || user?.role === 'admin');
+
+	const countrySwitchLinks = $derived(
+		COUNTRIES.map((target) => {
+			const base = resolve('/land/[country]', { country: target });
+			return { country: target, href: `${base}?to=${encodeURIComponent(page.url.pathname)}` };
+		})
+	);
 </script>
 
 <header class="navbar">
@@ -45,8 +70,15 @@
 		</a>
 
 		<nav aria-label="Hauptnavigation">
+			<div class="country-switch" role="group" aria-label="Land wählen">
+				{#each countrySwitchLinks as link (link.country)}
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve()-Basis + dynamischer ?to=-Query (aktuelle Seite), siehe countrySwitchLinks -->
+					<a href={link.href} class:active={link.country === country}>{COUNTRY_LABELS[link.country]}</a>
+				{/each}
+			</div>
 			{#if user}
 				<a href={resolve('/submit')}>Event einreichen</a>
+				<a href={resolve('/partyliste')}>Partyliste</a>
 				<a href={resolve('/profil')}>Mein Profil</a>
 				{#if isModerator}
 					<a href={resolve('/review')}>Review</a>
@@ -137,6 +169,28 @@
 
 	nav a:hover {
 		color: var(--color-text);
+	}
+
+	.country-switch {
+		display: flex;
+		border: 1px solid var(--color-border);
+	}
+
+	.country-switch a {
+		padding: 6px 10px;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.03em;
+		border-right: 1px solid var(--color-border);
+	}
+
+	.country-switch a:last-child {
+		border-right: none;
+	}
+
+	.country-switch a.active {
+		background: var(--color-primary);
+		color: var(--color-ink);
 	}
 
 	.theme-toggle {
