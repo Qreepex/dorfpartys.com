@@ -3,6 +3,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import {
 	COUNTRIES,
+	buildCountryRootUrl,
 	buildEventUrl,
 	reviewEventInputSchema,
 	submitEventInputSchema,
@@ -10,7 +11,7 @@ import {
 } from '@dorfpartys/shared';
 import { event, eventLink, eventPhoto, kreis, userProfile } from '../db/schema.js';
 import { generateUniqueEventSlug } from '../slug/index.js';
-import { buildEventJsonLd } from '../seo/index.js';
+import { buildBreadcrumbJsonLd, buildEventJsonLd } from '../seo/index.js';
 import { buildPublicStorageUrl } from '../storage/index.js';
 import { moderatorProcedure, protectedProcedure, publicProcedure, router } from '../trpc/trpc.js';
 import type { Database } from '../db/index.js';
@@ -174,6 +175,9 @@ export const eventsRouter = router({
 			// Ohne gepflegten display_name generischer Platzhalter (AGENTS.md Abschnitt 3).
 			const organizerName = organizerProfile?.displayName ?? 'Veranstalter';
 
+			const eventUrl = buildEventUrl(input.country, row.slug);
+			const photosWithUrl = photos.map((p) => ({ ...p, url: buildPublicStorageUrl(p.s3Key) }));
+
 			const jsonLd = buildEventJsonLd({
 				title: row.title,
 				description: row.description,
@@ -181,11 +185,16 @@ export const eventsRouter = router({
 				endDate: row.endDate,
 				addressDescription: row.addressDescription,
 				organizerName,
-				url: buildEventUrl(input.country, row.slug),
-				photoUrls: photos.map((p) => buildPublicStorageUrl(p.s3Key))
+				url: eventUrl,
+				photoUrls: photosWithUrl.map((p) => p.url)
 			});
 
-			return { ...row, photos, links, organizerName, jsonLd };
+			const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+				{ name: input.country.toUpperCase(), url: buildCountryRootUrl(input.country) },
+				{ name: row.title, url: eventUrl }
+			]);
+
+			return { ...row, photos: photosWithUrl, links, organizerName, jsonLd, breadcrumbJsonLd };
 		}),
 
 	listInReview: moderatorProcedure.query(async ({ ctx }) =>

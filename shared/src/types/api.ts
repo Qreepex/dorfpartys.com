@@ -16,6 +16,7 @@ export interface ApiErrorBody {
 
 export interface SitemapEventEntry {
 	slug: string;
+	country: string;
 	updatedAt: string;
 }
 

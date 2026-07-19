@@ -8,13 +8,14 @@ const APPROVED_UPCOMING = (countryFilter: ReturnType<typeof eq>) =>
 
 export async function getEventSitemapEntries(db: Database) {
 	const rows = await db
-		.select({ slug: event.slug, updatedAt: event.updatedAt })
+		.select({ slug: event.slug, country: bundesland.country, updatedAt: event.updatedAt })
 		.from(event)
+		.innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
 		.where(and(eq(event.status, 'approved'), sql`${event.endDate} >= now()`));
 
 	return rows
-		.filter((row): row is { slug: string; updatedAt: Date } => row.slug !== null)
-		.map((row) => ({ slug: row.slug, updatedAt: row.updatedAt.toISOString() }));
+		.filter((row): row is { slug: string; country: Country; updatedAt: Date } => row.slug !== null)
+		.map((row) => ({ slug: row.slug, country: row.country, updatedAt: row.updatedAt.toISOString() }));
 }
 
 /** Nur Orte (Bundesland/Kreis) mit mindestens einem aktuellen/kommenden Event (AGENTS.md 1.8). */

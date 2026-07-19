@@ -6,6 +6,10 @@ import Fastify from 'fastify';
 import { createContext } from './trpc/context.js';
 import { appRouter } from './routers/index.js';
 
+// Type-only Re-Export für den Frontend-Workspace (AGENTS.md Abschnitt 0):
+// `import type { AppRouter } from '@dorfpartys/backend'` — kein Laufzeit-Coupling.
+export type { AppRouter } from './routers/index.js';
+
 const app = Fastify({ logger: true });
 
 await app.register(cors, { origin: true, credentials: true });
