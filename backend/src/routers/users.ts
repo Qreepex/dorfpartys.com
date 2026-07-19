@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { updateProfileInputSchema } from "@dorfpartys/shared";
-import { userLink, userProfile } from "../db/schema.js";
-import { deleteS3Object } from "../storage/index.js";
+import { bundesland, event, kreis, partyArt, userLink, userProfile } from "../db/schema.js";
+import { generateUniqueOrganizerSlug } from "../slug/index.js";
+import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
 
 export const usersRouter = router({
@@ -22,6 +23,64 @@ export const usersRouter = router({
         .orderBy(userLink.position);
 
       return { profile: profileRow ?? null, links };
+    }),
+
+  // Öffentliche Veranstalter-Seite /{country}/veranstalter/{slug}/ (AGENTS.md 3/8).
+  getProfileBySlug: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const [profileRow] = await ctx.db
+        .select()
+        .from(userProfile)
+        .where(eq(userProfile.slug, input.slug));
+      if (!profileRow) return null;
+
+      const [links, events] = await Promise.all([
+        ctx.db
+          .select()
+          .from(userLink)
+          .where(eq(userLink.userId, profileRow.userId))
+          .orderBy(userLink.position),
+        ctx.db
+          .select({
+            slug: event.slug,
+            title: event.title,
+            startDate: event.startDate,
+            endDate: event.endDate,
+            customColor: event.customColor,
+            country: bundesland.country,
+            bundeslandName: bundesland.name,
+            kreisName: kreis.name,
+            partyArtName: partyArt.name,
+          })
+          .from(event)
+          .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
+          .innerJoin(kreis, eq(event.kreisId, kreis.id))
+          .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
+          .where(
+            and(eq(event.organizerUserId, profileRow.userId), eq(event.status, "approved")),
+          ),
+      ]);
+
+      const now = Date.now();
+      const upcoming = events
+        .filter((e) => new Date(e.endDate).getTime() >= now)
+        .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate));
+      const past = events
+        .filter((e) => new Date(e.endDate).getTime() < now)
+        .sort((a, b) => +new Date(b.startDate) - +new Date(a.startDate));
+
+      return {
+        profile: {
+          ...profileRow,
+          avatarUrl: profileRow.avatarS3Key
+            ? buildPublicStorageUrl(profileRow.avatarS3Key)
+            : null,
+        },
+        links,
+        upcoming,
+        past,
+      };
     }),
 
   updateMyProfile: protectedProcedure
@@ -44,16 +103,36 @@ export const usersRouter = router({
         }
       }
 
+      // Slug wird bei jeder Änderung des Anzeigenamens neu aus diesem
+      // abgeleitet (Veranstalter-Seite, AGENTS.md 3/8).
+      let slugUpdate: { slug: string } | Record<string, never> = {};
+      if (profileFields.displayName) {
+        const [existing] = await ctx.db
+          .select({ displayName: userProfile.displayName, slug: userProfile.slug })
+          .from(userProfile)
+          .where(eq(userProfile.userId, ctx.user.id));
+        if (!existing?.slug || existing.displayName !== profileFields.displayName) {
+          slugUpdate = {
+            slug: await generateUniqueOrganizerSlug(
+              ctx.db,
+              profileFields.displayName,
+              ctx.user.id,
+            ),
+          };
+        }
+      }
+
       await ctx.db
         .insert(userProfile)
         .values({
           userId: ctx.user.id,
           ...profileFields,
+          ...slugUpdate,
           updatedAt: new Date(),
         })
         .onConflictDoUpdate({
           target: userProfile.userId,
-          set: { ...profileFields, updatedAt: new Date() },
+          set: { ...profileFields, ...slugUpdate, updatedAt: new Date() },
         });
 
       if (links) {

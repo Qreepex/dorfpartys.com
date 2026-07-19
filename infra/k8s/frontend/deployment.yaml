@@ -15,9 +15,11 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: frontend
-          image: registry.dorfpartys.com/dorfpartys/frontend:latest
+          image: ghcr.io/qreepex/dorfpartys/frontend:latest
           ports:
             - containerPort: 3000
           envFrom:

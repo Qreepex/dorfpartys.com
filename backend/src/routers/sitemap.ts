@@ -4,6 +4,7 @@ import {
   getArtenSitemapEntries,
   getEventSitemapEntries,
   getOrteSitemapEntries,
+  getVeranstalterSitemapEntries,
 } from "../seo/index.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 
@@ -17,4 +18,8 @@ export const sitemapRouter = router({
   arten: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES) }))
     .query(({ ctx, input }) => getArtenSitemapEntries(ctx.db, input.country)),
+
+  veranstalter: publicProcedure.query(({ ctx }) =>
+    getVeranstalterSitemapEntries(ctx.db),
+  ),
 });

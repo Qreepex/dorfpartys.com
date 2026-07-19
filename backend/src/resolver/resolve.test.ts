@@ -155,7 +155,7 @@ describe("resolve — Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
   });
 });
 
-describe("resolve — Indexierungsregeln (AGENTS.md 1.6)", () => {
+describe("resolve — Indexierungsregeln (bewusste Abweichung von AGENTS.md 1.6, siehe TODO.md)", () => {
   it("Treffer > 0 -> indexable", async () => {
     const result = await resolve("de", ["schuetzenfeste"], repo);
     if (result.kind !== "result") throw new Error("expected result");
@@ -163,10 +163,10 @@ describe("resolve — Indexierungsregeln (AGENTS.md 1.6)", () => {
     expect(result.total).toBe(1);
   });
 
-  it("keine Treffer -> kein 404, aber nicht indexierbar", async () => {
+  it("keine Treffer, aber gültige Kombination -> trotzdem indexable (Ranking-Aufbau für künftige Events)", async () => {
     const result = await resolve("de", ["schuetzenfeste"], emptyRepo);
     if (result.kind !== "result") throw new Error("expected result");
-    expect(result.indexable).toBe(false);
+    expect(result.indexable).toBe(true);
     expect(result.total).toBe(0);
   });
 });

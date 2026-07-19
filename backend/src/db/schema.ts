@@ -76,6 +76,10 @@ export const userProfile = pgTable("user_profile", {
   userId: uuid("user_id")
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
+  // Veranstalter-Slug für /{country}/veranstalter/{slug}/ — vergeben, sobald
+  // ein display_name gesetzt wird; eigener URL-Baum ohne Kollisionsrisiko zu
+  // den vier Filter-Vokabularen, analog zu Event-Slugs (AGENTS.md 1.7).
+  slug: text("slug").unique(),
   displayName: text("display_name"),
   avatarS3Key: text("avatar_s3_key"),
   websiteUrl: text("website_url"),

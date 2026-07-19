@@ -3,7 +3,9 @@ import type { RequestHandler } from './$types.js';
 
 export const GET: RequestHandler = async () => {
 	const files = [
+		'sitemap-pages.xml',
 		'sitemap-events.xml',
+		'sitemap-veranstalter.xml',
 		...COUNTRIES.flatMap((country) => [
 			`sitemap-${country}-orte.xml`,
 			`sitemap-${country}-arten.xml`

@@ -57,4 +57,7 @@ export interface EventListItem
 		| 'customColor'
 	> {
 	coverPhotoS3Key: string | null;
+	bundeslandName: string;
+	kreisName: string;
+	partyArtName: string;
 }

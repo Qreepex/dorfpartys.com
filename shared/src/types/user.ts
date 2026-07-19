@@ -10,6 +10,7 @@ export interface User {
 
 export interface UserProfile {
 	userId: string;
+	slug: string | null;
 	displayName: string | null;
 	avatarS3Key: string | null;
 	websiteUrl: string | null;

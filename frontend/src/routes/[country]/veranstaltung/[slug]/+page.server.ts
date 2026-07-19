@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			country: params.country,
 			slug: params.slug
 		});
-		return { event };
+		return { event, country: params.country };
 	} catch {
 		error(404, 'Event nicht gefunden');
 	}

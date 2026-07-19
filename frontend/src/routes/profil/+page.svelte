@@ -1,13 +1,26 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	const organizerHref = $derived(
+		data.profile?.slug ? resolve('/veranstalter/[slug]', { slug: data.profile.slug }) : null
+	);
 </script>
 
 <h1>Mein Profil</h1>
 
 {#if form?.success}
 	<p>Profil gespeichert.</p>
+{/if}
+
+{#if organizerHref}
+	<p>
+		Deine öffentliche Veranstalter-Seite:
+		<a href={organizerHref}>dorfpartys.com{organizerHref}</a>
+	</p>
+{:else}
+	<p>Sobald du einen Anzeigenamen speicherst, bekommst du eine eigene öffentliche Veranstalter-Seite.</p>
 {/if}
 
 <form method="POST">
@@ -39,7 +52,10 @@
 	<h2>Weitere Links</h2>
 	<ul>
 		{#each data.links as link (link.id)}
-			<li><a href={link.url}>{link.label}</a></li>
+			<li>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
+				<a href={link.url}>{link.label}</a>
+			</li>
 		{/each}
 	</ul>
 {/if}

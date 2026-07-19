@@ -95,12 +95,14 @@ CREATE TABLE "user_link" (
 --> statement-breakpoint
 CREATE TABLE "user_profile" (
 	"user_id" uuid PRIMARY KEY NOT NULL,
+	"slug" text,
 	"display_name" text,
 	"avatar_s3_key" text,
 	"website_url" text,
 	"instagram_url" text,
 	"bio" text,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_profile_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 ALTER TABLE "event" ADD CONSTRAINT "event_organizer_user_id_user_id_fk" FOREIGN KEY ("organizer_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

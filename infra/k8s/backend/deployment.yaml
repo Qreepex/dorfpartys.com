@@ -15,14 +15,16 @@ spec:
       labels:
         app: backend
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       # Vereinfachung für diese Phase: migrate.js läuft als initContainer bei
       # jedem Replica-Start (idempotent über drizzle's Migrations-Tabelle,
       # aber bei parallelem Rollout theoretisch racy). Für Staging/Prod besser
       # als separater Job vor dem Rollout auslösen.
       initContainers:
         - name: migrate
-          image: registry.dorfpartys.com/dorfpartys/backend:latest
-          command: ['node', 'dist/db/migrate.js']
+          image: ghcr.io/qreepex/dorfpartys/backend:latest
+          command: ["node", "dist/db/migrate.js"]
           envFrom:
             - configMapRef:
                 name: backend-config
@@ -30,7 +32,7 @@ spec:
                 name: backend-secret
       containers:
         - name: backend
-          image: registry.dorfpartys.com/dorfpartys/backend:latest
+          image: ghcr.io/qreepex/dorfpartys/backend:latest
           ports:
             - containerPort: 3000
           envFrom:

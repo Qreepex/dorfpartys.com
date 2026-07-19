@@ -25,9 +25,14 @@ export function buildFilterUrl(country: Country, filters: CanonicalFilterSlugs =
 }
 
 export function buildEventUrl(country: Country, slug: string): string {
-	return `/${country}/party/${slug}/`;
+	return `/${country}/veranstaltung/${slug}/`;
 }
 
 export function buildCountryRootUrl(country: Country): string {
 	return `/${country}/`;
+}
+
+/** Veranstalter-Profile sind DACH-weit (nicht länderskaliert), siehe AGENTS.md Abschnitt 3/8. */
+export function buildOrganizerUrl(slug: string): string {
+	return `/veranstalter/${slug}/`;
 }

@@ -10,7 +10,11 @@ import { createContext } from "./trpc/context.js";
 // `import type { AppRouter } from '@dorfpartys/backend'` — kein Laufzeit-Coupling.
 export type { AppRouter } from "./routers/index.js";
 
-const app = Fastify({ logger: true });
+// maxParamLength angehoben: tRPCs httpBatchLink fügt bei parallelen Queries alle
+// Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter
+// ein (z.B. für die Landingpage: stats.overview,events.listUpcoming,...) — das
+// überschreitet Fastifys Default von 100 Zeichen schnell (FST_ERR_MAX_PARAM_LENGTH).
+const app = Fastify({ logger: true, maxParamLength: 5000 });
 
 await app.register(cors, { origin: true, credentials: true });
 await app.register(cookie, { secret: process.env.SESSION_COOKIE_SECRET });

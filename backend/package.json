@@ -19,6 +19,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed/index.ts",
+    "db:seed:demo": "tsx src/db/seed/demo-events.ts",
     "db:studio": "drizzle-kit studio",
     "test": "vitest run"
   },

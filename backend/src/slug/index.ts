@@ -1,6 +1,6 @@
-import { like } from "drizzle-orm";
+import { like, ne, and } from "drizzle-orm";
 import type { Database } from "../db/index.js";
-import { event } from "../db/schema.js";
+import { event, userProfile } from "../db/schema.js";
 
 export function slugify(input: string): string {
   return input
@@ -44,4 +44,33 @@ export async function generateUniqueEventSlug(
     suffix += 1;
   }
   return `${withDisambiguator}-${suffix}`;
+}
+
+/**
+ * Slug-Vergabe für Veranstalter-Profile (/{country}/veranstalter/{slug}/,
+ * AGENTS.md Abschnitt 3/8) — eigener URL-Baum, kein Kollisionsrisiko zu den
+ * vier Filter-Vokabularen. Wird beim Speichern des Profils neu aus dem
+ * `display_name` abgeleitet, sofern sich dieser geändert hat.
+ */
+export async function generateUniqueOrganizerSlug(
+  db: Database,
+  displayName: string,
+  currentUserId: string,
+): Promise<string> {
+  const base = slugify(displayName) || "veranstalter";
+  const existingRows = await db
+    .select({ slug: userProfile.slug })
+    .from(userProfile)
+    .where(
+      and(like(userProfile.slug, `${base}%`), ne(userProfile.userId, currentUserId)),
+    );
+  const taken = new Set(existingRows.map((row) => row.slug));
+
+  if (!taken.has(base)) return base;
+
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) {
+    suffix += 1;
+  }
+  return `${base}-${suffix}`;
 }

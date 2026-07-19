@@ -7,6 +7,8 @@ export interface EventJsonLdInput {
   endDate: Date;
   addressDescription: string;
   organizerName: string;
+  organizerUrl?: string | null;
+  priceInfo?: string | null;
   url: string;
   photoUrls: string[];
 }
@@ -28,9 +30,20 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
       address: input.addressDescription,
     },
     organizer: {
-      "@type": "Person",
+      "@type": "Organization",
       name: input.organizerName,
+      ...(input.organizerUrl ? { url: `${SITE_URL}${input.organizerUrl}` } : {}),
     },
+    ...(input.priceInfo
+      ? {
+          offers: {
+            "@type": "Offer",
+            description: input.priceInfo,
+            url: `${SITE_URL}${input.url}`,
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : {}),
     image: input.photoUrls,
     url: `${SITE_URL}${input.url}`,
   };

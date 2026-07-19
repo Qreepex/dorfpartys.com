@@ -16,7 +16,7 @@ dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform z
     routes/
       [country]/
         [...segments]/+page.server.ts   # ruft backend.resolve() auf, rendert oder redirected
-        party/[slug]/+page.server.ts     # ruft backend.events.getBySlug() auf
+        veranstaltung/[slug]/+page.server.ts     # ruft backend.events.getBySlug() auf
         review/                          # Moderations-Dashboard (geschützt: moderator/admin)
         submit/                          # Event-Einreichungsformular (geschützt: eingeloggt)
         profil/                          # Nutzerprofil-Editor (geschützt: eingeloggt)
@@ -143,17 +143,18 @@ Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **alle vier Vok
 
 ### 1.6 Indexierungsregeln
 
-- Jede Filter-Kombination nur `index,follow`, wenn sie **mindestens ein aktuelles/kommendes Event** hat.
-- Leere Kombinationen: **kein 404**, sondern normale Seite mit Hinweis und `noindex,follow`.
+- **Abweichung von der ursprünglichen Planung:** Jede gültige Filter-Kombination ist `index,follow`, **auch ohne aktuelle Treffer** — nicht nur solche mit mindestens einem aktuellen/kommenden Event. Begründung: valide Such-URLs sollen schon vor dem ersten eingetragenen Event Ranking aufbauen, damit künftig eingetragene Events sofort in einer bereits indexierten Seite auftauchen (siehe TODO.md "seite ohne events indizieren lassen? ich glaub ja"). Umgesetzt in `backend/src/resolver/resolve.ts` (`ResolveResult.indexable`) sowie in den Orte-/Arten-Sitemaps (`backend/src/seo/sitemap.ts`), die jetzt die volle Taxonomie statt nur Kombinationen mit Events auflisten.
+- Leere Kombinationen: **kein 404**, sondern normale Seite mit Hinweis (Call-to-Action zum Eintragen).
+- Jede Segment-Kombination hat serverseitig gebauten, eindeutigen SEO-Text (Title/Description/H1/Intro) aus den Klarnamen der Filter — `backend/src/seo/search-copy.ts`, ausgeliefert über `resolver.resolve`.
 - `BreadcrumbList` JSON-LD auf allen Filter-/Suchseiten.
 
 ### 1.7 Event-Detailseiten (eigener URL-Baum)
 
 ```
-/{country}/party/{slug}/
+/{country}/veranstaltung/{slug}/
 ```
 
-Beispiel: `/de/party/steinhorst-open-air/`
+Beispiel: `/de/veranstaltung/steinhorst-open-air/`
 
 Entkoppelt von den vier Filter-Vokabularen (kein Kollisionsrisiko), einfacheres Routing. Ranking läuft über interne Verlinkung, `BreadcrumbList`- und `schema.org/Event`-Markup, nicht über URL-Tiefe.
 
@@ -166,12 +167,14 @@ Entkoppelt von den vier Filter-Vokabularen (kein Kollisionsrisiko), einfacheres 
 
 ```
 /sitemap.xml
+/sitemap-pages.xml
 /sitemap-{country}-orte.xml
 /sitemap-{country}-arten.xml
 /sitemap-events.xml
+/sitemap-veranstalter.xml
 ```
 
-Segmentiert, dynamisch generiert (Backend, `seo`-Modul), nur URLs mit Content.
+Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen — konsistent mit der Indexierungsregel in 1.6 — die volle Taxonomie, nicht nur Kombinationen mit aktuellen Events.
 
 ## 2. Datenmodell
 
@@ -188,6 +191,7 @@ user (
 
 user_profile (
   user_id → user (1:1),
+  slug,                             -- vergeben aus display_name, öffentliche Seite /veranstalter/{slug}/
   display_name,                    -- öffentlich sichtbarer Name als "Veranstalter"
   avatar_s3_key,
   website_url,
@@ -248,6 +252,7 @@ Constraints/Validierung im Backend (nicht nur UI):
 - Pflicht für Profil: keine (Profil ist optional, aber ohne `display_name` wird der User als Veranstalter nur mit generischem Platzhalter angezeigt — UI-Entscheidung, kein Blocker für Event-Einreichung).
 - Felder: `display_name`, `avatar_s3_key` (Upload über Backend `storage`-Modul, presigned URL zu IONOS S3), `website_url`, `instagram_url`, `bio`, plus beliebig viele weitere über `user_link`.
 - Profilbild-Upload läuft wie Event-Fotos über presigned Upload-URLs — kein direkter Client-Upload zu S3-Credentials.
+- **Öffentliche Veranstalter-Seite** unter `/veranstalter/{slug}/` (DACH-weit, nicht länderskaliert, da ein Veranstalter Events in mehreren Ländern eintragen kann) — zeigt Profil, Links sowie kommende/vergangene Events des Nutzers. `slug` wird beim Speichern des Profils aus `display_name` abgeleitet (Kollisions-Disambiguierung analog Event-Slugs, `backend/src/slug/index.ts`) und ist erst gesetzt, sobald ein `display_name` gepflegt wurde — ohne `display_name` existiert keine öffentliche Seite. Eigene Sitemap `/sitemap-veranstalter.xml`.
 
 ## 4. Event-Customization
 
@@ -315,7 +320,7 @@ profiles/{user_id}/{avatar_id}.{ext}
 
 ## 10. Offene Punkte (vor/während Implementierung zu klären)
 
-- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Teilweise erledigt:** Seed-Skript (`backend/src/db/seed/`) legt alle 16 DE-Bundesländer, 9 AT-Bundesländer und 7 CH-Kantone plus je 1–3 Platzhalter-Kreise an — kein vollständiger Kreis-Import.
+- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Erledigt:** `backend/src/db/seed/data.ts` enthält alle 16 DE-Bundesländer (401 Kreise/kreisfreie Städte plus Berlin-Bezirke, Hamburg-Bezirke, Bremen/Bremerhaven), alle 9 AT-Bundesländer (93 Bezirke/Statutarstädte) und alle 26 CH-Kantone (124 Bezirke/Wahlkreise/Amtsbezirke, wo administrativ vorhanden). Quelle ist Modell-Wissen zu den Standard-Verwaltungsgliederungen (Destatis/Statistik Austria/BFS) zum Trainingsstand — bei künftigen Gebietsreformen (Kreisfusionen etc.) manuell nachziehen.
 - Finale Liste der Party-Arten festlegen (Startpunkt: Schützenfest, Zeltfete, Scheunenfete, Stoppelfete). **Startliste umgesetzt** (`shared/src/constants/index.ts` → `PARTY_ART_SEED`), finale Liste weiterhin offen.
 - Vollständige Liste optionaler Event-Felder über `custom_fields` hinaus abstimmen (aktuell: Preis, Altersbeschränkung/Muttizettel, Open Air als dedizierte Spalten).
 - Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung). **Aktuell:** on-demand, ohne Caching — jeder Aufruf von `/sitemap-*.xml` fragt live gegen die DB ab (`backend/src/seo/sitemap.ts`). Für Produktionslast ggf. Cronjob + Cache/S3-Ablage nachziehen.
@@ -328,3 +333,7 @@ profiles/{user_id}/{avatar_id}.{ext}
 - **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.
 - **Rollen-Mapping Authentik-Gruppen → App-Rollen** (Abschnitt 5): erledigt. In der echten Authentik-Instanz existieren die Gruppen `Dorfpartys.com - Admin` (Gruppen-ID `4e4f3f40-20ce-4492-b0d9-5e908597f3da`) und `Dorfpartys.com - Moderator` (Gruppen-ID `182f4f89-8e94-435a-aaef-2c28cf0952b9`), verdrahtet über `AUTHENTIK_ADMIN_GROUP`/`AUTHENTIK_MODERATOR_GROUP` in `.env.example` bzw. `infra/k8s/backend/configmap.yaml` (`backend/src/auth/roles.ts`). Wichtig: Der JWT-`groups`-Claim führt Gruppen-**Namen**, nicht die Authentik-Gruppen-IDs (siehe die `profile`-Scope-Mapping der Authentik-Instanz) — die IDs oben dienen nur der Rückverfolgbarkeit in Authentik selbst.
 - **SSO-Login-Flow in Authentik** (Abschnitt 5): für die Anwendung `dorf-partys-com` ist ein dedizierter Login-Flow eingerichtet, der ausschließlich Federated Login über die Quellen `discord-dorfpartys`, `google-dorfpartys` und `facebook-dorfpartys` anbietet — kein lokales Nutzername/Passwort-Formular, keine Nutzername-Eingabe bei Erstregistrierung (Identification-Stage ohne `user_fields`, Enrollment-Flow ohne Prompt-Stage). Reine Authentik-Konfiguration (Flows/Stages/Sources), kein Code in diesem Repo; die drei Quellen sind dediziert für diese App und werden nicht mit anderen in derselben Authentik-Instanz laufenden Anwendungen geteilt.
+- **Stats-Endpunkt** (TODO.md "stats endpunkt backend"): `stats.overview` (`backend/src/routers/stats.ts`) liefert aggregierte, nicht-personenbezogene Kennzahlen (freigeschaltete/kommende Events, abgedeckte Kreise/Bundesländer, aktive Party-Arten, Anzahl Veranstalter mit öffentlichem Profil) für die Vertrauensleiste auf der Startseite.
+- **Landingpage** (Abschnitt 9 hebt den Design-Ausschluss für diese Phase auf, sobald DESIGN.md gilt): umgesetzt (`frontend/src/routes/+page.svelte`) — Hero mit Land/Bundesland/Art/Monat-Suchformular (Poster-/Lineup-Ästhetik nach `brand-mockup.html`), Stats-Leiste, DACH-weite "Nächste Partys"-Lineup-Sektion (`events.listUpcoming`) sowie ein Erklärungsblock (Herkunft der Events, Vorteile fürs Eintragen: kostenlos, werbefrei, kein Tracking, bessere Sichtbarkeit).
+- **Demo-Daten** (für lokales Testen): `pnpm --filter backend db:seed:demo` (nach `db:seed`) legt einen Demo-Veranstalter mit öffentlichem Profil und 5 bereits freigeschaltete Beispiel-Events in unterschiedlichen Ländern/Bundesländern/Party-Arten an (`backend/src/db/seed/demo-events.ts`) — nicht Teil des Produktions-Seeds.
+- **Legal-Seiten** `/impressum`, `/datenschutz`, `/nutzungsbedingungen`: Routen existierten als leere Verzeichnisse ohne `+page.svelte` (von Footer verlinkt, aber ohne Inhalt). Jetzt mit Platzhaltertexten befüllt — **vor Livegang durch rechtsverbindliche Inhalte ersetzen** (insbesondere Anbieterkennzeichnung nach § 5 TMG).

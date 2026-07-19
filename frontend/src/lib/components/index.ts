@@ -8,3 +8,4 @@ export { default as DateInput } from './DateInput.svelte';
 export { default as DropdownSelect } from './DropdownSelect.svelte';
 export { default as DropdownMultiSelect } from './DropdownMultiSelect.svelte';
 export { default as Toggle } from './Toggle.svelte';
+export { default as EventList } from './EventList.svelte';

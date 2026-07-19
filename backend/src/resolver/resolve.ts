@@ -51,7 +51,7 @@ export async function resolve(
   };
 
   const total = await repo.countApprovedEvents(country, filterIds);
-  // Leere Kombinationen sind kein 404, sondern eine normale Seite mit noindex,follow (AGENTS.md 1.6).
+  // Leere Kombinationen sind kein 404, sondern eine normale Seite (AGENTS.md 1.6).
   const results =
     total > 0 ? await repo.listApprovedEvents(country, filterIds) : [];
 
@@ -66,6 +66,8 @@ export async function resolve(
     },
     results,
     total,
-    indexable: total > 0,
+    // Jede gültige Kombination ist index,follow, auch ohne aktuelle Treffer —
+    // bewusste Abweichung von AGENTS.md 1.6, siehe ResolveResult.indexable.
+    indexable: true,
   };
 }

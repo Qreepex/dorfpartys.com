@@ -19,13 +19,30 @@ ${entries
 `;
 }
 
+// Statische, nicht datenbankgestützte Seiten (AGENTS.md item 3) — jede
+// Detailseite ist außerdem in einer der anderen Sitemaps enthalten.
+const STATIC_PAGES = [
+	'/',
+	...COUNTRIES.map((country) => `/${country}/`),
+	'/impressum',
+	'/datenschutz',
+	'/nutzungsbedingungen'
+];
+
 /**
- * Bedient sitemap-events.xml, sitemap-{country}-orte.xml und
- * sitemap-{country}-arten.xml (AGENTS.md 1.8). Nur URLs mit Content —
- * die Datenaufbereitung (nur Kombinationen mit Events) passiert im Backend.
+ * Bedient sitemap-pages.xml, sitemap-events.xml, sitemap-veranstalter.xml,
+ * sitemap-{country}-orte.xml und sitemap-{country}-arten.xml (AGENTS.md 1.8).
+ * Orte/Arten enthalten inzwischen bewusst auch Kombinationen ohne aktuelle
+ * Events (siehe seo/sitemap.ts) — Datenaufbereitung läuft im Backend.
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const rest = params.rest;
+
+	if (rest === 'pages') {
+		return new Response(urlsetXml(STATIC_PAGES.map((loc) => ({ loc }))), {
+			headers: { 'Content-Type': 'application/xml' }
+		});
+	}
 
 	if (rest === 'events') {
 		const entries = await locals.trpc.sitemap.events.query();
@@ -36,6 +53,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			}))
 		);
 		return new Response(body, { headers: { 'Content-Type': 'application/xml' } });
+	}
+
+	if (rest === 'veranstalter') {
+		const entries = await locals.trpc.sitemap.veranstalter.query();
+		return new Response(
+			urlsetXml(entries.map((e) => ({ loc: e.loc, lastmod: e.updatedAt }))),
+			{ headers: { 'Content-Type': 'application/xml' } }
+		);
 	}
 
 	const match = /^(de|at|ch)-(orte|arten)$/.exec(rest);

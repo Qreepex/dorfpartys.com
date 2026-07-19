@@ -88,13 +88,18 @@ export function createDrizzleTaxonomyRepository(
           startDate: event.startDate,
           endDate: event.endDate,
           bundeslandId: event.bundeslandId,
+          bundeslandName: bundesland.name,
           kreisId: event.kreisId,
+          kreisName: kreis.name,
           partyArtId: event.partyArtId,
+          partyArtName: partyArt.name,
           customColor: event.customColor,
           coverPhotoS3Key: eventPhoto.s3Key,
         })
         .from(event)
         .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
+        .innerJoin(kreis, eq(event.kreisId, kreis.id))
+        .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
         .leftJoin(
           eventPhoto,
           and(eq(eventPhoto.eventId, event.id), eq(eventPhoto.position, 1)),
@@ -109,8 +114,11 @@ export function createDrizzleTaxonomyRepository(
         startDate: row.startDate.toISOString(),
         endDate: row.endDate.toISOString(),
         bundeslandId: row.bundeslandId,
+        bundeslandName: row.bundeslandName,
         kreisId: row.kreisId,
+        kreisName: row.kreisName,
         partyArtId: row.partyArtId,
+        partyArtName: row.partyArtName,
         customColor: row.customColor,
         coverPhotoS3Key: row.coverPhotoS3Key,
       }));

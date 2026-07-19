@@ -4,59 +4,91 @@ import {
   buildCountryRootUrl,
   buildFilterUrl,
   resolverInputSchema,
+  type Country,
+  type ResolvedFilterNames,
 } from "@dorfpartys/shared";
 import { bundesland, kreis, partyArt } from "../db/schema.js";
 import { createDrizzleTaxonomyRepository, resolve } from "../resolver/index.js";
-import { buildBreadcrumbJsonLd } from "../seo/index.js";
+import { buildBreadcrumbJsonLd, buildSearchSeoCopy } from "../seo/index.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 import type { Database } from "../db/index.js";
 
-async function buildBreadcrumbsForResult(
+const COUNTRY_LABELS: Record<Country, string> = {
+  de: "Deutschland",
+  at: "Österreich",
+  ch: "Schweiz",
+};
+
+async function resolveNamesForFilters(
   db: Database,
-  country: Parameters<typeof buildCountryRootUrl>[0],
+  country: Country,
   filters: {
     bundeslandSlug: string | null;
     kreisSlug: string | null;
     artSlug: string | null;
     monatSlug: string | null;
   },
+): Promise<ResolvedFilterNames> {
+  const [bundeslandRow] = filters.bundeslandSlug
+    ? await db
+        .select({ name: bundesland.name })
+        .from(bundesland)
+        .where(eq(bundesland.slug, filters.bundeslandSlug))
+    : [undefined];
+  const [kreisRow] = filters.kreisSlug
+    ? await db.select({ name: kreis.name }).from(kreis).where(eq(kreis.slug, filters.kreisSlug))
+    : [undefined];
+  const [artRow] = filters.artSlug
+    ? await db
+        .select({ name: partyArt.name })
+        .from(partyArt)
+        .where(eq(partyArt.slug, filters.artSlug))
+    : [undefined];
+  const monat = filters.monatSlug
+    ? (MONTHS.find((m) => m.slug === filters.monatSlug)?.name ?? filters.monatSlug)
+    : null;
+
+  return {
+    country,
+    bundeslandName: bundeslandRow?.name ?? filters.bundeslandSlug,
+    kreisName: kreisRow?.name ?? filters.kreisSlug,
+    artName: artRow?.name ?? filters.artSlug,
+    monatName: monat,
+  };
+}
+
+function buildBreadcrumbsForResult(
+  country: Country,
+  filters: {
+    bundeslandSlug: string | null;
+    kreisSlug: string | null;
+    artSlug: string | null;
+    monatSlug: string | null;
+  },
+  names: ResolvedFilterNames,
 ) {
   const items = [
-    { name: country.toUpperCase(), url: buildCountryRootUrl(country) },
+    { name: COUNTRY_LABELS[country], url: buildCountryRootUrl(country) },
   ];
 
   if (filters.bundeslandSlug) {
-    const [row] = await db
-      .select({ name: bundesland.name })
-      .from(bundesland)
-      .where(eq(bundesland.slug, filters.bundeslandSlug));
     items.push({
-      name: row?.name ?? filters.bundeslandSlug,
+      name: names.bundeslandName ?? filters.bundeslandSlug,
       url: buildFilterUrl(country, { bundeslandSlug: filters.bundeslandSlug }),
     });
   }
-
   if (filters.kreisSlug) {
-    const [row] = await db
-      .select({ name: kreis.name })
-      .from(kreis)
-      .where(eq(kreis.slug, filters.kreisSlug));
     items.push({
-      name: row?.name ?? filters.kreisSlug,
+      name: names.kreisName ?? filters.kreisSlug,
       url: buildFilterUrl(country, {
         bundeslandSlug: filters.bundeslandSlug,
         kreisSlug: filters.kreisSlug,
       }),
     });
   }
-
   if (filters.artSlug) {
-    const [row] = await db
-      .select({ name: partyArt.name })
-      .from(partyArt)
-      .where(eq(partyArt.slug, filters.artSlug));
     items.push({
-      name: row?.name ?? filters.artSlug,
+      name: names.artName ?? filters.artSlug,
       url: buildFilterUrl(country, {
         bundeslandSlug: filters.bundeslandSlug,
         kreisSlug: filters.kreisSlug,
@@ -64,11 +96,9 @@ async function buildBreadcrumbsForResult(
       }),
     });
   }
-
   if (filters.monatSlug) {
-    const month = MONTHS.find((m) => m.slug === filters.monatSlug);
     items.push({
-      name: month?.name ?? filters.monatSlug,
+      name: names.monatName ?? filters.monatSlug,
       url: buildFilterUrl(country, {
         bundeslandSlug: filters.bundeslandSlug,
         kreisSlug: filters.kreisSlug,
@@ -92,11 +122,20 @@ export const resolverRouter = router({
         return outcome;
       }
 
-      const breadcrumbJsonLd = await buildBreadcrumbsForResult(
-        ctx.db,
+      const names = await resolveNamesForFilters(ctx.db, input.country, outcome.filters);
+      const seo = buildSearchSeoCopy({
+        country: input.country,
+        bundeslandName: names.bundeslandName,
+        kreisName: names.kreisName,
+        artName: names.artName,
+        monatName: names.monatName,
+        total: outcome.total,
+      });
+      const breadcrumbJsonLd = buildBreadcrumbsForResult(
         input.country,
         outcome.filters,
+        names,
       );
-      return { ...outcome, breadcrumbJsonLd };
+      return { ...outcome, names, seo, breadcrumbJsonLd };
     }),
 });

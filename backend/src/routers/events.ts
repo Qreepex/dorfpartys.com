@@ -2,19 +2,22 @@ import {
   COUNTRIES,
   buildCountryRootUrl,
   buildEventUrl,
+  buildOrganizerUrl,
   reviewEventInputSchema,
   submitEventInputSchema,
   updateEventInputSchema,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
+  bundesland as bundeslandTable,
   event,
   eventLink,
   eventPhoto,
   kreis,
+  partyArt,
   userProfile,
 } from "../db/schema.js";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "../seo/index.js";
@@ -236,7 +239,7 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      const [photos, links, [organizerProfile]] = await Promise.all([
+      const [photos, links, [organizerProfile], [partyArtRow]] = await Promise.all([
         ctx.db
           .select()
           .from(eventPhoto)
@@ -248,13 +251,20 @@ export const eventsRouter = router({
           .where(eq(eventLink.eventId, row.id))
           .orderBy(eventLink.position),
         ctx.db
-          .select({ displayName: userProfile.displayName })
+          .select({ displayName: userProfile.displayName, slug: userProfile.slug })
           .from(userProfile)
           .where(eq(userProfile.userId, row.organizerUserId)),
+        ctx.db
+          .select({ name: partyArt.name })
+          .from(partyArt)
+          .where(eq(partyArt.id, row.partyArtId)),
       ]);
 
       // Ohne gepflegten display_name generischer Platzhalter (AGENTS.md Abschnitt 3).
       const organizerName = organizerProfile?.displayName ?? "Veranstalter";
+      const organizerUrl = organizerProfile?.slug
+        ? buildOrganizerUrl(organizerProfile.slug)
+        : null;
 
       const eventUrl = buildEventUrl(input.country, row.slug);
       const photosWithUrl = photos.map((p) => ({
@@ -269,6 +279,8 @@ export const eventsRouter = router({
         endDate: row.endDate,
         addressDescription: row.addressDescription,
         organizerName,
+        organizerUrl,
+        priceInfo: row.priceInfo,
         url: eventUrl,
         photoUrls: photosWithUrl.map((p) => p.url),
       });
@@ -286,9 +298,46 @@ export const eventsRouter = router({
         photos: photosWithUrl,
         links,
         organizerName,
+        organizerSlug: organizerProfile?.slug ?? null,
+        partyArtName: partyArtRow?.name ?? "",
         jsonLd,
         breadcrumbJsonLd,
       };
+    }),
+
+  // Für die Landingpage-Lineup-Sektion (AGENTS.md item 7) — nächste Termine
+  // DACH-weit, unabhängig vom Land.
+  listUpcoming: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(24).default(6) }))
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db
+        .select({
+          slug: event.slug,
+          title: event.title,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          customColor: event.customColor,
+          country: bundeslandTable.country,
+          bundeslandName: bundeslandTable.name,
+          kreisName: kreis.name,
+          partyArtName: partyArt.name,
+        })
+        .from(event)
+        .innerJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+        .innerJoin(kreis, eq(event.kreisId, kreis.id))
+        .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
+        .where(
+          and(eq(event.status, "approved"), sql`${event.endDate} >= now()`),
+        )
+        .orderBy(event.startDate)
+        .limit(input.limit);
+
+      return rows.map((row) => ({
+        ...row,
+        startDate: row.startDate.toISOString(),
+        endDate: row.endDate.toISOString(),
+        eventUrl: row.slug ? buildEventUrl(row.country, row.slug) : null,
+      }));
     }),
 
   listInReview: moderatorProcedure.query(async ({ ctx }) =>
