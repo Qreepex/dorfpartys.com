@@ -1,9 +1,10 @@
 import type { UserRole } from '@dorfpartys/shared';
 
 /**
- * Mapping Authentik-Gruppen -> App-Rollen. Konkrete Gruppennamen sind ein
- * offener Punkt (AGENTS.md Abschnitt 10) und daher über ENV konfigurierbar,
- * mit sinnvollen Default-Namen.
+ * Mapping Authentik-Gruppen -> App-Rollen. Der JWT-"groups"-Claim enthält
+ * Gruppen-NAMEN (nicht die Authentik-Gruppen-IDs), siehe die "profile"-Scope-
+ * Mapping der Authentik-Instanz. Gruppennamen sind daher über ENV konfigurierbar
+ * (siehe .env.example), mit sinnvollen Default-Namen als Fallback.
  */
 export function mapAuthentikGroupsToRole(groups: string[]): UserRole {
 	const adminGroup = process.env.AUTHENTIK_ADMIN_GROUP ?? 'admin';

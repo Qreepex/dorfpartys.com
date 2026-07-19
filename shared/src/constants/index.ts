@@ -34,7 +34,19 @@ export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
 	{ slug: 'schuetzenfeste', name: 'Schützenfest' },
 	{ slug: 'zeltfeten', name: 'Zeltfete' },
 	{ slug: 'scheunenfeten', name: 'Scheunenfete' },
-	{ slug: 'stoppelfeten', name: 'Stoppelfete' }
+	{ slug: 'stoppelfeten', name: 'Stoppelfete' },
+	{ slug: 'dorffeste', name: 'Dorffest' },
+	{ slug: 'maifeste', name: 'Maifest' },
+	{ slug: 'weinfeste', name: 'Weinfest' },
+	{ slug: 'kirmes', name: 'Kirmes' },
+	{ slug: 'straßenfeste', name: 'Straßenfest' },
+	{ slug: 'osterfeuer', name: 'Osterfeuer' },
+	{ slug: 'oktoberfeste', name: 'Oktoberfest' },
+	{ slug: 'karneval', name: 'Karneval' },
+	{ slug: 'fasching', name: 'Fasching' },
+	{ slug: 'weihnachtsmarkt', name: 'Weihnachtsmarkt' },
+	{ slug: 'sportfeste', name: 'Sportfest' },
+	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfest' }
 ];
 
 export const SITE_URL = 'https://dorfpartys.com';

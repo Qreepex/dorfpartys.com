@@ -11,3 +11,4 @@
 - s3 dateien löschen
 - extremes caching in cloudflare auf speicher.dorfpartys.com
 - caching auf der event seite, wenn die user keine änderungen machen
+- wenn man sich registriert erstmalig, erstmal account anlegen

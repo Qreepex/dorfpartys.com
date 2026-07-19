@@ -8,9 +8,6 @@ production-ready, aber lokal/staging deploybar (AGENTS.md Abschnitt 9).
 ```bash
 kubectl apply -f namespace.yaml
 
-# Postgres (siehe postgres/README.md für Operator-Setup)
-kubectl apply -f postgres/cluster.yaml
-
 # Secrets: *.example.yaml kopieren -> secret.yaml, echte Werte eintragen,
 # dann anwenden (secret.yaml ist gitignored)
 cp backend/secret.example.yaml backend/secret.yaml

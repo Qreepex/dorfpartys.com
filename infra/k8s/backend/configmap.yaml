@@ -8,10 +8,13 @@ data:
   NODE_ENV: 'production'
   S3_ENDPOINT: 'https://speicher.dorfpartys.com'
   S3_REGION: 'eu-central-1'
-  # Konkrete Werte sind offene Punkte (AGENTS.md 10) und werden pro Umgebung
-  # (staging/prod) überschrieben.
-  AUTHENTIK_ISSUER: ''
-  AUTHENTIK_JWKS_URL: ''
-  AUTHENTIK_ADMIN_GROUP: 'admin'
-  AUTHENTIK_MODERATOR_GROUP: 'moderator'
+  AUTHENTIK_ISSUER: 'https://auth.dorfpartys.com/application/o/dorf-partys-com/'
+  AUTHENTIK_JWKS_URL: 'https://auth.dorfpartys.com/application/o/dorf-partys-com/jwks/'
+  # JWT "groups"-Claim enthält Gruppen-NAMEN (siehe backend/src/auth/roles.ts), nicht die
+  # Authentik-Gruppen-IDs. Gruppen: Dorfpartys.com - Admin (4e4f3f40-20ce-4492-b0d9-5e908597f3da),
+  # Dorfpartys.com - Moderator (182f4f89-8e94-435a-aaef-2c28cf0952b9).
+  AUTHENTIK_ADMIN_GROUP: 'Dorfpartys.com - Admin'
+  AUTHENTIK_MODERATOR_GROUP: 'Dorfpartys.com - Moderator'
+  # Konkrete Werte für S3_BUCKET sind noch offen (AGENTS.md 10) und werden pro
+  # Umgebung (staging/prod) überschrieben.
   S3_BUCKET: ''

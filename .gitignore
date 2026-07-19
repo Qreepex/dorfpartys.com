@@ -9,3 +9,5 @@ build/
 infra/k8s/**/secret.yaml
 infra/k8s/**/*.local.yaml
 infra/k8s/**/credentials.yaml
+
+certs/

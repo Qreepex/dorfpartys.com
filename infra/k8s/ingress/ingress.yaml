@@ -6,8 +6,6 @@ kind: Ingress
 metadata:
   name: dorfpartys
   namespace: dorfpartys
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
   tls:

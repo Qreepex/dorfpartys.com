@@ -58,6 +58,6 @@ Läuft auf einem selbstverwalteten Kubernetes-Cluster. Manifeste liegen in `/inf
 
 Technisches Fundament ist als Erstimplementierung durchgängig vorhanden: URL-Resolver (inkl. 301-Kanonisierung, gegen alle Beispiel-URLs aus AGENTS.md 1.2 getestet), Drizzle-Datenmodell + Migration + Seed, Authentik-JWT-Auth mit Rollen-Mapping, tRPC-Router für Events (Draft → Review → Approve/Reject inkl. Slug-Vergabe), Taxonomie, Profile und Uploads, SvelteKit-SSR-Routing mit dynamischem robots-Meta und JSON-LD, OIDC-Login-Flow, sowie K8s-Manifeste/Dockerfiles. Kein Design/Styling in dieser Phase.
 
-Verbleibende offene Punkte (u. a. vollständiger Kreis-Import, finale Party-Art-Liste, konkrete Authentik-Gruppennamen, Sitemap-Cache/Trigger) stehen in [`AGENTS.md` Abschnitt 10](./AGENTS.md#10-offene-punkte-vorwährend-implementierung-zu-klären).
+Verbleibende offene Punkte (u. a. vollständiger Kreis-Import, finale Party-Art-Liste, Sitemap-Cache/Trigger) stehen in [`AGENTS.md` Abschnitt 10](./AGENTS.md#10-offene-punkte-vorwährend-implementierung-zu-klären).
 
 Für alle Architektur-Entscheidungen, das vollständige Datenmodell und verbindliche Implementierungsregeln: [`AGENTS.md`](./AGENTS.md).

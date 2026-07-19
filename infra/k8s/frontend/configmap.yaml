@@ -9,5 +9,5 @@ data:
   # K8s-Service-DNS, nicht die öffentliche Domain (AGENTS.md Abschnitt 0).
   BACKEND_INTERNAL_URL: 'http://backend:3000'
   PUBLIC_SITE_URL: 'https://dorfpartys.com'
-  AUTHENTIK_ISSUER: ''
+  AUTHENTIK_ISSUER: 'https://auth.dorfpartys.com/application/o/dorf-partys-com/'
   AUTHENTIK_REDIRECT_URI: 'https://dorfpartys.com/auth/callback'
