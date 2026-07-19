@@ -43,17 +43,21 @@ cp .env.example .env
 
 docker compose up -d postgres     # nur Postgres lokal
 pnpm install                      # installiert alle Workspaces
-pnpm --filter backend db:migrate
-pnpm --filter backend db:seed     # Bundesland/Kreis-Stammdaten + Party-Arten
+pnpm db:migrate
+pnpm db:seed                      # Bundesland/Kreis-Stammdaten (DE/AT/CH) + Party-Arten
 pnpm dev                          # startet frontend + backend parallel
 ```
 
+Weitere Scripts: `pnpm check` (Typecheck aller Workspaces), `pnpm test` (Resolver-Unit-Tests im Backend), `pnpm build`.
+
 ## Deployment
 
-Läuft auf einem selbstverwalteten Kubernetes-Cluster. Manifeste liegen in `/infra/k8s` (separate Deployments für `frontend` und `backend`, gemeinsames Ingress, Postgres z. B. über einen Operator wie CloudNativePG). CI baut die Docker-Images für `frontend` und `backend` getrennt und rollt sie aus.
+Läuft auf einem selbstverwalteten Kubernetes-Cluster. Manifeste liegen in `/infra/k8s` (separate Deployments für `frontend` und `backend`, gemeinsames Ingress, Postgres über CloudNativePG — siehe `infra/k8s/README.md`). Dockerfiles für beide Apps liegen in `/infra/docker` (Repo-Root als Build-Kontext, wegen pnpm-Workspace). CI-Pipeline zum Bauen/Pushen der Images ist noch nicht Teil dieses Repos.
 
 ## Aktueller Stand
 
-Technisches Fundament in Aufbau: URL-Resolver, Datenmodell, Auth, Nutzerprofile, Review-Workflow, SEO-Grundgerüst. Kein Design/Styling in dieser Phase.
+Technisches Fundament ist als Erstimplementierung durchgängig vorhanden: URL-Resolver (inkl. 301-Kanonisierung, gegen alle Beispiel-URLs aus AGENTS.md 1.2 getestet), Drizzle-Datenmodell + Migration + Seed, Authentik-JWT-Auth mit Rollen-Mapping, tRPC-Router für Events (Draft → Review → Approve/Reject inkl. Slug-Vergabe), Taxonomie, Profile und Uploads, SvelteKit-SSR-Routing mit dynamischem robots-Meta und JSON-LD, OIDC-Login-Flow, sowie K8s-Manifeste/Dockerfiles. Kein Design/Styling in dieser Phase.
+
+Bekannte Lücken gegenüber dem aktuellen Stand von `AGENTS.md` (u. a. die S3-Key-Struktur aus 7.1 und das Feld `requires_muttizettel`) sind in [`AGENTS.md` Abschnitt 10](./AGENTS.md#10-offene-punkte-vorwährend-implementierung-zu-klären) aufgeführt.
 
 Für alle Architektur-Entscheidungen, das vollständige Datenmodell und verbindliche Implementierungsregeln: [`AGENTS.md`](./AGENTS.md).

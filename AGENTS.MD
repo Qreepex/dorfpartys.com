@@ -216,7 +216,7 @@ event (
   -- optionale Felder
   price_info,                      -- Freitext, z.B. "5€ VVK / 8€ AK", nullable
   min_age,                         -- int, nullable
-  allows_muttizettel,              -- boolean, nullable, default false
+  requires_muttizettel,            -- boolean, nullable, default false
   is_outdoor,                      -- boolean, nullable, default false
   tags,                            -- array, freeform
   custom_fields,                   -- jsonb, Catch-all für künftige Ad-hoc-Felder ohne Migration
@@ -276,7 +276,25 @@ Constraints/Validierung im Backend (nicht nur UI):
 ## 7. Domains & Storage
 
 - Hauptdomain: `dorfpartys.com` — Land als Pfadsegment, nicht als ccTLD.
+- Optional als Marketing-/Redirect-Domain: `dorf.party`.
+- Kurzlink-Domain für Event-Shares: `dp.gg`, z. B. `dp.gg/schuetzenfest-eutin`.
 - Objektspeicher: **IONOS S3** (S3-kompatible API) über `speicher.dorfpartys.com`, für Event-Fotos und Profilbilder. Backend spricht ausschließlich über presigned URLs mit dem Bucket — Zugangsdaten bleiben serverseitig.
+
+### 7.1 S3-Struktur
+
+Bucket ist **public-read** (Fotos sind ohnehin öffentlich sichtbar), aber **nicht public-write** — Uploads laufen ausschließlich über presigned PUT-URLs vom Backend.
+
+```
+events/{event_id}/{event_photo_id}.{ext}
+profiles/{user_id}/{avatar_id}.{ext}
+```
+
+- Key basiert auf `event_id` (UUID), **nicht** auf dem Slug — der Slug existiert erst nach Approval (siehe 1.7), Fotos werden aber schon beim Einreichen hochgeladen.
+- `event_photo_id`/`avatar_id` sind UUIDs → Pfade sind unerratbar, relevant weil auch Fotos von noch nicht freigeschalteten Events (`draft`/`in_review`) technisch unter ihrer URL abrufbar sind, sobald hochgeladen.
+- Bei jedem Foto-/Avatar-Austausch wird ein **neuer Key** erzeugt (kein Overwrite) → ermöglicht `Cache-Control: public, max-age=31536000, immutable`.
+- Presigned-URL-Erstellung im Backend validiert Content-Type (nur `image/jpeg`, `image/png`, `image/webp`) und Dateigröße, bevor die URL ausgestellt wird.
+- Beim Löschen/Ersetzen eines Fotos entfernt das Backend aktiv den alten S3-Key (keine verwaisten öffentlichen Dateien).
+- Öffentliche Lese-URL: `https://speicher.dorfpartys.com/{key}` — kein Signing nötig für GET.
 
 ## 8. Tech-Stack (verbindlich für diese Phase)
 
@@ -297,8 +315,17 @@ Constraints/Validierung im Backend (nicht nur UI):
 
 ## 10. Offene Punkte (vor/während Implementierung zu klären)
 
-- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames).
-- Finale Liste der Party-Arten festlegen (Startpunkt: Schützenfest, Zeltfete, Scheunenfete, Stoppelfete).
+- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Teilweise erledigt:** Seed-Skript (`backend/src/db/seed/`) legt alle 16 DE-Bundesländer, 9 AT-Bundesländer und 7 CH-Kantone plus je 1–3 Platzhalter-Kreise an — kein vollständiger Kreis-Import.
+- Finale Liste der Party-Arten festlegen (Startpunkt: Schützenfest, Zeltfete, Scheunenfete, Stoppelfete). **Startliste umgesetzt** (`shared/src/constants/index.ts` → `PARTY_ART_SEED`), finale Liste weiterhin offen.
 - Vollständige Liste optionaler Event-Felder über `custom_fields` hinaus abstimmen (aktuell: Preis, Altersbeschränkung/Muttizettel, Open Air als dedizierte Spalten).
-- Rollen-Mapping Authentik-Gruppen → App-Rollen (`user`/`moderator`/`admin`) konkret definieren.
-- Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung).
+- Rollen-Mapping Authentik-Gruppen → App-Rollen (`user`/`moderator`/`admin`) konkret definieren. **Mechanismus umgesetzt** (`backend/src/auth/roles.ts`, Gruppennamen über `AUTHENTIK_ADMIN_GROUP`/`AUTHENTIK_MODERATOR_GROUP` konfigurierbar), konkrete Gruppennamen in der echten Authentik-Instanz weiterhin offen.
+- Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung). **Aktuell:** on-demand, ohne Caching — jeder Aufruf von `/sitemap-*.xml` fragt live gegen die DB ab (`backend/src/seo/sitemap.ts`). Für Produktionslast ggf. Cronjob + Cache/S3-Ablage nachziehen.
+
+### Bekannter Implementierungsstand vs. aktueller Spezifikation
+
+Diese Punkte in AGENTS.md wurden nach oder während der Erstimplementierung ergänzt/geändert und sind im Code noch **nicht** nachgezogen:
+
+- **`requires_muttizettel`** (Abschnitt 2): Code verwendet noch den alten Namen `allows_muttizettel`/`allowsMuttizettel` durchgängig (Drizzle-Schema, Zod-Schema, Typen, Submit-Formular). Erfordert eine neue Migration bei Umbenennung.
+- **S3-Struktur** (Abschnitt 7.1): Aktuelle Implementierung (`backend/src/storage/presign.ts`) legt Keys unter `events/{ownerUserId}/{uuid}.{ext}` bzw. `profiles/{ownerUserId}/{uuid}.{ext}` ab (User-basiert), nicht `events/{event_id}/{event_photo_id}.{ext}`. Dateigrößen-Validierung vor Ausstellen der presigned URL sowie aktives Löschen alter S3-Keys beim Ersetzen eines Fotos sind ebenfalls noch nicht implementiert.
+- **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): An der Review-Entscheidung (`backend/src/routers/events.ts`, `review`-Mutation) fehlt noch der explizit geforderte Code-Kommentar/Marker als Ansatzpunkt für eine spätere Implementierung.
+- **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ ergänzt, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.
