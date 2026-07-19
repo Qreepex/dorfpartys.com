@@ -149,8 +149,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "requires_muttizettel": {
-          "name": "requires_muttizettel",
+        "allows_muttizettel": {
+          "name": "allows_muttizettel",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,

@@ -38,7 +38,7 @@ export const submitEventInputSchema = z
 
 		priceInfo: z.string().trim().max(200).optional(),
 		minAge: z.number().int().nonnegative().max(99).optional(),
-		requiresMuttizettel: z.boolean().optional(),
+		allowsMuttizettel: z.boolean().optional(),
 		isOutdoor: z.boolean().optional(),
 		tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
 		customFields: z.record(z.string(), z.unknown()).optional(),

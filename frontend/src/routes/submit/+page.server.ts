@@ -1,6 +1,6 @@
-import { fail } from '@sveltejs/kit';
-import { COUNTRIES, submitEventInputSchema } from '@dorfpartys/shared';
 import { requireUser } from '$lib/server/require-auth.js';
+import { COUNTRIES, submitEventInputSchema } from '@dorfpartys/shared';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -43,7 +43,7 @@ export const actions: Actions = {
 			customColor: formData.get('customColor') || undefined,
 			priceInfo: formData.get('priceInfo') || undefined,
 			minAge: minAgeRaw ? Number(minAgeRaw) : undefined,
-			requiresMuttizettel: formData.get('requiresMuttizettel') === 'on',
+			allowsMuttizettel: formData.get('allowsMuttizettel') === 'on',
 			isOutdoor: formData.get('isOutdoor') === 'on'
 		};
 

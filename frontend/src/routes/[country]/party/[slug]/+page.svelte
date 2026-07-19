@@ -30,7 +30,7 @@
 	{#if event.minAge}
 		<p>Mindestalter: {event.minAge}</p>
 	{/if}
-	{#if event.requiresMuttizettel}
+	{#if event.allowsMuttizettel}
 		<p>Muttizettel erforderlich</p>
 	{/if}
 	{#if event.isOutdoor}

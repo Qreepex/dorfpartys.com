@@ -5,7 +5,6 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
-	primaryKey,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -116,7 +115,7 @@ export const event = pgTable('event', {
 
 	priceInfo: text('price_info'),
 	minAge: integer('min_age'),
-	requiresMuttizettel: boolean('requires_muttizettel').default(false),
+	allowsMuttizettel: boolean('allows_muttizettel').default(false),
 	isOutdoor: boolean('is_outdoor').default(false),
 	tags: text('tags').array().notNull().default([]),
 	customFields: jsonb('custom_fields').notNull().default({}),

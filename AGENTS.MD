@@ -216,7 +216,7 @@ event (
   -- optionale Felder
   price_info,                      -- Freitext, z.B. "5€ VVK / 8€ AK", nullable
   min_age,                         -- int, nullable
-  requires_muttizettel,            -- boolean, nullable, default false
+  allows_muttizettel,            -- boolean, nullable, default false
   is_outdoor,                      -- boolean, nullable, default false
   tags,                            -- array, freeform
   custom_fields,                   -- jsonb, Catch-all für künftige Ad-hoc-Felder ohne Migration
@@ -323,7 +323,7 @@ profiles/{user_id}/{avatar_id}.{ext}
 
 ### Bekannter Implementierungsstand vs. aktueller Spezifikation
 
-- **`requires_muttizettel`** (Abschnitt 2): umgesetzt (Drizzle-Schema/Migration, Zod-Schema, Typen, Submit-/Detailseite). Migrationshistorie wurde dabei auf eine einzige saubere Erstmigration zurückgesetzt, da noch kein echtes Deployment mit Daten existiert.
+- **`allows_muttizettel`** (Abschnitt 2): umgesetzt (Drizzle-Schema/Migration, Zod-Schema, Typen, Submit-/Detailseite). Migrationshistorie wurde dabei auf eine einzige saubere Erstmigration zurückgesetzt, da noch kein echtes Deployment mit Daten existiert.
 - **S3-Struktur** (Abschnitt 7.1): umgesetzt — `events/{event_id}/{event_photo_id}.{ext}` bzw. `profiles/{user_id}/{avatar_id}.{ext}` (`backend/src/storage/presign.ts`), Dateigrößen-Validierung (Server-seitiger Grenzwert-Check auf den vom Client angegebenen Wert — SigV4-presignte PUT-URLs erzwingen keine Content-Length-Range kryptographisch) sowie aktives Löschen alter S3-Keys beim Ersetzen eines Event-Fotos/Avatars (`backend/src/storage/delete.ts`). Die Event-ID wird dafür vom Client vor `events.create` generiert (`submitEventInputSchema.id`) — ein clientseitiges Upload-Widget (Datei-Picker + presigned PUT) ist noch **nicht** gebaut, nur die Backend-Endpunkte (`uploads.requestEventPhotoUploadUrl`/`requestAvatarUploadUrl`).
 - **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): Kommentar an beiden Review-Entscheidungen ergänzt (`backend/src/routers/events.ts`, `review`-Mutation).
 - **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.

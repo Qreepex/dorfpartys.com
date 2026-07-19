@@ -1,6 +1,3 @@
-import { TRPCError } from '@trpc/server';
-import { and, desc, eq } from 'drizzle-orm';
-import { z } from 'zod';
 import {
 	COUNTRIES,
 	buildCountryRootUrl,
@@ -9,12 +6,15 @@ import {
 	submitEventInputSchema,
 	updateEventInputSchema
 } from '@dorfpartys/shared';
+import { TRPCError } from '@trpc/server';
+import { and, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
+import type { Database } from '../db/index.js';
 import { event, eventLink, eventPhoto, kreis, userProfile } from '../db/schema.js';
-import { generateUniqueEventSlug } from '../slug/index.js';
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from '../seo/index.js';
+import { generateUniqueEventSlug } from '../slug/index.js';
 import { buildPublicStorageUrl, deleteS3Object } from '../storage/index.js';
 import { moderatorProcedure, protectedProcedure, publicProcedure, router } from '../trpc/trpc.js';
-import type { Database } from '../db/index.js';
 
 async function assertKreisBelongsToBundesland(
 	db: Database,
@@ -91,7 +91,7 @@ export const eventsRouter = router({
 				...(input.customColor ? { customColor: input.customColor } : {}),
 				priceInfo: input.priceInfo ?? null,
 				minAge: input.minAge ?? null,
-				requiresMuttizettel: input.requiresMuttizettel ?? false,
+				allowsMuttizettel: input.allowsMuttizettel ?? false,
 				isOutdoor: input.isOutdoor ?? false,
 				tags: input.tags ?? [],
 				customFields: input.customFields ?? {},
@@ -135,7 +135,7 @@ export const eventsRouter = router({
 				...(input.customColor ? { customColor: input.customColor } : {}),
 				priceInfo: input.priceInfo ?? null,
 				minAge: input.minAge ?? null,
-				requiresMuttizettel: input.requiresMuttizettel ?? false,
+				allowsMuttizettel: input.allowsMuttizettel ?? false,
 				isOutdoor: input.isOutdoor ?? false,
 				tags: input.tags ?? [],
 				customFields: input.customFields ?? {},
