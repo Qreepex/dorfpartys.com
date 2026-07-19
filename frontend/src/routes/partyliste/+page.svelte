@@ -41,7 +41,7 @@
 
 <style>
 	.lead {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin-bottom: 32px;
 	}
 
@@ -57,7 +57,7 @@
 		flex: 0 0 auto;
 		background: none;
 		border: 1px solid var(--color-border);
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.78rem;
 		padding: 6px 10px;
 		cursor: pointer;

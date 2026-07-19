@@ -1,566 +1,632 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>dorfpartys.com – Finde Dorfpartys in deiner Nähe</title>
+    <meta
+      name="description"
+      content="Schützenfeste, Zeltfeten, Scheunenfeten und mehr im DACH-Raum finden – nach Bundesland, Kreis, Art und Monat."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Brandfarben – bleiben in Dark & Light identisch */
+        --color-primary: #39e67a;
+        /* sattes Neon-Wiesengrün */
+        --color-secondary: #ff4b3e;
+        /* kräftiges Flare-Rot */
+        --color-accent-gold: #ffc93d;
+        /* Lichterketten-Gold, sparsamer Tertiär-Akzent */
+        --color-ink: #0a0b09;
+        /* fixer dunkler Text auf Brandfarben-Flächen, themenunabhängig */
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>dorfpartys.com – Finde Dorfpartys in deiner Nähe</title>
-  <meta name="description"
-    content="Schützenfeste, Zeltfeten, Scheunenfeten und mehr im DACH-Raum finden – nach Bundesland, Kreis, Art und Monat.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      /* Brandfarben – bleiben in Dark & Light identisch */
-      --color-primary: #39E67A;
-      /* sattes Neon-Wiesengrün */
-      --color-secondary: #FF4B3E;
-      /* kräftiges Flare-Rot */
-      --color-accent-gold: #FFC93D;
-      /* Lichterketten-Gold, sparsamer Tertiär-Akzent */
-      --color-ink: #0A0B09;
-      /* fixer dunkler Text auf Brandfarben-Flächen, themenunabhängig */
-
-      /* Theme: Dark (Standard) */
-      --color-bg: #0A0B09;
-      --color-bg-alt: #16180F;
-      --color-text: #FAFAF5;
-      --color-text-muted: #9C9C90;
-      --color-border: #26281E;
-    }
-
-    :root[data-theme="light"] {
-      --color-bg: #FAF9F4;
-      --color-bg-alt: #F1EFE6;
-      --color-text: #14150F;
-      --color-text-muted: #6B6B60;
-      --color-border: #DEDBCB;
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root:not([data-theme="dark"]):not([data-theme="light"]) {
-        --color-bg: #FAF9F4;
-        --color-bg-alt: #F1EFE6;
-        --color-text: #14150F;
-        --color-text-muted: #6B6B60;
-        --color-border: #DEDBCB;
+        /* Theme: Dark (Standard) */
+        --color-bg: #0a0b09;
+        --color-bg-alt: #16180f;
+        --color-text: #fafaf5;
+        --color-text-muted: #9c9c90;
+        --color-border: #26281e;
       }
-    }
 
-    * {
-      box-sizing: border-box;
-    }
+      :root[data-theme="light"] {
+        --color-bg: #faf9f4;
+        --color-bg-alt: #f1efe6;
+        --color-text: #14150f;
+        --color-text-muted: #6b6b60;
+        --color-border: #dedbcb;
+      }
 
-    html {
-      -webkit-text-size-adjust: 100%;
-    }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]):not([data-theme="light"]) {
+          --color-bg: #faf9f4;
+          --color-bg-alt: #f1efe6;
+          --color-text: #14150f;
+          --color-text-muted: #6b6b60;
+          --color-border: #dedbcb;
+        }
+      }
 
-    body {
-      margin: 0;
-      overflow-x: hidden;
-      background:
-        radial-gradient(1px 1px at 10% 20%, rgba(250, 250, 245, .3) 50%, transparent 51%),
-        radial-gradient(1px 1px at 80% 10%, rgba(250, 250, 245, .2) 50%, transparent 51%),
-        radial-gradient(1.5px 1.5px at 60% 70%, rgba(250, 250, 245, .25) 50%, transparent 51%),
-        radial-gradient(1px 1px at 30% 85%, rgba(250, 250, 245, .18) 50%, transparent 51%),
-        radial-gradient(1px 1px at 45% 40%, rgba(250, 250, 245, .22) 50%, transparent 51%),
-        var(--color-bg);
-      background-repeat: repeat;
-      background-size: 400px 400px;
-      color: var(--color-text);
-      font-family: 'Inter', system-ui, sans-serif;
-      line-height: 1.5;
-      transition: background-color .2s, color .2s;
-    }
+      * {
+        box-sizing: border-box;
+      }
 
-    :root[data-theme="light"] body {
-      background: var(--color-bg);
-    }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
 
-    @media (prefers-color-scheme: light) {
-      :root:not([data-theme="dark"]) body {
+      body {
+        margin: 0;
+        overflow-x: hidden;
+        background:
+          radial-gradient(
+            1px 1px at 10% 20%,
+            rgba(250, 250, 245, 0.3) 50%,
+            transparent 51%
+          ),
+          radial-gradient(
+            1px 1px at 80% 10%,
+            rgba(250, 250, 245, 0.2) 50%,
+            transparent 51%
+          ),
+          radial-gradient(
+            1.5px 1.5px at 60% 70%,
+            rgba(250, 250, 245, 0.25) 50%,
+            transparent 51%
+          ),
+          radial-gradient(
+            1px 1px at 30% 85%,
+            rgba(250, 250, 245, 0.18) 50%,
+            transparent 51%
+          ),
+          radial-gradient(
+            1px 1px at 45% 40%,
+            rgba(250, 250, 245, 0.22) 50%,
+            transparent 51%
+          ),
+          var(--color-bg);
+        background-repeat: repeat;
+        background-size: 400px 400px;
+        color: var(--color-text);
+        font-family: "Inter", system-ui, sans-serif;
+        line-height: 1.5;
+        transition:
+          background-color 0.2s,
+          color 0.2s;
+      }
+
+      :root[data-theme="light"] body {
         background: var(--color-bg);
       }
-    }
 
-    h1,
-    h2,
-    h3 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-weight: 900;
-      letter-spacing: -0.01em;
-      margin: 0 0 .4em;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    .wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    /* Header */
-    header {
-      padding: 20px 0;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    header .wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
-    .brand svg {
-      filter: drop-shadow(0 0 6px var(--color-primary));
-    }
-
-    .brand span {
-      font-family: 'Fraunces', serif;
-      font-weight: 900;
-      font-size: 1.3rem;
-      letter-spacing: -0.02em;
-    }
-
-    .brand span em {
-      font-style: normal;
-      color: var(--color-text-muted);
-      font-weight: 400;
-      font-size: .85em;
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      font-size: .9rem;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: var(--color-text-muted);
-    }
-
-    nav a.cta {
-      color: var(--color-ink);
-      background: var(--color-primary);
-      padding: 8px 16px;
-      font-weight: 700;
-      border-radius: 3px;
-      box-shadow: 0 0 18px rgba(57, 230, 122, .4);
-    }
-
-    .theme-toggle {
-      background: none;
-      border: 1px solid var(--color-border);
-      color: var(--color-text);
-      width: 34px;
-      height: 34px;
-      border-radius: 3px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .theme-toggle .icon-moon {
-      display: none;
-    }
-
-    :root[data-theme="light"] .theme-toggle .icon-sun {
-      display: none;
-    }
-
-    :root[data-theme="light"] .theme-toggle .icon-moon {
-      display: block;
-    }
-
-    /* Hero */
-    .hero {
-      position: relative;
-      padding: 64px 0 40px;
-    }
-
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: -60px;
-      left: -80px;
-      width: 380px;
-      height: 380px;
-      background: radial-gradient(circle, rgba(57, 230, 122, .35), transparent 70%);
-      filter: blur(6px);
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    :root[data-theme="light"] .hero::before {
-      opacity: .4;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.2rem, 6vw, 4rem);
-      line-height: 1.05;
-    }
-
-    .hero h1 .accent {
-      background: var(--color-primary);
-      color: var(--color-ink);
-      padding: 0 .18em;
-      box-decoration-break: clone;
-      -webkit-box-decoration-break: clone;
-    }
-
-    .hero p.lead {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      color: var(--color-text-muted);
-      max-width: 46ch;
-      margin: 0 0 32px;
-    }
-
-    /* Suche – bewusst keine runde Pill-/Card-Suchleiste */
-    form.search {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0;
-      border: 1px solid var(--color-border);
-      background: var(--color-bg-alt);
-    }
-
-    form.search .field {
-      flex: 1 1 140px;
-      padding: 14px 16px;
-      border-right: 1px solid var(--color-border);
-    }
-
-    form.search .field:last-of-type {
-      border-right: none;
-    }
-
-    form.search label {
-      display: block;
-      font-size: .7rem;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--color-text-muted);
-      margin-bottom: 4px;
-    }
-
-    form.search select,
-    form.search input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--color-text);
-      font-family: 'Inter';
-      font-size: .95rem;
-      padding: 0;
-      appearance: none;
-    }
-
-    form.search select:focus,
-    form.search input:focus {
-      outline: none;
-    }
-
-    form.search button {
-      flex: 1 1 100%;
-      border: none;
-      background: var(--color-primary);
-      color: var(--color-ink);
-      font-weight: 700;
-      font-size: .95rem;
-      padding: 16px;
-      cursor: pointer;
-    }
-
-    @media(min-width:640px) {
-      form.search button {
-        flex: 0 0 auto;
-        padding: 0 28px;
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) body {
+          background: var(--color-bg);
+        }
       }
-    }
 
-    /* Lichterketten-Divider – wiederkehrendes Markenelement */
-    .lights {
-      display: block;
-      width: 100%;
-      height: 44px;
-      margin: 48px 0 8px;
-    }
+      h1,
+      h2,
+      h3 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin: 0 0 0.4em;
+      }
 
-    .lights .bulb-primary {
-      filter: drop-shadow(0 0 5px var(--color-primary));
-    }
+      a {
+        color: inherit;
+      }
 
-    .lights .bulb-secondary {
-      filter: drop-shadow(0 0 5px var(--color-secondary));
-    }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
 
-    /* Lineup – Liste statt Cards/Badges */
-    .lineup h2 {
-      font-size: 1.6rem;
-      margin-bottom: 6px;
-    }
+      /* Header */
+      header {
+        padding: 20px 0;
+        border-bottom: 1px solid var(--color-border);
+      }
 
-    .lineup .sub {
-      color: var(--color-text-muted);
-      font-size: .9rem;
-      margin-bottom: 24px;
-    }
+      header .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
 
-    ul.events {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+      }
 
-    .event-row {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 20px 0;
-      border-top: 1px solid var(--color-border);
-    }
+      .brand svg {
+        filter: drop-shadow(0 0 6px var(--color-primary));
+      }
 
-    .event-row:last-child {
-      border-bottom: 1px solid var(--color-border);
-    }
+      .brand span {
+        font-family: "Fraunces", serif;
+        font-weight: 900;
+        font-size: 1.3rem;
+        letter-spacing: -0.02em;
+      }
 
-    .event-date {
-      font-family: 'Fraunces', serif;
-      font-weight: 700;
-      font-size: 1.3rem;
-      line-height: 1;
-      color: var(--color-ink);
-      background: var(--color-primary);
-      flex: 0 0 52px;
-      text-align: center;
-      padding: 8px 4px;
-    }
+      .brand span em {
+        font-style: normal;
+        color: var(--color-text-muted);
+        font-weight: 400;
+        font-size: 0.85em;
+      }
 
-    .event-date small {
-      display: block;
-      font-family: 'Inter';
-      font-weight: 700;
-      font-size: .6rem;
-      letter-spacing: .1em;
-      color: var(--color-ink);
-      opacity: .75;
-      margin-top: 4px;
-    }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 0.9rem;
+      }
 
-    .event-info {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
+      nav a {
+        text-decoration: none;
+        color: var(--color-text-muted);
+      }
 
-    .event-title {
-      font-weight: 600;
-      font-size: 1.05rem;
-      display: block;
-    }
+      nav a.cta {
+        color: var(--color-ink);
+        background: var(--color-primary);
+        padding: 8px 16px;
+        font-weight: 700;
+        border-radius: 3px;
+        box-shadow: 0 0 18px rgba(57, 230, 122, 0.4);
+      }
 
-    .event-meta {
-      color: var(--color-text-muted);
-      font-size: .85rem;
-    }
+      .theme-toggle {
+        background: none;
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        width: 34px;
+        height: 34px;
+        border-radius: 3px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .event-tag {
-      flex: 0 0 auto;
-      font-size: .72rem;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      border-left: 2px solid var(--color-secondary);
-      padding-left: 8px;
-      color: var(--color-text-muted);
-      display: none;
-    }
+      .theme-toggle .icon-moon {
+        display: none;
+      }
 
-    @media(min-width:560px) {
-      .event-tag {
+      :root[data-theme="light"] .theme-toggle .icon-sun {
+        display: none;
+      }
+
+      :root[data-theme="light"] .theme-toggle .icon-moon {
         display: block;
       }
-    }
 
-    footer {
-      margin-top: 64px;
-      padding: 32px 0 48px;
-      border-top: 1px solid var(--color-border);
-      color: var(--color-text-muted);
-      font-size: .85rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: space-between;
-    }
+      /* Hero */
+      .hero {
+        position: relative;
+        padding: 64px 0 40px;
+      }
 
-    footer a {
-      color: var(--color-text-muted);
-      text-decoration: none;
-    }
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        left: -80px;
+        width: 380px;
+        height: 380px;
+        background: radial-gradient(
+          circle,
+          rgba(57, 230, 122, 0.35),
+          transparent 70%
+        );
+        filter: blur(6px);
+        z-index: -1;
+        pointer-events: none;
+      }
 
-    footer a:hover {
-      color: var(--color-primary);
-    }
-  </style>
-</head>
+      :root[data-theme="light"] .hero::before {
+        opacity: 0.4;
+      }
 
-<body>
+      .hero h1 {
+        font-size: clamp(2.2rem, 6vw, 4rem);
+        line-height: 1.05;
+      }
 
-  <header>
-    <div class="wrap">
-      <a class="brand" href="/">
-        <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 0 C12 6 14 10 20 12 C14 14 12 18 12 24 C12 18 10 14 4 12 C10 10 12 6 12 0 Z"
-            fill="var(--color-primary)" />
-        </svg>
-        <span>dorfpartys<em>.com</em></span>
-      </a>
-      <nav>
-        <a href="#">Einreichen</a>
-        <a href="#">Login</a>
-        <a class="cta" href="#">Event eintragen</a>
-        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Theme wechseln">
-          <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="4" />
+      .hero h1 .accent {
+        background: var(--color-primary);
+        color: var(--color-ink);
+        padding: 0 0.18em;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+      }
+
+      .hero p.lead {
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        color: var(--color-text-muted);
+        max-width: 46ch;
+        margin: 0 0 32px;
+      }
+
+      /* Suche – bewusst keine runde Pill-/Card-Suchleiste */
+      form.search {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-alt);
+      }
+
+      form.search .field {
+        flex: 1 1 140px;
+        padding: 14px 16px;
+        border-right: 1px solid var(--color-border);
+      }
+
+      form.search .field:last-of-type {
+        border-right: none;
+      }
+
+      form.search label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-text-muted);
+        margin-bottom: 4px;
+      }
+
+      form.search select,
+      form.search input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--color-text);
+        font-family: "Inter";
+        font-size: 0.95rem;
+        padding: 0;
+        appearance: none;
+      }
+
+      form.search select:focus,
+      form.search input:focus {
+        outline: none;
+      }
+
+      form.search button {
+        flex: 1 1 100%;
+        border: none;
+        background: var(--color-primary);
+        color: var(--color-ink);
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 16px;
+        cursor: pointer;
+      }
+
+      @media (min-width: 640px) {
+        form.search button {
+          flex: 0 0 auto;
+          padding: 0 28px;
+        }
+      }
+
+      /* Lichterketten-Divider – wiederkehrendes Markenelement */
+      .lights {
+        display: block;
+        width: 100%;
+        height: 44px;
+        margin: 48px 0 8px;
+      }
+
+      .lights .bulb-primary {
+        filter: drop-shadow(0 0 5px var(--color-primary));
+      }
+
+      .lights .bulb-secondary {
+        filter: drop-shadow(0 0 5px var(--color-secondary));
+      }
+
+      /* Lineup – Liste statt Cards/Badges */
+      .lineup h2 {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+      }
+
+      .lineup .sub {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+      }
+
+      ul.events {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .event-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 0;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .event-row:last-child {
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .event-date {
+        font-family: "Fraunces", serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        line-height: 1;
+        color: var(--color-ink);
+        background: var(--color-primary);
+        flex: 0 0 52px;
+        text-align: center;
+        padding: 8px 4px;
+      }
+
+      .event-date small {
+        display: block;
+        font-family: "Inter";
+        font-weight: 700;
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        color: var(--color-ink);
+        opacity: 0.75;
+        margin-top: 4px;
+      }
+
+      .event-info {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .event-title {
+        font-weight: 600;
+        font-size: 1.05rem;
+        display: block;
+      }
+
+      .event-meta {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+      }
+
+      .event-tag {
+        flex: 0 0 auto;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-left: 2px solid var(--color-secondary);
+        padding-left: 8px;
+        color: var(--color-text-muted);
+        display: none;
+      }
+
+      @media (min-width: 560px) {
+        .event-tag {
+          display: block;
+        }
+      }
+
+      footer {
+        margin-top: 64px;
+        padding: 32px 0 48px;
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: space-between;
+      }
+
+      footer a {
+        color: var(--color-text-muted);
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        color: var(--color-primary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="wrap">
+        <a class="brand" href="/">
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
             <path
-              d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              d="M12 0 C12 6 14 10 20 12 C14 14 12 18 12 24 C12 18 10 14 4 12 C10 10 12 6 12 0 Z"
+              fill="var(--color-primary)"
+            />
           </svg>
-          <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
-          </svg>
-        </button>
-      </nav>
-    </div>
-  </header>
+          <span>dorfpartys<em>.com</em></span>
+        </a>
+        <nav>
+          <a href="#">Einreichen</a>
+          <a href="#">Login</a>
+          <a class="cta" href="#">Event eintragen</a>
+          <button
+            id="themeToggle"
+            class="theme-toggle"
+            type="button"
+            aria-label="Theme wechseln"
+          >
+            <svg
+              class="icon-sun"
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+              />
+            </svg>
+            <svg
+              class="icon-moon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
 
-  <main class="wrap">
+    <main class="wrap">
+      <section class="hero">
+        <h1>Wo geht’s<br />diesen Sommer <span class="accent">ab?</span></h1>
+        <p class="lead">
+          Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im ganzen
+          DACH-Raum – filterbar nach Bundesland, Kreis, Art und Monat.
+        </p>
 
-    <section class="hero">
-      <h1>Wo geht’s<br>diesen Sommer <span class="accent">ab?</span></h1>
-      <p class="lead">Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im ganzen DACH-Raum – filterbar nach
-        Bundesland, Kreis, Art und Monat.</p>
+        <form class="search">
+          <div class="field">
+            <label for="bundesland">Bundesland</label>
+            <select id="bundesland">
+              <option>Alle</option>
+              <option>Schleswig-Holstein</option>
+              <option>Bayern</option>
+              <option>Niedersachsen</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="art">Art</label>
+            <select id="art">
+              <option>Alle</option>
+              <option>Schützenfest</option>
+              <option>Zeltfete</option>
+              <option>Scheunenfete</option>
+              <option>Stoppelfete</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="monat">Monat</label>
+            <select id="monat">
+              <option>Alle</option>
+              <option>August</option>
+              <option>September</option>
+            </select>
+          </div>
+          <button type="submit">Suchen</button>
+        </form>
+      </section>
 
-      <form class="search">
-        <div class="field">
-          <label for="bundesland">Bundesland</label>
-          <select id="bundesland">
-            <option>Alle</option>
-            <option>Schleswig-Holstein</option>
-            <option>Bayern</option>
-            <option>Niedersachsen</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="art">Art</label>
-          <select id="art">
-            <option>Alle</option>
-            <option>Schützenfest</option>
-            <option>Zeltfete</option>
-            <option>Scheunenfete</option>
-            <option>Stoppelfete</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="monat">Monat</label>
-          <select id="monat">
-            <option>Alle</option>
-            <option>August</option>
-            <option>September</option>
-          </select>
-        </div>
-        <button type="submit">Suchen</button>
-      </form>
-    </section>
+      <svg
+        class="lights"
+        viewBox="0 0 800 60"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,10 C100,50 200,-10 300,30 C400,60 500,0 600,30 C700,50 750,10 800,25"
+          fill="none"
+          stroke="var(--color-border)"
+          stroke-width="1.5"
+        />
+        <circle class="bulb-primary" cx="40" cy="18" r="5" fill="#39E67A" />
+        <circle class="bulb-secondary" cx="160" cy="35" r="5" fill="#FF4B3E" />
+        <circle class="bulb-primary" cx="280" cy="10" r="5" fill="#39E67A" />
+        <circle class="bulb-primary" cx="400" cy="45" r="5" fill="#39E67A" />
+        <circle class="bulb-secondary" cx="520" cy="15" r="5" fill="#FF4B3E" />
+        <circle class="bulb-primary" cx="640" cy="35" r="5" fill="#39E67A" />
+        <circle class="bulb-primary" cx="760" cy="18" r="5" fill="#39E67A" />
+      </svg>
 
-    <svg class="lights" viewBox="0 0 800 60" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0,10 C100,50 200,-10 300,30 C400,60 500,0 600,30 C700,50 750,10 800,25" fill="none"
-        stroke="var(--color-border)" stroke-width="1.5" />
-      <circle class="bulb-primary" cx="40" cy="18" r="5" fill="#39E67A" />
-      <circle class="bulb-secondary" cx="160" cy="35" r="5" fill="#FF4B3E" />
-      <circle class="bulb-primary" cx="280" cy="10" r="5" fill="#39E67A" />
-      <circle class="bulb-primary" cx="400" cy="45" r="5" fill="#39E67A" />
-      <circle class="bulb-secondary" cx="520" cy="15" r="5" fill="#FF4B3E" />
-      <circle class="bulb-primary" cx="640" cy="35" r="5" fill="#39E67A" />
-      <circle class="bulb-primary" cx="760" cy="18" r="5" fill="#39E67A" />
-    </svg>
+      <section class="lineup">
+        <h2>Nächste Partys</h2>
+        <p class="sub">4 von 312 Veranstaltungen</p>
 
-    <section class="lineup">
-      <h2>Nächste Partys</h2>
-      <p class="sub">4 von 312 Veranstaltungen</p>
+        <ul class="events">
+          <li class="event-row">
+            <span class="event-date">17<small>AUG</small></span>
+            <span class="event-info">
+              <span class="event-title">Schützenfest Steinhorst</span>
+              <span class="event-meta">Ostholstein · Schleswig-Holstein</span>
+            </span>
+            <span class="event-tag">Schützenfest</span>
+          </li>
+          <li class="event-row">
+            <span class="event-date">22<small>AUG</small></span>
+            <span class="event-info">
+              <span class="event-title">Zeltfete am Deich</span>
+              <span class="event-meta">Nordfriesland · Schleswig-Holstein</span>
+            </span>
+            <span class="event-tag">Zeltfete</span>
+          </li>
+          <li class="event-row">
+            <span class="event-date">05<small>SEP</small></span>
+            <span class="event-info">
+              <span class="event-title">Scheunenfete Hofgut Bergmann</span>
+              <span class="event-meta">Rosenheim · Bayern</span>
+            </span>
+            <span class="event-tag">Scheunenfete</span>
+          </li>
+          <li class="event-row">
+            <span class="event-date">12<small>SEP</small></span>
+            <span class="event-info">
+              <span class="event-title">Stoppelfete Wiesenhof</span>
+              <span class="event-meta">Segeberg · Schleswig-Holstein</span>
+            </span>
+            <span class="event-tag">Stoppelfete</span>
+          </li>
+        </ul>
+      </section>
+    </main>
 
-      <ul class="events">
-        <li class="event-row">
-          <span class="event-date">17<small>AUG</small></span>
-          <span class="event-info">
-            <span class="event-title">Schützenfest Steinhorst</span>
-            <span class="event-meta">Ostholstein · Schleswig-Holstein</span>
-          </span>
-          <span class="event-tag">Schützenfest</span>
-        </li>
-        <li class="event-row">
-          <span class="event-date">22<small>AUG</small></span>
-          <span class="event-info">
-            <span class="event-title">Zeltfete am Deich</span>
-            <span class="event-meta">Nordfriesland · Schleswig-Holstein</span>
-          </span>
-          <span class="event-tag">Zeltfete</span>
-        </li>
-        <li class="event-row">
-          <span class="event-date">05<small>SEP</small></span>
-          <span class="event-info">
-            <span class="event-title">Scheunenfete Hofgut Bergmann</span>
-            <span class="event-meta">Rosenheim · Bayern</span>
-          </span>
-          <span class="event-tag">Scheunenfete</span>
-        </li>
-        <li class="event-row">
-          <span class="event-date">12<small>SEP</small></span>
-          <span class="event-info">
-            <span class="event-title">Stoppelfete Wiesenhof</span>
-            <span class="event-meta">Segeberg · Schleswig-Holstein</span>
-          </span>
-          <span class="event-tag">Stoppelfete</span>
-        </li>
-      </ul>
-    </section>
+    <footer class="wrap">
+      <span>© 2026 dorfpartys.com</span>
+      <span
+        ><a
+          href="https://instagram.com/dorfpartys"
+          target="_blank"
+          rel="noopener"
+          >@dorfpartys</a
+        ></span
+      >
+      <span><a href="#">Impressum</a> · <a href="#">Datenschutz</a></span>
+    </footer>
 
-  </main>
-
-  <footer class="wrap">
-    <span>© 2026 dorfpartys.com</span>
-    <span><a href="https://instagram.com/dorfpartys" target="_blank" rel="noopener">@dorfpartys</a></span>
-    <span><a href="#">Impressum</a> · <a href="#">Datenschutz</a></span>
-  </footer>
-
-  <script>
-    (function () {
-      var root = document.documentElement;
-      var btn = document.getElementById('themeToggle');
-      btn.addEventListener('click', function () {
-        var current = root.getAttribute('data-theme');
-        var isLight = current === 'light' || (!current && window.matchMedia('(prefers-color-scheme: light)').matches);
-        root.setAttribute('data-theme', isLight ? 'dark' : 'light');
-      });
-    })();
-  </script>
-
-</body>
-
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var btn = document.getElementById("themeToggle");
+        btn.addEventListener("click", function () {
+          var current = root.getAttribute("data-theme");
+          var isLight =
+            current === "light" ||
+            (!current &&
+              window.matchMedia("(prefers-color-scheme: light)").matches);
+          root.setAttribute("data-theme", isLight ? "dark" : "light");
+        });
+      })();
+    </script>
+  </body>
 </html>

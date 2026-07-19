@@ -33,12 +33,12 @@
 		flex-wrap: wrap;
 		gap: 12px;
 		justify-content: space-between;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.85rem;
 	}
 
 	.footer-inner a {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		text-decoration: none;
 	}
 

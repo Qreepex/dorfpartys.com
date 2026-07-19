@@ -53,7 +53,7 @@
 	.notice {
 		border-left: 3px solid var(--color-secondary);
 		padding-left: 12px;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.9rem;
 	}
 	.legal h2 {

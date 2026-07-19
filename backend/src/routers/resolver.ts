@@ -36,7 +36,10 @@ async function resolveNamesForFilters(
         .where(eq(bundesland.slug, filters.bundeslandSlug))
     : [undefined];
   const [kreisRow] = filters.kreisSlug
-    ? await db.select({ name: kreis.name }).from(kreis).where(eq(kreis.slug, filters.kreisSlug))
+    ? await db
+        .select({ name: kreis.name })
+        .from(kreis)
+        .where(eq(kreis.slug, filters.kreisSlug))
     : [undefined];
   const [artRow] = filters.artSlug
     ? await db
@@ -45,7 +48,8 @@ async function resolveNamesForFilters(
         .where(eq(partyArt.slug, filters.artSlug))
     : [undefined];
   const monat = filters.monatSlug
-    ? (MONTHS.find((m) => m.slug === filters.monatSlug)?.name ?? filters.monatSlug)
+    ? (MONTHS.find((m) => m.slug === filters.monatSlug)?.name ??
+      filters.monatSlug)
     : null;
 
   return {
@@ -122,7 +126,11 @@ export const resolverRouter = router({
         return outcome;
       }
 
-      const names = await resolveNamesForFilters(ctx.db, input.country, outcome.filters);
+      const names = await resolveNamesForFilters(
+        ctx.db,
+        input.country,
+        outcome.filters,
+      );
       const seo = buildSearchSeoCopy({
         country: input.country,
         bundeslandName: names.bundeslandName,

@@ -5,7 +5,15 @@ import {
   updateProfileInputSchema,
   type UpdateProfileInput,
 } from "@dorfpartys/shared";
-import { bundesland, event, kreis, partyArt, user, userLink, userProfile } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  kreis,
+  partyArt,
+  user,
+  userLink,
+  userProfile,
+} from "../db/schema.js";
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
@@ -28,7 +36,10 @@ async function upsertProfile(
       .where(eq(userProfile.userId, userId));
     // Alter Avatar-Key wird aktiv aus S3 entfernt — keine verwaisten
     // öffentlichen Dateien (AGENTS.md 7.1).
-    if (existing?.avatarS3Key && existing.avatarS3Key !== profileFields.avatarS3Key) {
+    if (
+      existing?.avatarS3Key &&
+      existing.avatarS3Key !== profileFields.avatarS3Key
+    ) {
       await deleteS3Object(existing.avatarS3Key);
     }
   }
@@ -41,7 +52,11 @@ async function upsertProfile(
       .where(eq(userProfile.userId, userId));
     if (!existing?.slug || existing.displayName !== profileFields.displayName) {
       slugUpdate = {
-        slug: await generateUniqueOrganizerSlug(db, profileFields.displayName, userId),
+        slug: await generateUniqueOrganizerSlug(
+          db,
+          profileFields.displayName,
+          userId,
+        ),
       };
     }
   }
@@ -107,7 +122,10 @@ export const usersRouter = router({
           .innerJoin(kreis, eq(event.kreisId, kreis.id))
           .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
           .where(
-            and(eq(event.organizerUserId, profileRow.userId), eq(event.status, "approved")),
+            and(
+              eq(event.organizerUserId, profileRow.userId),
+              eq(event.status, "approved"),
+            ),
           ),
       ]);
 
@@ -141,16 +159,14 @@ export const usersRouter = router({
       if (links) {
         await ctx.db.delete(userLink).where(eq(userLink.userId, ctx.user.id));
         if (links.length > 0) {
-          await ctx.db
-            .insert(userLink)
-            .values(
-              links.map((l) => ({
-                userId: ctx.user.id,
-                url: l.url,
-                label: l.label,
-                position: l.position,
-              })),
-            );
+          await ctx.db.insert(userLink).values(
+            links.map((l) => ({
+              userId: ctx.user.id,
+              url: l.url,
+              label: l.label,
+              position: l.position,
+            })),
+          );
         }
       }
 

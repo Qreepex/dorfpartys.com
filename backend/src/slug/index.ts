@@ -62,7 +62,10 @@ export async function generateUniqueOrganizerSlug(
     .select({ slug: userProfile.slug })
     .from(userProfile)
     .where(
-      and(like(userProfile.slug, `${base}%`), ne(userProfile.userId, currentUserId)),
+      and(
+        like(userProfile.slug, `${base}%`),
+        ne(userProfile.userId, currentUserId),
+      ),
     );
   const taken = new Set(existingRows.map((row) => row.slug));
 

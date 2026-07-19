@@ -64,7 +64,9 @@
 	<ul class="events">
 		{#each events as item (item.slug ?? item.title)}
 			<li class="event-row">
-				<span class="event-date">{day(item.startDate)}<small>{monthAbbr(item.startDate)}</small></span>
+				<span class="event-date"
+					>{day(item.startDate)}<small>{monthAbbr(item.startDate)}</small></span
+				>
 				<span class="event-info">
 					{#if eventHref(item)}
 						<a class="event-title" href={eventHref(item)}>{item.title}</a>
@@ -73,7 +75,9 @@
 					{/if}
 					<span class="event-meta">{item.kreisName} · {item.bundeslandName}</span>
 				</span>
-				<span class="event-tag" style={`border-color: ${item.customColor}`}>{item.partyArtName}</span>
+				<span class="event-tag" style={`border-color: ${item.customColor}`}
+					>{item.partyArtName}</span
+				>
 				{#if itemExtra}
 					{@render itemExtra(item)}
 				{/if}
@@ -84,7 +88,7 @@
 
 <style>
 	.empty {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		padding: 24px 0;
 		border-top: 1px solid var(--color-border);
 	}
@@ -149,7 +153,7 @@
 	}
 
 	.event-meta {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.85rem;
 	}
 
@@ -160,7 +164,7 @@
 		letter-spacing: 0.08em;
 		border-left: 2px solid var(--color-secondary);
 		padding-left: 8px;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		display: none;
 	}
 
@@ -170,4 +174,3 @@
 		}
 	}
 </style>
-

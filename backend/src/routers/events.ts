@@ -65,15 +65,13 @@ async function replacePhotosAndLinks(
 
     await db.delete(eventPhoto).where(eq(eventPhoto.eventId, eventId));
     if (photos.length > 0) {
-      await db
-        .insert(eventPhoto)
-        .values(
-          photos.map((p) => ({
-            eventId,
-            s3Key: p.s3Key,
-            position: p.position,
-          })),
-        );
+      await db.insert(eventPhoto).values(
+        photos.map((p) => ({
+          eventId,
+          s3Key: p.s3Key,
+          position: p.position,
+        })),
+      );
     }
 
     // Alte Keys, die nicht in der neuen Auswahl wiederverwendet werden, aktiv
@@ -87,16 +85,14 @@ async function replacePhotosAndLinks(
   if (links) {
     await db.delete(eventLink).where(eq(eventLink.eventId, eventId));
     if (links.length > 0) {
-      await db
-        .insert(eventLink)
-        .values(
-          links.map((l) => ({
-            eventId,
-            url: l.url,
-            label: l.label,
-            position: l.position,
-          })),
-        );
+      await db.insert(eventLink).values(
+        links.map((l) => ({
+          eventId,
+          url: l.url,
+          label: l.label,
+          position: l.position,
+        })),
+      );
     }
   }
 }
@@ -240,33 +236,42 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      const [photos, links, [organizerProfile], [partyArtRow], isSaved] = await Promise.all([
-        ctx.db
-          .select()
-          .from(eventPhoto)
-          .where(eq(eventPhoto.eventId, row.id))
-          .orderBy(eventPhoto.position),
-        ctx.db
-          .select()
-          .from(eventLink)
-          .where(eq(eventLink.eventId, row.id))
-          .orderBy(eventLink.position),
-        ctx.db
-          .select({ displayName: userProfile.displayName, slug: userProfile.slug })
-          .from(userProfile)
-          .where(eq(userProfile.userId, row.organizerUserId)),
-        ctx.db
-          .select({ name: partyArt.name })
-          .from(partyArt)
-          .where(eq(partyArt.id, row.partyArtId)),
-        ctx.user
-          ? ctx.db
-              .select({ id: savedEvent.id })
-              .from(savedEvent)
-              .where(and(eq(savedEvent.userId, ctx.user.id), eq(savedEvent.eventId, row.id)))
-              .then((rows) => rows.length > 0)
-          : Promise.resolve(false),
-      ]);
+      const [photos, links, [organizerProfile], [partyArtRow], isSaved] =
+        await Promise.all([
+          ctx.db
+            .select()
+            .from(eventPhoto)
+            .where(eq(eventPhoto.eventId, row.id))
+            .orderBy(eventPhoto.position),
+          ctx.db
+            .select()
+            .from(eventLink)
+            .where(eq(eventLink.eventId, row.id))
+            .orderBy(eventLink.position),
+          ctx.db
+            .select({
+              displayName: userProfile.displayName,
+              slug: userProfile.slug,
+            })
+            .from(userProfile)
+            .where(eq(userProfile.userId, row.organizerUserId)),
+          ctx.db
+            .select({ name: partyArt.name })
+            .from(partyArt)
+            .where(eq(partyArt.id, row.partyArtId)),
+          ctx.user
+            ? ctx.db
+                .select({ id: savedEvent.id })
+                .from(savedEvent)
+                .where(
+                  and(
+                    eq(savedEvent.userId, ctx.user.id),
+                    eq(savedEvent.eventId, row.id),
+                  ),
+                )
+                .then((rows) => rows.length > 0)
+            : Promise.resolve(false),
+        ]);
 
       // Ohne gepflegten display_name generischer Platzhalter (AGENTS.md Abschnitt 3).
       const organizerName = organizerProfile?.displayName ?? "Veranstalter";
@@ -345,7 +350,9 @@ export const eventsRouter = router({
           and(
             eq(event.status, "approved"),
             sql`${event.endDate} >= now()`,
-            input.country ? eq(bundeslandTable.country, input.country) : undefined,
+            input.country
+              ? eq(bundeslandTable.country, input.country)
+              : undefined,
           ),
         )
         .orderBy(event.startDate)

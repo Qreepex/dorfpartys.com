@@ -121,8 +121,8 @@
 		content: '';
 		width: 8px;
 		height: 8px;
-		border-right: 2px solid var(--color-text-muted);
-		border-bottom: 2px solid var(--color-text-muted);
+		border-right: 2px solid var(--color-muted);
+		border-bottom: 2px solid var(--color-muted);
 		transform: rotate(45deg);
 		margin-left: 8px;
 		flex: 0 0 auto;

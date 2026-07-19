@@ -30,24 +30,24 @@ Steht für den Moment, in dem eine Party "zündet" — funktioniert eigenständi
 
 ### 3.1 Brandfarben (fix, themenunabhängig)
 
-| Rolle | Wert | Verwendung |
-|---|---|---|
-| Primary | `#39E67A` | Neon-Wiesengrün. CTAs, Logo, Akzent-Chips, Haupt-Glow. Verbindet Dorf/Wiese mit Glowstick-Party-Energie. |
-| Secondary | `#FF4B3E` | Kräftiges Flare-Rot. Kontrast-Akzent, Hover, zweite Lichterketten-Farbe. Grün-Rot ist die klassische Erntefest-/Kirmes-Kombination. |
-| Accent (Gold) | `#FFC93D` | Lichterketten-Gold. Bewusst sparsam als Tertiär-Akzent, nicht dominant. |
-| Ink | `#0A0B09` | Fixer dunkler Text **auf** Brandfarben-Flächen — unabhängig vom aktiven Theme (siehe 3.3). |
+| Rolle         | Wert      | Verwendung                                                                                                                          |
+| ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Primary       | `#39E67A` | Neon-Wiesengrün. CTAs, Logo, Akzent-Chips, Haupt-Glow. Verbindet Dorf/Wiese mit Glowstick-Party-Energie.                            |
+| Secondary     | `#FF4B3E` | Kräftiges Flare-Rot. Kontrast-Akzent, Hover, zweite Lichterketten-Farbe. Grün-Rot ist die klassische Erntefest-/Kirmes-Kombination. |
+| Accent (Gold) | `#FFC93D` | Lichterketten-Gold. Bewusst sparsam als Tertiär-Akzent, nicht dominant.                                                             |
+| Ink           | `#0A0B09` | Fixer dunkler Text **auf** Brandfarben-Flächen — unabhängig vom aktiven Theme (siehe 3.3).                                          |
 
 Diese vier Werte ändern sich **nicht** zwischen Dark- und Light-Theme.
 
 ### 3.2 Theme-Oberflächenfarben
 
-| Rolle | Dark | Light |
-|---|---|---|
-| Background | `#0A0B09` | `#FAF9F4` |
+| Rolle                               | Dark      | Light     |
+| ----------------------------------- | --------- | --------- |
+| Background                          | `#0A0B09` | `#FAF9F4` |
 | Background Alt (Panels, Suchleiste) | `#16180F` | `#F1EFE6` |
-| Text | `#FAFAF5` | `#14150F` |
-| Text Muted | `#9C9C90` | `#6B6B60` |
-| Border/Hairline | `#26281E` | `#DEDBCB` |
+| Text                                | `#FAFAF5` | `#14150F` |
+| Text Muted                          | `#9C9C90` | `#6B6B60` |
+| Border/Hairline                     | `#26281E` | `#DEDBCB` |
 
 Dark ist der konzeptionelle Standardzustand (Nacht-Metapher), Light eine vollwertige Alternative — kein nachträglich aufgesetztes "Invert".
 
@@ -58,33 +58,33 @@ Dark ist der konzeptionelle Standardzustand (Nacht-Metapher), Light eine vollwer
 ### 3.4 CSS-Custom-Properties (Referenzstruktur)
 
 ```css
-:root{
-  --color-primary: #39E67A;
-  --color-secondary: #FF4B3E;
-  --color-accent-gold: #FFC93D;
-  --color-ink: #0A0B09;
+:root {
+  --color-primary: #39e67a;
+  --color-secondary: #ff4b3e;
+  --color-accent-gold: #ffc93d;
+  --color-ink: #0a0b09;
 
-  --color-bg: #0A0B09;
-  --color-bg-alt: #16180F;
-  --color-text: #FAFAF5;
-  --color-text-muted: #9C9C90;
-  --color-border: #26281E;
+  --color-bg: #0a0b09;
+  --color-bg-alt: #16180f;
+  --color-text: #fafaf5;
+  --color-text-muted: #9c9c90;
+  --color-border: #26281e;
 }
-:root[data-theme="light"]{
-  --color-bg: #FAF9F4;
-  --color-bg-alt: #F1EFE6;
-  --color-text: #14150F;
-  --color-text-muted: #6B6B60;
-  --color-border: #DEDBCB;
+:root[data-theme="light"] {
+  --color-bg: #faf9f4;
+  --color-bg-alt: #f1efe6;
+  --color-text: #14150f;
+  --color-text-muted: #6b6b60;
+  --color-border: #dedbcb;
 }
 ```
 
 ## 4. Typografie
 
-| Rolle | Font | Einsatz |
-|---|---|---|
+| Rolle   | Font                                  | Einsatz                                                                                                                                                                                                |
+| ------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Display | **Fraunces** (variable, `opsz`-Achse) | h1–h3, Datums-Ziffern, Wordmark. Warme, leicht schrullige Serife mit handgesetztem Charakter — bewusste Abgrenzung von der Bebas/Poppins-Kombination, die auf den meisten KI-generierten Seiten läuft. |
-| Body/UI | **Inter** | Fließtext, Formulare, Navigation, Labels. Maximale Lesbarkeit auf Mobile, breite Sprachunterstützung inkl. Umlaute. |
+| Body/UI | **Inter**                             | Fließtext, Formulare, Navigation, Labels. Maximale Lesbarkeit auf Mobile, breite Sprachunterstützung inkl. Umlaute.                                                                                    |
 
 **Hinweis für die Implementierung:** Für Produktion die Fonts **selbst hosten** statt über die Google-Fonts-CDN einzubinden (`fonts.googleapis.com`) — direktes Laden von Google Fonts überträgt IP-Adressen an Google und ist in Deutschland datenschutzrechtlich umstritten (siehe LG München I, Urteil zu Google Fonts). Für den Mockup-Prototyp ist die CDN-Einbindung okay, für `/frontend` nicht übernehmen.
 

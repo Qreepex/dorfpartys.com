@@ -30,7 +30,12 @@ export interface SearchCopyInput {
  * AGENTS.md 1.2 ab (0–4 Segmente).
  */
 export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
-  const { bundeslandName: bl, kreisName: kr, artName: art, monatName: monat } = input;
+  const {
+    bundeslandName: bl,
+    kreisName: kr,
+    artName: art,
+    monatName: monat,
+  } = input;
   const ort = kr ?? bl; // Kreis ist die spezifischste Orts-Angabe, impliziert Bundesland.
   const countryIn = COUNTRY_NAMES[input.country];
   const countryNom = COUNTRY_NAMES_NOMINATIVE[input.country];
@@ -56,7 +61,9 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   const title = `${h1} — ${SITE_NAME}`;
 
   const ortSatz = kr ? `${kr} (${bl})` : (bl ?? countryIn);
-  const artSatzTeil = art ? art : "Schützenfeste, Zeltfeten, Scheunenfeten und mehr";
+  const artSatzTeil = art
+    ? art
+    : "Schützenfeste, Zeltfeten, Scheunenfeten und mehr";
   const monatSatzTeil = monat ? ` im ${monat}` : " das ganze Jahr über";
 
   const description =

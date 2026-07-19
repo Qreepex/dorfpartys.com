@@ -49,7 +49,7 @@ export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
 	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfest' }
 ];
 
-export const SITE_URL = 'https://dorfpartys.com';
+export const SITE_URL = 'https://www.dorfpartys.com';
 export const SITE_NAME = 'dorfpartys.com';
 export const DEFAULT_PAGE_SIZE = 24;
 

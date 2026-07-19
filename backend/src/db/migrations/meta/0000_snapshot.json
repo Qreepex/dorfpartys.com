@@ -42,9 +42,7 @@
         "bundesland_slug_unique": {
           "name": "bundesland_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -216,12 +214,8 @@
           "name": "event_organizer_user_id_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "organizer_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organizer_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -229,12 +223,8 @@
           "name": "event_bundesland_id_bundesland_id_fk",
           "tableFrom": "event",
           "tableTo": "bundesland",
-          "columnsFrom": [
-            "bundesland_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bundesland_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -242,12 +232,8 @@
           "name": "event_kreis_id_kreis_id_fk",
           "tableFrom": "event",
           "tableTo": "kreis",
-          "columnsFrom": [
-            "kreis_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["kreis_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -255,12 +241,8 @@
           "name": "event_party_art_id_party_art_id_fk",
           "tableFrom": "event",
           "tableTo": "party_art",
-          "columnsFrom": [
-            "party_art_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["party_art_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -268,12 +250,8 @@
           "name": "event_created_by_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -281,12 +259,8 @@
           "name": "event_approved_by_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "approved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -296,9 +270,7 @@
         "event_slug_unique": {
           "name": "event_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -369,12 +341,8 @@
           "name": "event_link_event_id_event_id_fk",
           "tableFrom": "event_link",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -443,12 +411,8 @@
           "name": "event_photo_event_id_event_id_fk",
           "tableFrom": "event_photo",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -495,12 +459,8 @@
           "name": "kreis_bundesland_id_bundesland_id_fk",
           "tableFrom": "kreis",
           "tableTo": "bundesland",
-          "columnsFrom": [
-            "bundesland_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bundesland_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -510,9 +470,7 @@
         "kreis_slug_unique": {
           "name": "kreis_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -557,9 +515,7 @@
         "party_art_slug_unique": {
           "name": "party_art_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -644,16 +600,12 @@
         "user_authentik_subject_unique": {
           "name": "user_authentik_subject_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "authentik_subject"
-          ]
+          "columns": ["authentik_subject"]
         },
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -702,12 +654,8 @@
           "name": "user_link_user_id_user_id_fk",
           "tableFrom": "user_link",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -778,12 +726,8 @@
           "name": "user_profile_user_id_user_id_fk",
           "tableFrom": "user_profile",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -793,9 +737,7 @@
         "user_profile_slug_unique": {
           "name": "user_profile_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -807,40 +749,22 @@
     "public.country": {
       "name": "country",
       "schema": "public",
-      "values": [
-        "de",
-        "at",
-        "ch"
-      ]
+      "values": ["de", "at", "ch"]
     },
     "public.event_status": {
       "name": "event_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "in_review",
-        "approved",
-        "rejected"
-      ]
+      "values": ["draft", "in_review", "approved", "rejected"]
     },
     "public.slug_type": {
       "name": "slug_type",
       "schema": "public",
-      "values": [
-        "bundesland",
-        "kreis",
-        "party_art",
-        "monat"
-      ]
+      "values": ["bundesland", "kreis", "party_art", "monat"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "user",
-        "moderator",
-        "admin"
-      ]
+      "values": ["user", "moderator", "admin"]
     }
   },
   "schemas": {},

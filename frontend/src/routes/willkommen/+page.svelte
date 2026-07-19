@@ -36,7 +36,13 @@
 		Bevor es losgeht, richten wir kurz dein Veranstalter-Profil ein — das dauert eine Minute.
 	</p>
 
-	<div class="progress" role="progressbar" aria-valuenow={step} aria-valuemin="1" aria-valuemax={totalSteps}>
+	<div
+		class="progress"
+		role="progressbar"
+		aria-valuenow={step}
+		aria-valuemin="1"
+		aria-valuemax={totalSteps}
+	>
 		{#each stepIndicators as i (i)}
 			<span class="bar" class:active={i < step}></span>
 		{/each}
@@ -84,9 +90,18 @@
 		<fieldset hidden={step !== 3}>
 			<legend>Fertig?</legend>
 			<dl class="summary">
-				<div><dt>Anzeigename</dt><dd>{displayName || '—'}</dd></div>
-				{#if websiteUrl}<div><dt>Website</dt><dd>{websiteUrl}</dd></div>{/if}
-				{#if instagramUrl}<div><dt>Instagram</dt><dd>{instagramUrl}</dd></div>{/if}
+				<div>
+					<dt>Anzeigename</dt>
+					<dd>{displayName || '—'}</dd>
+				</div>
+				{#if websiteUrl}<div>
+						<dt>Website</dt>
+						<dd>{websiteUrl}</dd>
+					</div>{/if}
+				{#if instagramUrl}<div>
+						<dt>Instagram</dt>
+						<dd>{instagramUrl}</dd>
+					</div>{/if}
 			</dl>
 			<p class="hint">
 				Damit bist du startklar. Du kannst dein Profil jederzeit unter „Mein Profil" anpassen.
@@ -122,12 +137,12 @@
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin: 0 0 4px;
 	}
 
 	.lead {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin-bottom: 24px;
 	}
 
@@ -162,14 +177,14 @@
 	}
 
 	.hint {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.85rem;
 	}
 
 	.bio-field {
 		display: block;
 		font-size: 0.85rem;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin-top: 16px;
 	}
 
@@ -201,7 +216,7 @@
 	}
 
 	.summary dt {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	.summary dd {

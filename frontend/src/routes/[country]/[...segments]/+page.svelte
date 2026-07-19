@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { EventList } from '$lib/components/index.js';
+	import { Breadcrumbs, EventList } from '$lib/components/index.js';
 	import { jsonLdScriptTag, robotsContent } from '$lib/seo.js';
 	import { SITE_URL, buildEventUrl, buildFilterUrl, type Country } from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
@@ -25,7 +25,9 @@
 					itemListElement: result.results.map((item, index) => ({
 						'@type': 'ListItem',
 						position: index + 1,
-						url: item.slug ? `${SITE_URL}${buildEventUrl(result.filters.country, item.slug)}` : undefined,
+						url: item.slug
+							? `${SITE_URL}${buildEventUrl(result.filters.country, item.slug)}`
+							: undefined,
 						name: item.title
 					}))
 				}
@@ -127,72 +129,29 @@
 </svelte:head>
 
 {#if result}
-	<nav class="breadcrumbs" aria-label="Breadcrumb">
-		{#each breadcrumbs as crumb, i (crumb.href)}
-			{#if i > 0}<span class="sep">/</span>{/if}
-			<a href={crumb.href}>{crumb.name}</a>
-		{/each}
-	</nav>
+	<Breadcrumbs items={breadcrumbs} />
 
-	<header class="search-header">
-		<h1>{result.seo.h1}</h1>
-		<p class="intro">{result.seo.intro}</p>
-		<p class="count">{result.total} {result.total === 1 ? 'Treffer' : 'Treffer'}</p>
-	</header>
+	<article>
+		<header class="mb-8">
+			<h1 class="text-[clamp(1.6rem,4vw,2.4rem)]">{result.seo.h1}</h1>
+			<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
+			<p class="mt-2 text-[0.85rem] text-muted">
+				{result.total}
+				{result.total === 1 ? 'Treffer' : 'Treffer'}
+			</p>
+		</header>
 
-	<EventList events={result.results} country={result.filters.country} />
+		<section aria-label="Veranstaltungen">
+			<EventList events={result.results} country={result.filters.country} />
+		</section>
 
-	{#if result.results.length === 0}
-		<p class="hint">
-			Kennst du eine Party in der Umgebung? <a href={resolve('/submit')}>Trag sie kostenlos ein</a> — du bist
-			als Erste:r auf dieser Seite gelistet.
-		</p>
-	{/if}
+		{#if result.results.length === 0}
+			<p class="mt-6 text-muted">
+				Kennst du eine Party in der Umgebung?
+				<a class="text-primary" href={resolve('/veranstaltung-eintragen')}>Trag sie kostenlos ein</a
+				>
+				— du bist als Erste:r auf dieser Seite gelistet.
+			</p>
+		{/if}
+	</article>
 {/if}
-
-<style>
-	.breadcrumbs {
-		font-size: 0.8rem;
-		color: var(--color-text-muted);
-		margin-bottom: 24px;
-	}
-
-	.breadcrumbs a {
-		color: var(--color-text-muted);
-		text-decoration: none;
-	}
-
-	.breadcrumbs a:hover {
-		color: var(--color-primary);
-	}
-
-	.breadcrumbs .sep {
-		margin: 0 6px;
-	}
-
-	.search-header h1 {
-		font-size: clamp(1.6rem, 4vw, 2.4rem);
-		margin-bottom: 8px;
-	}
-
-	.intro {
-		color: var(--color-text-muted);
-		max-width: 60ch;
-		margin: 0 0 8px;
-	}
-
-	.count {
-		font-size: 0.85rem;
-		color: var(--color-text-muted);
-		margin: 0 0 8px;
-	}
-
-	.hint {
-		margin-top: 24px;
-		color: var(--color-text-muted);
-	}
-
-	.hint a {
-		color: var(--color-primary);
-	}
-</style>

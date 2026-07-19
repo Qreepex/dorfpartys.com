@@ -32,7 +32,9 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
     organizer: {
       "@type": "Organization",
       name: input.organizerName,
-      ...(input.organizerUrl ? { url: `${SITE_URL}${input.organizerUrl}` } : {}),
+      ...(input.organizerUrl
+        ? { url: `${SITE_URL}${input.organizerUrl}` }
+        : {}),
     },
     ...(input.priceInfo
       ? {

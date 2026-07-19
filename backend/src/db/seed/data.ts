@@ -174,7 +174,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "recklinghausen", name: "Recklinghausen" },
       { slug: "rhein-erft-kreis", name: "Rhein-Erft-Kreis" },
       { slug: "rhein-kreis-neuss", name: "Rhein-Kreis Neuss" },
-      { slug: "rheinisch-bergischer-kreis", name: "Rheinisch-Bergischer Kreis" },
+      {
+        slug: "rheinisch-bergischer-kreis",
+        name: "Rheinisch-Bergischer Kreis",
+      },
       { slug: "rhein-sieg-kreis", name: "Rhein-Sieg-Kreis" },
       { slug: "siegen-wittgenstein", name: "Siegen-Wittgenstein" },
       { slug: "soest", name: "Soest" },
@@ -229,7 +232,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "landau-in-der-pfalz", name: "Landau in der Pfalz" },
       { slug: "ludwigshafen-am-rhein", name: "Ludwigshafen am Rhein" },
       { slug: "mainz", name: "Mainz" },
-      { slug: "neustadt-an-der-weinstrasse", name: "Neustadt an der Weinstraße" },
+      {
+        slug: "neustadt-an-der-weinstrasse",
+        name: "Neustadt an der Weinstraße",
+      },
       { slug: "pirmasens", name: "Pirmasens" },
       { slug: "speyer", name: "Speyer" },
       { slug: "trier-stadt", name: "Trier (Stadt)" },
@@ -388,7 +394,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "muenchen-landkreis", name: "München (Landkreis)" },
       { slug: "neuburg-schrobenhausen", name: "Neuburg-Schrobenhausen" },
       { slug: "neumarkt-in-der-oberpfalz", name: "Neumarkt in der Oberpfalz" },
-      { slug: "neustadt-an-der-aisch-bad-windsheim", name: "Neustadt an der Aisch-Bad Windsheim" },
+      {
+        slug: "neustadt-an-der-aisch-bad-windsheim",
+        name: "Neustadt an der Aisch-Bad Windsheim",
+      },
       { slug: "neustadt-an-der-waldnaab", name: "Neustadt an der Waldnaab" },
       { slug: "neu-ulm", name: "Neu-Ulm" },
       { slug: "nuernberger-land", name: "Nürnberger Land" },
@@ -411,7 +420,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "unterallgaeu", name: "Unterallgäu" },
       { slug: "weilheim-schongau", name: "Weilheim-Schongau" },
       { slug: "weissenburg-gunzenhausen", name: "Weißenburg-Gunzenhausen" },
-      { slug: "wunsiedel-im-fichtelgebirge", name: "Wunsiedel im Fichtelgebirge" },
+      {
+        slug: "wunsiedel-im-fichtelgebirge",
+        name: "Wunsiedel im Fichtelgebirge",
+      },
       { slug: "wuerzburg-landkreis", name: "Würzburg (Landkreis)" },
     ],
   },
@@ -420,7 +432,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     name: "Saarland",
     country: "de",
     kreise: [
-      { slug: "regionalverband-saarbruecken", name: "Regionalverband Saarbrücken" },
+      {
+        slug: "regionalverband-saarbruecken",
+        name: "Regionalverband Saarbrücken",
+      },
       { slug: "merzig-wadern", name: "Merzig-Wadern" },
       { slug: "neunkirchen", name: "Neunkirchen" },
       { slug: "saarlouis", name: "Saarlouis" },
@@ -436,7 +451,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "mitte", name: "Mitte" },
       { slug: "friedrichshain-kreuzberg", name: "Friedrichshain-Kreuzberg" },
       { slug: "pankow", name: "Pankow" },
-      { slug: "charlottenburg-wilmersdorf", name: "Charlottenburg-Wilmersdorf" },
+      {
+        slug: "charlottenburg-wilmersdorf",
+        name: "Charlottenburg-Wilmersdorf",
+      },
       { slug: "spandau", name: "Spandau" },
       { slug: "steglitz-zehlendorf", name: "Steglitz-Zehlendorf" },
       { slug: "tempelhof-schoeneberg", name: "Tempelhof-Schöneberg" },
@@ -481,7 +499,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "schwerin", name: "Schwerin" },
       { slug: "landkreis-rostock", name: "Landkreis Rostock" },
       { slug: "ludwigslust-parchim", name: "Ludwigslust-Parchim" },
-      { slug: "mecklenburgische-seenplatte", name: "Mecklenburgische Seenplatte" },
+      {
+        slug: "mecklenburgische-seenplatte",
+        name: "Mecklenburgische Seenplatte",
+      },
       { slug: "nordwestmecklenburg", name: "Nordwestmecklenburg" },
       { slug: "vorpommern-greifswald", name: "Vorpommern-Greifswald" },
       { slug: "vorpommern-ruegen", name: "Vorpommern-Rügen" },
@@ -502,7 +523,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
       { slug: "meissen", name: "Meißen" },
       { slug: "mittelsachsen", name: "Mittelsachsen" },
       { slug: "nordsachsen", name: "Nordsachsen" },
-      { slug: "saechsische-schweiz-osterzgebirge", name: "Sächsische Schweiz-Osterzgebirge" },
+      {
+        slug: "saechsische-schweiz-osterzgebirge",
+        name: "Sächsische Schweiz-Osterzgebirge",
+      },
       { slug: "vogtlandkreis", name: "Vogtlandkreis" },
       { slug: "zwickau", name: "Zwickau" },
     ],
@@ -561,9 +585,7 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "wien",
     name: "Wien",
     country: "at",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "niederoesterreich",
@@ -766,9 +788,7 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "uri",
     name: "Uri",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "schwyz",
@@ -787,33 +807,25 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "obwalden",
     name: "Obwalden",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "nidwalden",
     name: "Nidwalden",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "glarus",
     name: "Glarus",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "zug",
     name: "Zug",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "freiburg",
@@ -850,9 +862,7 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "basel-stadt",
     name: "Basel-Stadt",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "basel-landschaft",
@@ -870,25 +880,19 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "schaffhausen",
     name: "Schaffhausen",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "appenzell-ausserrhoden",
     name: "Appenzell Ausserrhoden",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "appenzell-innerrhoden",
     name: "Appenzell Innerrhoden",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "st-gallen",
@@ -912,7 +916,10 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     kreise: [
       { slug: "albula", name: "Albula" },
       { slug: "bernina", name: "Bernina" },
-      { slug: "engiadina-bassa-val-muestair", name: "Engiadina Bassa/Val Müstair" },
+      {
+        slug: "engiadina-bassa-val-muestair",
+        name: "Engiadina Bassa/Val Müstair",
+      },
       { slug: "imboden", name: "Imboden" },
       { slug: "landquart", name: "Landquart" },
       { slug: "maloja", name: "Maloja" },
@@ -1009,17 +1016,13 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     slug: "neuenburg",
     name: "Neuenburg",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "genf",
     name: "Genf",
     country: "ch",
-    kreise: [
-
-    ],
+    kreise: [],
   },
   {
     slug: "jura",

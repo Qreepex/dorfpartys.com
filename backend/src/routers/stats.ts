@@ -1,5 +1,11 @@
 import { count, countDistinct, eq, isNotNull, sql } from "drizzle-orm";
-import { bundesland, event, kreis, partyArt, userProfile } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  kreis,
+  partyArt,
+  userProfile,
+} from "../db/schema.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 
 /**
@@ -32,14 +38,19 @@ export const statsRouter = router({
         .select({ total: countDistinct(event.bundeslandId) })
         .from(event)
         .where(sql`${event.status} = 'approved' AND ${event.endDate} >= now()`),
-      ctx.db.select({ total: count() }).from(partyArt).where(eq(partyArt.active, true)),
+      ctx.db
+        .select({ total: count() })
+        .from(partyArt)
+        .where(eq(partyArt.active, true)),
       ctx.db
         .select({ total: count() })
         .from(userProfile)
         .where(isNotNull(userProfile.slug)),
     ]);
 
-    const [{ total: totalKreise }] = await ctx.db.select({ total: count() }).from(kreis);
+    const [{ total: totalKreise }] = await ctx.db
+      .select({ total: count() })
+      .from(kreis);
     const [{ total: totalBundeslaender }] = await ctx.db
       .select({ total: count() })
       .from(bundesland);

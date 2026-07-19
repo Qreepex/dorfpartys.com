@@ -14,7 +14,7 @@
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	color: var(--color-text-muted);
+	color: var(--color-muted);
 }
 
 .field-control {
@@ -31,7 +31,7 @@
 }
 
 .field-control::placeholder {
-	color: var(--color-text-muted);
+	color: var(--color-muted);
 }
 
 .field-control:focus {
@@ -88,7 +88,7 @@ select.field-control {
 	flex: 0 0 auto;
 	display: flex;
 	align-items: center;
-	color: var(--color-text-muted);
+	color: var(--color-muted);
 	font-size: 0.9rem;
 }
 

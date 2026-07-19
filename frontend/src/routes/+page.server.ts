@@ -9,9 +9,7 @@ export const load: PageServerLoad = async ({ locals, url, parent }) => {
 
 	const [stats, upcoming, partyArten, bundeslaenderByCountry] = await Promise.all([
 		locals.trpc.stats.overview.query(),
-		locals.trpc.events.listUpcoming.query(
-			showAllCountries ? { limit: 6 } : { limit: 6, country }
-		),
+		locals.trpc.events.listUpcoming.query(showAllCountries ? { limit: 6 } : { limit: 6, country }),
 		locals.trpc.taxonomy.partyArten.query(),
 		Promise.all(
 			COUNTRIES.map(async (c) => ({

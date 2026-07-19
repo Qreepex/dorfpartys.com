@@ -73,7 +73,9 @@
 			<div class="country-switch" role="group" aria-label="Land wählen">
 				{#each countrySwitchLinks as link (link.country)}
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve()-Basis + dynamischer ?to=-Query (aktuelle Seite), siehe countrySwitchLinks -->
-					<a href={link.href} class:active={link.country === country}>{COUNTRY_LABELS[link.country]}</a>
+					<a href={link.href} class:active={link.country === country}
+						>{COUNTRY_LABELS[link.country]}</a
+					>
 				{/each}
 			</div>
 			{#if user}
@@ -152,7 +154,7 @@
 		font-style: normal;
 		font-weight: 400;
 		font-size: 0.85em;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	nav {
@@ -164,7 +166,7 @@
 
 	nav a {
 		text-decoration: none;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	nav a:hover {

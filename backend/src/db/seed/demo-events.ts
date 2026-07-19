@@ -1,8 +1,19 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { db, queryClient } from "../index.js";
-import { bundesland, event, eventLink, kreis, partyArt, user, userProfile } from "../schema.js";
-import { generateUniqueEventSlug, generateUniqueOrganizerSlug } from "../../slug/index.js";
+import {
+  bundesland,
+  event,
+  eventLink,
+  kreis,
+  partyArt,
+  user,
+  userProfile,
+} from "../schema.js";
+import {
+  generateUniqueEventSlug,
+  generateUniqueOrganizerSlug,
+} from "../../slug/index.js";
 
 /**
  * Demo-Datensatz für lokale Entwicklung/Tests (AGENTS.md item 4) — legt einen
@@ -176,8 +187,12 @@ async function seedDemoEvents() {
       continue;
     }
 
-    const startDate = new Date(Date.now() + demo.daysFromNow * 24 * 60 * 60 * 1000);
-    const endDate = new Date(startDate.getTime() + demo.durationHours * 60 * 60 * 1000);
+    const startDate = new Date(
+      Date.now() + demo.daysFromNow * 24 * 60 * 60 * 1000,
+    );
+    const endDate = new Date(
+      startDate.getTime() + demo.durationHours * 60 * 60 * 1000,
+    );
     const slug = await generateUniqueEventSlug(db, demo.title, kreisRow.name);
 
     const [row] = await db
@@ -214,7 +229,9 @@ async function seedDemoEvents() {
       });
     }
 
-    console.log(`Angelegt: ${demo.title} (/${demo.bundeslandSlug === "tirol" ? "at" : "de"}/veranstaltung/${slug}/)`);
+    console.log(
+      `Angelegt: ${demo.title} (/${demo.bundeslandSlug === "tirol" ? "at" : "de"}/veranstaltung/${slug}/)`,
+    );
   }
 }
 

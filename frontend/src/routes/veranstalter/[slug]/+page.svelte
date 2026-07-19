@@ -27,9 +27,7 @@
 			description: profile.bio ?? undefined,
 			image: profile.avatarUrl ?? undefined,
 			url: canonical,
-			sameAs: [profile.websiteUrl, profile.instagramUrl, ...links.map((l) => l.url)].filter(
-				Boolean
-			)
+			sameAs: [profile.websiteUrl, profile.instagramUrl, ...links.map((l) => l.url)].filter(Boolean)
 		}
 	});
 </script>
@@ -123,7 +121,7 @@
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin: 0 0 4px;
 	}
 
@@ -133,7 +131,7 @@
 
 	.bio {
 		max-width: 60ch;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		line-height: 1.6;
 	}
 
@@ -168,6 +166,6 @@
 	}
 
 	.empty {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 </style>

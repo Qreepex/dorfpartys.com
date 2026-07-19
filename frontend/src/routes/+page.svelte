@@ -66,8 +66,8 @@
 <section class="hero">
 	<h1>Wo geht's<br />diesen Sommer <span class="accent">ab?</span></h1>
 	<p class="lead">
-		Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im ganzen DACH-Raum — filterbar
-		nach Land, Bundesland, Art und Monat. Kostenlos und ohne Werbung.
+		Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im ganzen DACH-Raum — filterbar nach
+		Land, Bundesland, Art und Monat. Kostenlos und ohne Werbung.
 	</p>
 
 	<form class="search" onsubmit={handleSearch}>
@@ -142,7 +142,8 @@
 <section class="lineup">
 	<div class="lineup-header">
 		<h2>
-			Nächste Partys{#if !data.showAllCountries} in {COUNTRY_LABELS[data.country]}{/if}
+			Nächste Partys{#if !data.showAllCountries}
+				in {COUNTRY_LABELS[data.country]}{/if}
 		</h2>
 		{#if data.showAllCountries}
 			<a href={homeHref}>Nur {COUNTRY_LABELS[data.country]} anzeigen</a>
@@ -152,8 +153,8 @@
 	</div>
 	{#if data.upcoming.length === 0}
 		<p class="sub">
-			Noch keine Termine{#if !data.showAllCountries} in {COUNTRY_LABELS[data.country]}{/if} eingetragen
-			— sei die erste Person, die eine einträgt.
+			Noch keine Termine{#if !data.showAllCountries}
+				in {COUNTRY_LABELS[data.country]}{/if} eingetragen — sei die erste Person, die eine einträgt.
 		</p>
 	{:else}
 		<p class="sub">{data.upcoming.length} kommende Termine</p>
@@ -164,8 +165,8 @@
 <section class="explainer">
 	<h2>Woher kommen die Events?</h2>
 	<p>
-		Jede Party auf dorfpartys.com wurde von Veranstalter:innen, Vereinen oder Besucher:innen
-		selbst eingetragen — kostenlos, in wenigen Minuten. Jede Einreichung durchläuft vor der
+		Jede Party auf dorfpartys.com wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst
+		eingetragen — kostenlos, in wenigen Minuten. Jede Einreichung durchläuft vor der
 		Veröffentlichung eine redaktionelle Prüfung, damit die Suche verlässlich bleibt.
 	</p>
 
@@ -175,17 +176,16 @@
 			<strong>Kostenlos für immer.</strong> Keine versteckten Kosten, keine Promotion-Gebühren.
 		</li>
 		<li>
-			<strong>Bessere Sichtbarkeit.</strong> Jede Region, Party-Art und jeder Monat hat eine
-			eigene, suchmaschinenoptimierte Seite — dein Event wird dort gefunden, wo Leute in der
-			Umgebung suchen.
+			<strong>Bessere Sichtbarkeit.</strong> Jede Region, Party-Art und jeder Monat hat eine eigene, suchmaschinenoptimierte
+			Seite — dein Event wird dort gefunden, wo Leute in der Umgebung suchen.
 		</li>
 		<li>
-			<strong>100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein Tracking, kein
-			Weiterverkauf von Daten — weder deiner noch der deiner Gäste.
+			<strong>100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein Tracking, kein Weiterverkauf
+			von Daten — weder deiner noch der deiner Gäste.
 		</li>
 		<li>
-			<strong>Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen
-			Veranstaltungen an einem Ort.
+			<strong>Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen Veranstaltungen an
+			einem Ort.
 		</li>
 	</ul>
 	<a class="cta" href={resolve('/submit')}>Jetzt Event eintragen</a>
@@ -229,7 +229,7 @@
 
 	.hero p.lead {
 		font-size: clamp(1rem, 2vw, 1.2rem);
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		max-width: 46ch;
 		margin: 0 0 32px;
 	}
@@ -257,7 +257,7 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		margin-bottom: 4px;
 	}
 
@@ -337,7 +337,7 @@
 
 	.stat span {
 		font-size: 0.8rem;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	.lineup {
@@ -369,7 +369,7 @@
 	}
 
 	.lineup .sub {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.9rem;
 		margin-bottom: 24px;
 	}
@@ -385,7 +385,7 @@
 	}
 
 	.explainer p {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		line-height: 1.6;
 	}
 

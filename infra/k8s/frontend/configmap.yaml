@@ -4,10 +4,10 @@ metadata:
   name: frontend-config
   namespace: dorfpartys
 data:
-  PORT: '3000'
-  NODE_ENV: 'production'
+  PORT: "3000"
+  NODE_ENV: "production"
   # K8s-Service-DNS, nicht die öffentliche Domain (AGENTS.md Abschnitt 0).
-  BACKEND_INTERNAL_URL: 'http://backend:3000'
-  PUBLIC_SITE_URL: 'https://dorfpartys.com'
-  AUTHENTIK_ISSUER: 'https://auth.dorfpartys.com/application/o/dorf-partys-com/'
-  AUTHENTIK_REDIRECT_URI: 'https://dorfpartys.com/auth/callback'
+  BACKEND_INTERNAL_URL: "http://backend.dorfpartys.svc.cluster.local:5000"
+  PUBLIC_SITE_URL: "https://www.dorfpartys.com"
+  AUTHENTIK_ISSUER: "https://auth.dorfpartys.com/application/o/dorf-partys-com/"
+  AUTHENTIK_REDIRECT_URI: "https://www.dorfpartys.com/auth/callback"

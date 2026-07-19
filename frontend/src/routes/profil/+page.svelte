@@ -20,7 +20,9 @@
 		<a href={organizerHref}>dorfpartys.com{organizerHref}</a>
 	</p>
 {:else}
-	<p>Sobald du einen Anzeigenamen speicherst, bekommst du eine eigene öffentliche Veranstalter-Seite.</p>
+	<p>
+		Sobald du einen Anzeigenamen speicherst, bekommst du eine eigene öffentliche Veranstalter-Seite.
+	</p>
 {/if}
 
 <form method="POST">

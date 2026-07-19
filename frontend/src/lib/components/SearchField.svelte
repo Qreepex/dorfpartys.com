@@ -94,7 +94,7 @@
 		padding: 4px;
 		margin: 0;
 		cursor: pointer;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	.clear:hover {

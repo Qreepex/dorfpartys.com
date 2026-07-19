@@ -1,7 +1,17 @@
 import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { buildFilterUrl, buildOrganizerUrl, type Country } from "@dorfpartys/shared";
+import {
+  buildFilterUrl,
+  buildOrganizerUrl,
+  type Country,
+} from "@dorfpartys/shared";
 import type { Database } from "../db/index.js";
-import { bundesland, event, kreis, partyArt, userProfile } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  kreis,
+  partyArt,
+  userProfile,
+} from "../db/schema.js";
 
 export async function getEventSitemapEntries(db: Database) {
   const rows = await db
@@ -88,7 +98,9 @@ export async function getVeranstalterSitemapEntries(db: Database) {
     .where(isNotNull(userProfile.slug));
 
   return rows
-    .filter((row): row is { slug: string; updatedAt: Date } => row.slug !== null)
+    .filter(
+      (row): row is { slug: string; updatedAt: Date } => row.slug !== null,
+    )
     .map((row) => ({
       loc: buildOrganizerUrl(row.slug),
       updatedAt: row.updatedAt.toISOString(),

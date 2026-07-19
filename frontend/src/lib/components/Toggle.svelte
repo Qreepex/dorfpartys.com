@@ -114,7 +114,7 @@
 		left: 2px;
 		width: 16px;
 		height: 16px;
-		background: var(--color-text-muted);
+		background: var(--color-muted);
 		border-radius: 1px;
 		transition:
 			transform 0.15s,

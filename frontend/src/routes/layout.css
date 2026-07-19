@@ -1,25 +1,35 @@
 @import 'tailwindcss';
 
-:root {
-	/* Brandfarben – bleiben in Dark & Light identisch, siehe DESIGN.md 3.1 */
+/*
+ * Tailwind-v4-Theme (CSS-first, kein tailwind.config.*): Tokens hier drin
+ * erzeugen automatisch Utilities (bg-primary, text-muted, border-border, ...).
+ * Werte sind die Dark-Defaults (konzeptioneller Standardzustand, DESIGN.md 6) —
+ * der Light-Theme-Wechsel läuft weiterhin über reine CSS-Custom-Property-
+ * Überschreibung unten (:root[data-theme='light']), NICHT über @theme, damit
+ * die generierten Utility-Klassen (die intern var(--color-*) referenzieren)
+ * die Laufzeit-Umschaltung unverändert mitmachen.
+ */
+@theme {
 	--color-primary: #39e67a;
 	--color-secondary: #ff4b3e;
 	--color-accent-gold: #ffc93d;
 	--color-ink: #0a0b09;
 
-	/* Theme: Dark (konzeptioneller Standardzustand) */
 	--color-bg: #0a0b09;
 	--color-bg-alt: #16180f;
 	--color-text: #fafaf5;
-	--color-text-muted: #9c9c90;
+	--color-muted: #9c9c90;
 	--color-border: #26281e;
+
+	--font-display: 'Fraunces', Georgia, serif;
+	--font-body: 'Inter', system-ui, sans-serif;
 }
 
 :root[data-theme='light'] {
 	--color-bg: #faf9f4;
 	--color-bg-alt: #f1efe6;
 	--color-text: #14150f;
-	--color-text-muted: #6b6b60;
+	--color-muted: #6b6b60;
 	--color-border: #dedbcb;
 }
 
@@ -28,7 +38,7 @@
 		--color-bg: #faf9f4;
 		--color-bg-alt: #f1efe6;
 		--color-text: #14150f;
-		--color-text-muted: #6b6b60;
+		--color-muted: #6b6b60;
 		--color-border: #dedbcb;
 	}
 }
@@ -64,132 +74,172 @@ a {
 
 /* fraunces-regular - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 400;
-  src: url('/fonts/fraunces-v38-latin-regular.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/fraunces-v38-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/fraunces-v38-latin-regular.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/fraunces-v38-latin-regular.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/fraunces-v38-latin-regular.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/fraunces-v38-latin-regular.svg#Fraunces') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fraunces';
+	font-style: normal;
+	font-weight: 400;
+	src: url('/fonts/fraunces-v38-latin-regular.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/fraunces-v38-latin-regular.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/fraunces-v38-latin-regular.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/fraunces-v38-latin-regular.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/fraunces-v38-latin-regular.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/fraunces-v38-latin-regular.svg#Fraunces') format('svg'); /* Legacy iOS */
 }
 /* fraunces-500 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 500;
-  src: url('/fonts/fraunces-v38-latin-500.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/fraunces-v38-latin-500.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/fraunces-v38-latin-500.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/fraunces-v38-latin-500.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/fraunces-v38-latin-500.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/fraunces-v38-latin-500.svg#Fraunces') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fraunces';
+	font-style: normal;
+	font-weight: 500;
+	src: url('/fonts/fraunces-v38-latin-500.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/fraunces-v38-latin-500.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/fraunces-v38-latin-500.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/fraunces-v38-latin-500.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/fraunces-v38-latin-500.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/fraunces-v38-latin-500.svg#Fraunces') format('svg'); /* Legacy iOS */
 }
 /* fraunces-600 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 600;
-  src: url('/fonts/fraunces-v38-latin-600.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/fraunces-v38-latin-600.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/fraunces-v38-latin-600.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/fraunces-v38-latin-600.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/fraunces-v38-latin-600.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/fraunces-v38-latin-600.svg#Fraunces') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fraunces';
+	font-style: normal;
+	font-weight: 600;
+	src: url('/fonts/fraunces-v38-latin-600.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/fraunces-v38-latin-600.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/fraunces-v38-latin-600.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/fraunces-v38-latin-600.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/fraunces-v38-latin-600.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/fraunces-v38-latin-600.svg#Fraunces') format('svg'); /* Legacy iOS */
 }
 /* fraunces-700 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 700;
-  src: url('/fonts/fraunces-v38-latin-700.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/fraunces-v38-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/fraunces-v38-latin-700.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/fraunces-v38-latin-700.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/fraunces-v38-latin-700.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/fraunces-v38-latin-700.svg#Fraunces') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fraunces';
+	font-style: normal;
+	font-weight: 700;
+	src: url('/fonts/fraunces-v38-latin-700.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/fraunces-v38-latin-700.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/fraunces-v38-latin-700.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/fraunces-v38-latin-700.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/fraunces-v38-latin-700.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/fraunces-v38-latin-700.svg#Fraunces') format('svg'); /* Legacy iOS */
 }
 /* fraunces-800 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 800;
-  src: url('/fonts/fraunces-v38-latin-800.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/fraunces-v38-latin-800.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/fraunces-v38-latin-800.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/fraunces-v38-latin-800.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/fraunces-v38-latin-800.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/fraunces-v38-latin-800.svg#Fraunces') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fraunces';
+	font-style: normal;
+	font-weight: 800;
+	src: url('/fonts/fraunces-v38-latin-800.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/fraunces-v38-latin-800.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/fraunces-v38-latin-800.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/fraunces-v38-latin-800.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/fraunces-v38-latin-800.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/fraunces-v38-latin-800.svg#Fraunces') format('svg'); /* Legacy iOS */
 }
 
 /* inter-regular - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  src: url('/fonts/inter-v20-latin-regular.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/inter-v20-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/inter-v20-latin-regular.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/inter-v20-latin-regular.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/inter-v20-latin-regular.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/inter-v20-latin-regular.svg#Inter') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 400;
+	src: url('/fonts/inter-v20-latin-regular.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/inter-v20-latin-regular.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/inter-v20-latin-regular.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/inter-v20-latin-regular.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
+			url('/fonts/inter-v20-latin-regular.ttf') format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/inter-v20-latin-regular.svg#Inter') format('svg'); /* Legacy iOS */
 }
 /* inter-500 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  src: url('/fonts/inter-v20-latin-500.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/inter-v20-latin-500.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/inter-v20-latin-500.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/inter-v20-latin-500.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/inter-v20-latin-500.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/inter-v20-latin-500.svg#Inter') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 500;
+	src: url('/fonts/inter-v20-latin-500.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/inter-v20-latin-500.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/inter-v20-latin-500.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/inter-v20-latin-500.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */ url('/fonts/inter-v20-latin-500.ttf')
+			format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/inter-v20-latin-500.svg#Inter') format('svg'); /* Legacy iOS */
 }
 /* inter-600 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  src: url('/fonts/inter-v20-latin-600.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/inter-v20-latin-600.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/inter-v20-latin-600.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/inter-v20-latin-600.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/inter-v20-latin-600.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/inter-v20-latin-600.svg#Inter') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 600;
+	src: url('/fonts/inter-v20-latin-600.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/inter-v20-latin-600.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/inter-v20-latin-600.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/inter-v20-latin-600.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */ url('/fonts/inter-v20-latin-600.ttf')
+			format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/inter-v20-latin-600.svg#Inter') format('svg'); /* Legacy iOS */
 }
 /* inter-700 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 700;
-  src: url('/fonts/inter-v20-latin-700.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/inter-v20-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/inter-v20-latin-700.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/inter-v20-latin-700.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/inter-v20-latin-700.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/inter-v20-latin-700.svg#Inter') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 700;
+	src: url('/fonts/inter-v20-latin-700.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/inter-v20-latin-700.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/inter-v20-latin-700.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/inter-v20-latin-700.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */ url('/fonts/inter-v20-latin-700.ttf')
+			format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/inter-v20-latin-700.svg#Inter') format('svg'); /* Legacy iOS */
 }
 /* inter-800 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 800;
-  src: url('/fonts/inter-v20-latin-800.eot'); /* IE9 Compat Modes */
-  src: url('/fonts/inter-v20-latin-800.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-       url('/fonts/inter-v20-latin-800.woff2') format('woff2'), /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
-       url('/fonts/inter-v20-latin-800.woff') format('woff'), /* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */
-       url('/fonts/inter-v20-latin-800.ttf') format('truetype'), /* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
-       url('/fonts/inter-v20-latin-800.svg#Inter') format('svg'); /* Legacy iOS */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 800;
+	src: url('/fonts/inter-v20-latin-800.eot'); /* IE9 Compat Modes */
+	src:
+		url('/fonts/inter-v20-latin-800.eot?#iefix') format('embedded-opentype'),
+		/* IE6-IE8 */ url('/fonts/inter-v20-latin-800.woff2') format('woff2'),
+		/* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+			url('/fonts/inter-v20-latin-800.woff') format('woff'),
+		/* Chrome 5+, Firefox 3.6+, IE 9+, Safari 5.1+, iOS 5+ */ url('/fonts/inter-v20-latin-800.ttf')
+			format('truetype'),
+		/* Chrome 4+, Firefox 3.5+, IE 9+, Safari 3.1+, iOS 4.2+, Android Browser 2.2+ */
+			url('/fonts/inter-v20-latin-800.svg#Inter') format('svg'); /* Legacy iOS */
 }

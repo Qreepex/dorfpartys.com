@@ -1,5 +1,5 @@
-import { error } from '@sveltejs/kit';
 import { COUNTRIES, SITE_URL, buildEventUrl, type Country } from '@dorfpartys/shared';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types.js';
 
 function isCountry(value: string): value is Country {
@@ -26,7 +26,8 @@ const STATIC_PAGES = [
 	...COUNTRIES.map((country) => `/${country}/`),
 	'/impressum',
 	'/datenschutz',
-	'/nutzungsbedingungen'
+	'/nutzungsbedingungen',
+	'/faq'
 ];
 
 /**
@@ -57,10 +58,9 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	if (rest === 'veranstalter') {
 		const entries = await locals.trpc.sitemap.veranstalter.query();
-		return new Response(
-			urlsetXml(entries.map((e) => ({ loc: e.loc, lastmod: e.updatedAt }))),
-			{ headers: { 'Content-Type': 'application/xml' } }
-		);
+		return new Response(urlsetXml(entries.map((e) => ({ loc: e.loc, lastmod: e.updatedAt }))), {
+			headers: { 'Content-Type': 'application/xml' }
+		});
 	}
 
 	const match = /^(de|at|ch)-(orte|arten)$/.exec(rest);

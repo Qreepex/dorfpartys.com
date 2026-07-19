@@ -1,6 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { bundesland, event, kreis, partyArt, savedEvent } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  kreis,
+  partyArt,
+  savedEvent,
+} from "../db/schema.js";
 import { protectedProcedure, router } from "../trpc/trpc.js";
 
 /**
@@ -14,7 +20,9 @@ export const savedEventsRouter = router({
       await ctx.db
         .insert(savedEvent)
         .values({ userId: ctx.user.id, eventId: input.eventId })
-        .onConflictDoNothing({ target: [savedEvent.userId, savedEvent.eventId] });
+        .onConflictDoNothing({
+          target: [savedEvent.userId, savedEvent.eventId],
+        });
       return { saved: true };
     }),
 
@@ -24,7 +32,10 @@ export const savedEventsRouter = router({
       await ctx.db
         .delete(savedEvent)
         .where(
-          and(eq(savedEvent.userId, ctx.user.id), eq(savedEvent.eventId, input.eventId)),
+          and(
+            eq(savedEvent.userId, ctx.user.id),
+            eq(savedEvent.eventId, input.eventId),
+          ),
         );
       return { saved: false };
     }),
@@ -48,7 +59,9 @@ export const savedEventsRouter = router({
       .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
       .innerJoin(kreis, eq(event.kreisId, kreis.id))
       .innerJoin(partyArt, eq(event.partyArtId, partyArt.id))
-      .where(and(eq(savedEvent.userId, ctx.user.id), eq(event.status, "approved")));
+      .where(
+        and(eq(savedEvent.userId, ctx.user.id), eq(event.status, "approved")),
+      );
 
     const now = Date.now();
     const upcoming = rows

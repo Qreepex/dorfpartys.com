@@ -38,16 +38,16 @@
 
 	<h2>Konto &amp; Anmeldung</h2>
 	<p>
-		Die Anmeldung erfolgt über Single Sign-On (Authentik) mit Login ausschließlich über die von
-		dir gewählten Anbieter (z. B. Google, Discord, Facebook). Es werden nur die für den
-		Betrieb deines Kontos notwendigen Daten (E-Mail-Adresse, Rolle) gespeichert.
+		Die Anmeldung erfolgt über Single Sign-On (Authentik) mit Login ausschließlich über die von dir
+		gewählten Anbieter (z. B. Google, Discord, Facebook). Es werden nur die für den Betrieb deines
+		Kontos notwendigen Daten (E-Mail-Adresse, Rolle) gespeichert.
 	</p>
 
 	<h2>Eingereichte Events &amp; Profile</h2>
 	<p>
-		Von dir eingereichte Event- und Profildaten (inkl. hochgeladener Fotos) werden zur Anzeige
-		auf der Plattform gespeichert und, nach redaktioneller Prüfung, öffentlich angezeigt. Fotos
-		werden über einen S3-kompatiblen Objektspeicher ausgeliefert.
+		Von dir eingereichte Event- und Profildaten (inkl. hochgeladener Fotos) werden zur Anzeige auf
+		der Plattform gespeichert und, nach redaktioneller Prüfung, öffentlich angezeigt. Fotos werden
+		über einen S3-kompatiblen Objektspeicher ausgeliefert.
 	</p>
 
 	<h2>Cookies</h2>
@@ -58,8 +58,8 @@
 
 	<h2>Deine Rechte</h2>
 	<p>
-		Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung
-		deiner Daten sowie auf Datenübertragbarkeit. Wende dich dazu an [kontakt@dorfpartys.com].
+		Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner
+		Daten sowie auf Datenübertragbarkeit. Wende dich dazu an [kontakt@dorfpartys.com].
 	</p>
 </article>
 
@@ -70,7 +70,7 @@
 	.notice {
 		border-left: 3px solid var(--color-secondary);
 		padding-left: 12px;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-size: 0.9rem;
 	}
 	.legal h2 {

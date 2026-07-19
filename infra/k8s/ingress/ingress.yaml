@@ -10,10 +10,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - dorfpartys.com
+        - www.dorfpartys.com
       secretName: dorfpartys-tls
   rules:
-    - host: dorfpartys.com
+    - host: www.dorfpartys.com
       http:
         paths:
           - path: /
