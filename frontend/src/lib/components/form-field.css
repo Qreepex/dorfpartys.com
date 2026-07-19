@@ -1,0 +1,99 @@
+/* Shared styling for form-field-shaped components (TextInput, PriceInput, DateInput, ... ).
+   Hard-edged, bordered fields per DESIGN.md 5 ("Festzelt-Anmeldeformular", keine Pill-Inputs). */
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.field-label {
+	font-family: 'Inter', system-ui, sans-serif;
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--color-text-muted);
+}
+
+.field-control {
+	width: 100%;
+	min-height: 44px;
+	background: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: 2px;
+	color: var(--color-text);
+	font-family: 'Inter', system-ui, sans-serif;
+	font-size: 0.95rem;
+	padding: 10px 12px;
+	transition: border-color 0.15s;
+}
+
+.field-control::placeholder {
+	color: var(--color-text-muted);
+}
+
+.field-control:focus {
+	outline: 2px solid var(--color-primary);
+	outline-offset: -2px;
+	border-color: var(--color-primary);
+}
+
+.field-control:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+select.field-control {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239C9C90' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	padding-right: 32px;
+	cursor: pointer;
+}
+
+.field-control-wrap {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 44px;
+	background: var(--color-bg-alt);
+	border: 1px solid var(--color-border);
+	border-radius: 2px;
+	padding: 0 12px;
+	gap: 8px;
+	transition: border-color 0.15s;
+}
+
+.field-control-wrap:focus-within {
+	outline: 2px solid var(--color-primary);
+	outline-offset: -2px;
+	border-color: var(--color-primary);
+}
+
+.field-control-wrap .field-control {
+	border: none;
+	background: transparent;
+	padding: 10px 0;
+	min-height: auto;
+}
+
+.field-control-wrap .field-control:focus {
+	outline: none;
+}
+
+.field-affix {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	color: var(--color-text-muted);
+	font-size: 0.9rem;
+}
+
+.field-error {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--color-secondary);
+}
