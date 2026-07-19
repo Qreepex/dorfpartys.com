@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Meine Partyliste - dorfpartys.com</title>
+	<title>Meine Partyliste | dorfpartys.com</title>
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 

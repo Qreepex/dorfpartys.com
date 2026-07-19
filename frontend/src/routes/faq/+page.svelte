@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>Häufig gestellte Fragen (FAQ) - dorfpartys.com</title>
+	<title>Häufig gestellte Fragen (FAQ) | dorfpartys.com</title>
 	<meta
 		name="description"
 		content="Alle Antworten zu dorfpartys.com: kostenlos Veranstaltungen eintragen, Schützenfeste und Zeltfeten finden, Veranstalter-Profile, Datenschutz und mehr."
@@ -20,13 +20,14 @@
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="Häufig gestellte Fragen - dorfpartys.com" />
 	<meta property="og:url" content={canonical} />
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(faqJsonLd)}
 </svelte:head>
 
-<article class="max-w-[70ch]">
+<article>
 	<header>
-		<h1 class="text-[clamp(1.8rem,4vw,2.6rem)]">Häufig gestellte Fragen</h1>
-		<p class="mt-3 text-lg text-muted">
+		<h1>Häufig gestellte Fragen</h1>
+		<p class="text-lg text-muted">
 			Alles rund um kostenloses Eintragen und Finden von Dorfpartys, Schützenfesten, Zeltfeten und
 			mehr im DACH-Raum.
 		</p>

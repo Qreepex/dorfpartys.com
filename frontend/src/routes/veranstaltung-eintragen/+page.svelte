@@ -2,8 +2,8 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
-	import { Button, DropdownSelect, FormGrid, TextInput, Toggle } from '$lib/components/index.js';
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
+	import { Button, DropdownSelect, FormGrid, TextInput, Toggle } from '$lib/components/index.js';
 	import { SITE_URL } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
@@ -62,7 +62,7 @@
 		<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
 			Kostenlos · Werbefrei · In 5 Minuten
 		</p>
-		<h1 class="text-[clamp(2rem,5vw,3rem)] leading-[1.05]">
+		<h1 class="leading-[1.05]">
 			Trag deine Party ein -<br />
 			<span class="bg-primary px-1 text-ink">gefunden von der ganzen Gegend</span>
 		</h1>

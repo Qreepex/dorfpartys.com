@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head>
-	<title>{event.title} - dorfpartys.com</title>
+	<title>{event.title} | dorfpartys.com</title>
 	<meta name="description" content={metaDescription} />
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
@@ -46,7 +46,9 @@
 	{:else}
 		<meta name="twitter:card" content="summary" />
 	{/if}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(event.jsonLd)}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(event.breadcrumbJsonLd)}
 </svelte:head>
 
@@ -61,7 +63,7 @@
 			>
 				{event.partyArtName}
 			</p>
-			<h1 class="text-[clamp(1.8rem,5vw,2.8rem)]">{event.title}</h1>
+			<h1>{event.title}</h1>
 		</div>
 		<form method="POST" action="?/toggleSave">
 			<input type="hidden" name="eventId" value={event.id} />

@@ -133,7 +133,7 @@
 
 	<article>
 		<header class="mb-8">
-			<h1 class="text-[clamp(1.6rem,4vw,2.4rem)]">{result.seo.h1}</h1>
+			<h1>{result.seo.h1}</h1>
 			<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
 			<p class="mt-2 text-[0.85rem] text-muted">
 				{result.total}

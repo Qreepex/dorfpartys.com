@@ -33,6 +33,10 @@
 			<a class="text-muted no-underline hover:text-primary" href={resolve('/nutzungsbedingungen')}>
 				Nutzungsbedingungen
 			</a>
+			·
+			<a class="text-muted no-underline hover:text-primary" href={resolve('/report')}>
+				Inhalte melden
+			</a>
 		</span>
 	</div>
 </footer>

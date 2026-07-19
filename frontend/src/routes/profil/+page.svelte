@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>Mein Profil - dorfpartys.com</title>
+	<title>Mein Profil | dorfpartys.com</title>
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
@@ -81,7 +81,7 @@
 	</form>
 
 	{#if data.links.length > 0}
-		<h2 class="mt-10 text-[1.3rem]">Weitere Links</h2>
+		<h2>Weitere Links</h2>
 		<ul class="mt-3 flex flex-wrap gap-3">
 			{#each data.links as link (link.id)}
 				<li>

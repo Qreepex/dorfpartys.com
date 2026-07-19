@@ -107,7 +107,7 @@
 	{/if}
 
 	<section class="mt-10">
-		<h2 class="text-[1.3rem]">Kommende Veranstaltungen</h2>
+		<h2>Kommende Veranstaltungen</h2>
 		{#if upcoming.length === 0}
 			<p class="text-muted">Aktuell sind keine kommenden Termine eingetragen.</p>
 		{:else}
@@ -117,7 +117,7 @@
 
 	{#if past.length > 0}
 		<section class="mt-10">
-			<h2 class="text-[1.3rem]">Vergangene Veranstaltungen</h2>
+			<h2>Vergangene Veranstaltungen</h2>
 			<EventList events={past} country={past[0].country} />
 		</section>
 	{/if}

@@ -90,8 +90,11 @@
 	/>
 	<meta property="og:url" content={SITE_URL + '/'} />
 	<meta name="twitter:card" content="summary" />
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(websiteJsonLd)}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(organizationJsonLd)}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(faqJsonLd)}
 </svelte:head>
 
@@ -262,7 +265,7 @@
 
 <section class="mt-12">
 	<div class="flex flex-wrap items-baseline justify-between gap-3">
-		<h2 class="mb-1.5 text-[1.6rem]">
+		<h2>
 			Nächste Partys{#if !data.showAllCountries}
 				in {COUNTRY_LABELS[data.country]}{/if}
 		</h2>
@@ -288,7 +291,7 @@
 </section>
 
 <section class="mt-16 max-w-[70ch]">
-	<h2 class="text-[1.5rem]">Was ist dorfpartys.com?</h2>
+	<h2>Was ist dorfpartys.com?</h2>
 	<p class="leading-relaxed text-muted">
 		dorfpartys.com ist die größte kostenlose Übersicht für Dorfpartys, Schützenfeste, Zeltfeten,
 		Scheunenfeten, Stoppelfeten, Kirmes und Dorffeste in Deutschland, Österreich und der Schweiz.
@@ -305,7 +308,7 @@
 
 {#if popularPartyArten.length > 0}
 	<section class="mt-16">
-		<h2 class="text-[1.5rem]">
+		<h2>
 			Beliebte Party-Arten{#if currentMonth}
 				im {currentMonth.name}{/if}
 		</h2>
@@ -332,8 +335,8 @@
 
 {#if popularBundeslaender.length > 0}
 	<section class="mt-16">
-		<h2 class="text-[1.5rem]">Regionen in {COUNTRY_LABELS[data.country]}</h2>
-		<p class="mb-5 max-w-[60ch] text-muted">
+		<h2>Regionen in {COUNTRY_LABELS[data.country]}</h2>
+		<p class="text-lg text-muted">
 			Alle Dorfpartys in einem Bundesland - auch wenn dort noch kein Termin eingetragen ist, lohnt
 			sich ein späterer Blick.
 		</p>
@@ -342,7 +345,7 @@
 				<li>
 					<a
 						class="text-[0.9rem] text-text no-underline hover:text-primary hover:underline"
-						href={buildFilterUrl(data.country, { bundeslandSlug: bl.slug })}
+						href={resolve(buildFilterUrl(data.country, { bundeslandSlug: bl.slug }))}
 					>
 						{bl.name}
 					</a>
@@ -352,8 +355,8 @@
 	</section>
 {/if}
 
-<section class="mt-16 max-w-[70ch]">
-	<h2 class="mt-8 text-[1.5rem]">Warum dein Event hier eintragen?</h2>
+<section class="mt-16">
+	<h2>Warum dein Event hier eintragen?</h2>
 	<ul class="my-0 grid list-none gap-4 p-0">
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Die größte Liste im DACH-Raum.</strong> Alle 16 Bundesländer Deutschlands,
@@ -388,7 +391,7 @@
 
 <section class="mt-16">
 	<div class="flex flex-wrap items-baseline justify-between gap-3">
-		<h2 class="text-[1.5rem]">Häufig gestellte Fragen</h2>
+		<h2>Häufig gestellte Fragen</h2>
 		<a class="text-[0.85rem] text-primary no-underline hover:underline" href={faqHref}
 			>Alle Fragen ansehen</a
 		>
