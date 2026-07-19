@@ -29,22 +29,18 @@
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
-<div class="onboarding">
-	<p class="eyebrow">Schritt {step} von {totalSteps}</p>
+<div class="mx-auto max-w-[52ch] py-8 pb-16">
+	<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">
+		Schritt {step} von {totalSteps}
+	</p>
 	<h1>Willkommen bei dorfpartys.com</h1>
-	<p class="lead">
+	<p class="mb-6 text-muted">
 		Bevor es losgeht, richten wir kurz dein Veranstalter-Profil ein — das dauert eine Minute.
 	</p>
 
-	<div
-		class="progress"
-		role="progressbar"
-		aria-valuenow={step}
-		aria-valuemin="1"
-		aria-valuemax={totalSteps}
-	>
+	<div class="mb-8 flex gap-1.5" role="progressbar" aria-valuenow={step} aria-valuemin="1" aria-valuemax={totalSteps}>
 		{#each stepIndicators as i (i)}
-			<span class="bar" class:active={i < step}></span>
+			<span class="h-1 flex-1" class:bg-primary={i < step} class:bg-border={i >= step}></span>
 		{/each}
 	</div>
 
@@ -54,8 +50,8 @@
 		<input type="hidden" name="websiteUrl" value={websiteUrl} />
 		<input type="hidden" name="instagramUrl" value={instagramUrl} />
 
-		<fieldset hidden={step !== 1}>
-			<legend>Wie sollen wir dich nennen?</legend>
+		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 1}>
+			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Wie sollen wir dich nennen?</legend>
 			<TextInput
 				label="Anzeigename"
 				name="displayName"
@@ -65,14 +61,14 @@
 				maxlength={80}
 				error={form?.fieldErrors?.displayName?.[0]}
 			/>
-			<p class="hint">
+			<p class="text-[0.85rem] text-muted">
 				Das ist dein öffentlicher Name als Veranstalter:in — sichtbar auf jeder Party, die du
 				einträgst, und auf deiner eigenen Veranstalter-Seite.
 			</p>
 		</fieldset>
 
-		<fieldset hidden={step !== 2}>
-			<legend>Erzähl uns kurz von dir (optional)</legend>
+		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 2}>
+			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Erzähl uns kurz von dir (optional)</legend>
 			<TextInput label="Website" type="url" bind:value={websiteUrl} placeholder="https://…" />
 			<TextInput
 				label="Instagram"
@@ -80,35 +76,44 @@
 				bind:value={instagramUrl}
 				placeholder="https://instagram.com/…"
 			/>
-			<label class="bio-field">
+			<label class="mt-4 block text-[0.85rem] text-muted">
 				Kurzbeschreibung
-				<textarea maxlength="2000" bind:value={bio} rows="4"></textarea>
+				<textarea
+					class="mt-1.5 block w-full resize-y border border-border bg-bg-alt px-3 py-2.5 font-body text-[0.95rem] text-text"
+					maxlength="2000"
+					bind:value={bio}
+					rows="4"
+				></textarea>
 			</label>
-			<p class="hint">Kannst du auch jederzeit später in deinem Profil ergänzen.</p>
+			<p class="text-[0.85rem] text-muted">Kannst du auch jederzeit später in deinem Profil ergänzen.</p>
 		</fieldset>
 
-		<fieldset hidden={step !== 3}>
-			<legend>Fertig?</legend>
-			<dl class="summary">
-				<div>
-					<dt>Anzeigename</dt>
-					<dd>{displayName || '—'}</dd>
+		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 3}>
+			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Fertig?</legend>
+			<dl class="mb-4 border-y border-border py-4">
+				<div class="flex justify-between gap-3 py-1">
+					<dt class="text-muted">Anzeigename</dt>
+					<dd class="m-0 text-right font-semibold">{displayName || '—'}</dd>
 				</div>
-				{#if websiteUrl}<div>
-						<dt>Website</dt>
-						<dd>{websiteUrl}</dd>
-					</div>{/if}
-				{#if instagramUrl}<div>
-						<dt>Instagram</dt>
-						<dd>{instagramUrl}</dd>
-					</div>{/if}
+				{#if websiteUrl}
+					<div class="flex justify-between gap-3 py-1">
+						<dt class="text-muted">Website</dt>
+						<dd class="m-0 text-right font-semibold">{websiteUrl}</dd>
+					</div>
+				{/if}
+				{#if instagramUrl}
+					<div class="flex justify-between gap-3 py-1">
+						<dt class="text-muted">Instagram</dt>
+						<dd class="m-0 text-right font-semibold">{instagramUrl}</dd>
+					</div>
+				{/if}
 			</dl>
-			<p class="hint">
+			<p class="text-[0.85rem] text-muted">
 				Damit bist du startklar. Du kannst dein Profil jederzeit unter „Mein Profil" anpassen.
 			</p>
 		</fieldset>
 
-		<div class="actions">
+		<div class="flex flex-wrap gap-3">
 			{#if step > 1}
 				<Button type="button" variant="ghost" onclick={back}>Zurück</Button>
 			{/if}
@@ -119,115 +124,7 @@
 			{:else}
 				<Button type="submit">Fertig einrichten</Button>
 			{/if}
-			<Button type="submit" formaction="?/skip" formnovalidate variant="ghost">
-				Später einrichten
-			</Button>
+			<Button type="submit" formaction="?/skip" formnovalidate variant="ghost">Später einrichten</Button>
 		</div>
 	</form>
 </div>
-
-<style>
-	.onboarding {
-		max-width: 52ch;
-		margin: 0 auto;
-		padding: 32px 0 64px;
-	}
-
-	.eyebrow {
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--color-muted);
-		margin: 0 0 4px;
-	}
-
-	.lead {
-		color: var(--color-muted);
-		margin-bottom: 24px;
-	}
-
-	.progress {
-		display: flex;
-		gap: 6px;
-		margin-bottom: 32px;
-	}
-
-	.bar {
-		flex: 1;
-		height: 4px;
-		background: var(--color-border);
-	}
-
-	.bar.active {
-		background: var(--color-primary);
-	}
-
-	fieldset {
-		border: none;
-		padding: 0;
-		margin: 0 0 24px;
-	}
-
-	legend {
-		font-family: 'Fraunces', Georgia, serif;
-		font-weight: 700;
-		font-size: 1.2rem;
-		padding: 0;
-		margin-bottom: 16px;
-	}
-
-	.hint {
-		color: var(--color-muted);
-		font-size: 0.85rem;
-	}
-
-	.bio-field {
-		display: block;
-		font-size: 0.85rem;
-		color: var(--color-muted);
-		margin-top: 16px;
-	}
-
-	.bio-field textarea {
-		display: block;
-		width: 100%;
-		margin-top: 6px;
-		padding: 10px 12px;
-		background: var(--color-bg-alt);
-		border: 1px solid var(--color-border);
-		color: var(--color-text);
-		font-family: 'Inter', system-ui, sans-serif;
-		font-size: 0.95rem;
-		resize: vertical;
-	}
-
-	.summary {
-		border-top: 1px solid var(--color-border);
-		border-bottom: 1px solid var(--color-border);
-		padding: 16px 0;
-		margin: 0 0 16px;
-	}
-
-	.summary div {
-		display: flex;
-		justify-content: space-between;
-		gap: 12px;
-		padding: 4px 0;
-	}
-
-	.summary dt {
-		color: var(--color-muted);
-	}
-
-	.summary dd {
-		margin: 0;
-		font-weight: 600;
-		text-align: right;
-	}
-
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-	}
-</style>

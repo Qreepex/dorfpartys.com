@@ -51,6 +51,25 @@ async function assertKreisBelongsToBundesland(
   }
 }
 
+/**
+ * Öffentliches Profil ist Voraussetzung fürs Eintragen von Veranstaltungen
+ * (AGENTS.md Abschnitt 3) — serverseitige Durchsetzung, das Frontend blendet
+ * das Formular nur zusätzlich entsprechend ein/aus (/veranstaltung-eintragen).
+ */
+async function assertHasPublicProfile(db: Database, userId: string) {
+  const [row] = await db
+    .select({ isPublic: userProfile.isPublic })
+    .from(userProfile)
+    .where(eq(userProfile.userId, userId));
+  if (!row?.isPublic) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Dein Profil muss öffentlich sichtbar sein, um Veranstaltungen einzutragen. Aktiviere das in deinen Profileinstellungen.",
+    });
+  }
+}
+
 async function replacePhotosAndLinks(
   db: Database,
   eventId: string,
@@ -101,6 +120,7 @@ export const eventsRouter = router({
   create: protectedProcedure
     .input(submitEventInputSchema)
     .mutation(async ({ ctx, input }) => {
+      await assertHasPublicProfile(ctx.db, ctx.user.id);
       await assertKreisBelongsToBundesland(
         ctx.db,
         input.kreisId,

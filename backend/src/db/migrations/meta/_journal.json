@@ -15,6 +15,13 @@
       "when": 1784466352905,
       "tag": "0001_cultured_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784481728192,
+      "tag": "0002_solid_gargoyle",
+      "breakpoints": true
     }
   ]
 }

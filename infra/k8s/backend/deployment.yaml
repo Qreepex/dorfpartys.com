@@ -30,6 +30,14 @@ spec:
                 name: backend-config
             - secretRef:
                 name: backend-secret
+        - name: seed
+          image: ghcr.io/qreepex/dorfpartys/backend:0.0.1
+          command: ["node", "backend/dist/db/seed/index.js"]
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
       containers:
         - name: backend
           image: ghcr.io/qreepex/dorfpartys/backend:0.0.1

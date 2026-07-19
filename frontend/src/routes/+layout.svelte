@@ -13,6 +13,8 @@
 
 <Navbar user={data.user} country={data.country} />
 
-{@render children()}
+<main class="mx-auto max-w-240 px-5 py-10">
+	{@render children()}
+</main>
 
 <Footer />

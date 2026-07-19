@@ -16,12 +16,21 @@ export const actions: Actions = {
 			displayName: formData.get('displayName') || undefined,
 			websiteUrl: formData.get('websiteUrl') || undefined,
 			instagramUrl: formData.get('instagramUrl') || undefined,
-			bio: formData.get('bio') || undefined
+			bio: formData.get('bio') || undefined,
+			isPublic: formData.get('isPublic') === 'on'
 		};
 
 		const parsed = updateProfileInputSchema.safeParse(raw);
 		if (!parsed.success) {
 			return fail(400, { fieldErrors: parsed.error.flatten().fieldErrors });
+		}
+
+		// Öffentliches Profil braucht einen Anzeigenamen, sonst gäbe es keine
+		// sinnvolle Veranstalter-Seite (AGENTS.md Abschnitt 3).
+		if (parsed.data.isPublic && !parsed.data.displayName) {
+			return fail(400, {
+				fieldErrors: { displayName: ['Anzeigename ist nötig, um das Profil öffentlich zu stellen.'] }
+			});
 		}
 
 		await locals.trpc.users.updateMyProfile.mutate(parsed.data);

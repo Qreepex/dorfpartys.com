@@ -57,39 +57,53 @@
 	);
 </script>
 
-<header class="navbar">
-	<div class="navbar-inner">
-		<a class="brand" href={resolve('/')}>
-			<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+<header class="border-b border-border">
+	<div class="mx-auto flex max-w-240 flex-wrap items-center justify-between gap-4 px-5 py-4">
+		<a class="flex items-center gap-2.5 no-underline" href={resolve('/')}>
+			<svg class="drop-shadow-[0_0_6px_var(--color-primary)]" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
 				<path
 					d="M12 0 C12 6 14 10 20 12 C14 14 12 18 12 24 C12 18 10 14 4 12 C10 10 12 6 12 0 Z"
 					fill="var(--color-primary)"
 				/>
 			</svg>
-			<span class="wordmark">dorfpartys<em>.com</em></span>
+			<span class="font-display text-lg font-black tracking-[-0.02em] text-text">
+				dorfpartys<em class="text-[0.85em] font-normal text-muted not-italic">.com</em>
+			</span>
 		</a>
 
-		<nav aria-label="Hauptnavigation">
-			<div class="country-switch" role="group" aria-label="Land wählen">
-				{#each countrySwitchLinks as link (link.country)}
+		<nav class="flex flex-wrap items-center gap-4.5 text-[0.9rem]" aria-label="Hauptnavigation">
+			<div class="flex border border-border" role="group" aria-label="Land wählen">
+				{#each countrySwitchLinks as link, i (link.country)}
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve()-Basis + dynamischer ?to=-Query (aktuelle Seite), siehe countrySwitchLinks -->
-					<a href={link.href} class:active={link.country === country}
-						>{COUNTRY_LABELS[link.country]}</a
+					<a
+						class="px-2.5 py-1.5 text-[0.78rem] font-bold tracking-[0.03em] text-muted no-underline hover:text-text"
+						class:border-r={i < countrySwitchLinks.length - 1}
+						class:border-border={i < countrySwitchLinks.length - 1}
+						class:bg-primary={link.country === country}
+						class:text-ink={link.country === country}
+						href={link.href}>{COUNTRY_LABELS[link.country]}</a
 					>
 				{/each}
 			</div>
 			{#if user}
-				<a href={resolve('/submit')}>Event einreichen</a>
-				<a href={resolve('/partyliste')}>Partyliste</a>
-				<a href={resolve('/profil')}>Mein Profil</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/veranstaltung-eintragen')}>
+					Event einreichen
+				</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/partyliste')}>Partyliste</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/profil')}>Mein Profil</a>
 				{#if isModerator}
-					<a href={resolve('/review')}>Review</a>
+					<a class="text-muted no-underline hover:text-text" href={resolve('/review')}>Review</a>
 				{/if}
-				<a href={resolve('/auth/logout')}>Logout</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/auth/logout')}>Logout</a>
 			{:else}
-				<a href={resolve('/auth/login')}>Login</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/auth/login')}>Login</a>
 			{/if}
-			<button type="button" class="theme-toggle" onclick={toggleTheme} aria-label="Theme wechseln">
+			<button
+				type="button"
+				class="flex h-11 w-11 items-center justify-center border border-border text-text hover:border-primary hover:text-primary"
+				onclick={toggleTheme}
+				aria-label="Theme wechseln"
+			>
 				{#if theme === 'dark'}
 					<svg
 						width="16"
@@ -114,102 +128,3 @@
 		</nav>
 	</div>
 </header>
-
-<style>
-	.navbar {
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.navbar-inner {
-		max-width: 960px;
-		margin: 0 auto;
-		padding: 16px 20px;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-		flex-wrap: wrap;
-	}
-
-	.brand {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		text-decoration: none;
-	}
-
-	.brand svg {
-		filter: drop-shadow(0 0 6px var(--color-primary));
-	}
-
-	.wordmark {
-		font-family: 'Fraunces', Georgia, serif;
-		font-weight: 900;
-		font-size: 1.2rem;
-		letter-spacing: -0.02em;
-		color: var(--color-text);
-	}
-
-	.wordmark em {
-		font-style: normal;
-		font-weight: 400;
-		font-size: 0.85em;
-		color: var(--color-muted);
-	}
-
-	nav {
-		display: flex;
-		align-items: center;
-		gap: 18px;
-		font-size: 0.9rem;
-	}
-
-	nav a {
-		text-decoration: none;
-		color: var(--color-muted);
-	}
-
-	nav a:hover {
-		color: var(--color-text);
-	}
-
-	.country-switch {
-		display: flex;
-		border: 1px solid var(--color-border);
-	}
-
-	.country-switch a {
-		padding: 6px 10px;
-		font-size: 0.78rem;
-		font-weight: 700;
-		letter-spacing: 0.03em;
-		border-right: 1px solid var(--color-border);
-	}
-
-	.country-switch a:last-child {
-		border-right: none;
-	}
-
-	.country-switch a.active {
-		background: var(--color-primary);
-		color: var(--color-ink);
-	}
-
-	.theme-toggle {
-		background: none;
-		border: 1px solid var(--color-border);
-		color: var(--color-text);
-		width: 44px;
-		height: 44px;
-		border-radius: 3px;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.theme-toggle:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
-	}
-</style>

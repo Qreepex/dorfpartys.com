@@ -47,125 +47,72 @@
 	{@html jsonLdScriptTag(jsonLd)}
 </svelte:head>
 
-<article class="profile">
-	<header class="profile-header">
+<article>
+	<header class="mb-2 flex items-center gap-4">
 		{#if profile.avatarUrl}
-			<img class="avatar" src={profile.avatarUrl} alt={displayName} width="96" height="96" />
+			<img class="h-24 w-24 rounded-full object-cover" src={profile.avatarUrl} alt={displayName} width="96" height="96" />
 		{/if}
 		<div>
-			<p class="eyebrow">Veranstalter</p>
-			<h1>{displayName}</h1>
+			<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>
+			<h1 class="m-0">{displayName}</h1>
 		</div>
 	</header>
 
 	{#if profile.bio}
-		<p class="bio">{profile.bio}</p>
+		<p class="max-w-[60ch] leading-relaxed text-muted">{profile.bio}</p>
 	{/if}
 
 	{#if profile.websiteUrl || profile.instagramUrl || links.length > 0}
-		<ul class="links">
+		<ul class="mb-8 flex flex-wrap gap-3">
 			{#if profile.websiteUrl}
 				<li>
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
-					<a href={profile.websiteUrl} target="_blank" rel="noopener noreferrer ugc">Website</a>
+					<a
+						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
+						href={profile.websiteUrl}
+						target="_blank"
+						rel="noopener noreferrer ugc">Website</a
+					>
 				</li>
 			{/if}
 			{#if profile.instagramUrl}
 				<li>
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
-					<a href={profile.instagramUrl} target="_blank" rel="noopener noreferrer ugc">Instagram</a>
+					<a
+						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
+						href={profile.instagramUrl}
+						target="_blank"
+						rel="noopener noreferrer ugc">Instagram</a
+					>
 				</li>
 			{/if}
 			{#each links as link (link.id)}
 				<li>
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
-					<a href={link.url} target="_blank" rel="noopener noreferrer ugc">{link.label}</a>
+					<a
+						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
+						href={link.url}
+						target="_blank"
+						rel="noopener noreferrer ugc">{link.label}</a
+					>
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
-	<section>
-		<h2>Kommende Veranstaltungen</h2>
+	<section class="mt-10">
+		<h2 class="text-[1.3rem]">Kommende Veranstaltungen</h2>
 		{#if upcoming.length === 0}
-			<p class="empty">Aktuell sind keine kommenden Termine eingetragen.</p>
+			<p class="text-muted">Aktuell sind keine kommenden Termine eingetragen.</p>
 		{:else}
 			<EventList events={upcoming} country={upcoming[0].country} />
 		{/if}
 	</section>
 
 	{#if past.length > 0}
-		<section>
-			<h2>Vergangene Veranstaltungen</h2>
+		<section class="mt-10">
+			<h2 class="text-[1.3rem]">Vergangene Veranstaltungen</h2>
 			<EventList events={past} country={past[0].country} />
 		</section>
 	{/if}
 </article>
-
-<style>
-	.profile-header {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		margin-bottom: 8px;
-	}
-
-	.avatar {
-		border-radius: 50%;
-		object-fit: cover;
-		width: 96px;
-		height: 96px;
-	}
-
-	.eyebrow {
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--color-muted);
-		margin: 0 0 4px;
-	}
-
-	.profile-header h1 {
-		margin: 0;
-	}
-
-	.bio {
-		max-width: 60ch;
-		color: var(--color-muted);
-		line-height: 1.6;
-	}
-
-	.links {
-		list-style: none;
-		padding: 0;
-		margin: 0 0 32px;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-	}
-
-	.links a {
-		display: inline-block;
-		border: 1px solid var(--color-border);
-		padding: 8px 14px;
-		text-decoration: none;
-		color: var(--color-text);
-	}
-
-	.links a:hover {
-		border-color: var(--color-primary);
-		color: var(--color-primary);
-	}
-
-	section {
-		margin-top: 40px;
-	}
-
-	section h2 {
-		font-size: 1.3rem;
-	}
-
-	.empty {
-		color: var(--color-muted);
-	}
-</style>

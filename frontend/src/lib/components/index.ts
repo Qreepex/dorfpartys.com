@@ -11,3 +11,4 @@ export { default as Toggle } from './Toggle.svelte';
 export { default as EventList } from './EventList.svelte';
 export { default as Breadcrumbs } from './Breadcrumbs.svelte';
 export { default as FaqList } from './FaqList.svelte';
+export { default as FormGrid } from './FormGrid.svelte';

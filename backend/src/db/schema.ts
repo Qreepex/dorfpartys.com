@@ -85,6 +85,10 @@ export const userProfile = pgTable("user_profile", {
   // ein display_name gesetzt wird; eigener URL-Baum ohne Kollisionsrisiko zu
   // den vier Filter-Vokabularen, analog zu Event-Slugs (AGENTS.md 1.7).
   slug: text("slug").unique(),
+  // Standardmäßig privat — öffentliche Sichtbarkeit ist Voraussetzung fürs
+  // Eintragen von Veranstaltungen (enforced sowohl im Backend als auch im
+  // Frontend, siehe events.create und /veranstaltung-eintragen).
+  isPublic: boolean("is_public").notNull().default(false),
   displayName: text("display_name"),
   avatarS3Key: text("avatar_s3_key"),
   websiteUrl: text("website_url"),

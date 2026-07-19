@@ -148,6 +148,7 @@ async function ensureDemoOrganizer(index: number) {
       userId,
       slug,
       displayName,
+      isPublic: true,
       bio: "Demo-Veranstalter für Testzwecke — trägt Beispiel-Events auf dorfpartys.com ein.",
     });
   }

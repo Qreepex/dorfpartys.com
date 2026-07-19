@@ -13,6 +13,8 @@ export interface User {
 export interface UserProfile {
 	userId: string;
 	slug: string | null;
+	/** Standardmäßig privat — öffentlich ist Voraussetzung fürs Eintragen von Veranstaltungen. */
+	isPublic: boolean;
 	displayName: string | null;
 	avatarS3Key: string | null;
 	websiteUrl: string | null;

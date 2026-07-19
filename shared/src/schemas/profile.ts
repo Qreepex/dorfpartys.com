@@ -6,13 +6,16 @@ export const userLinkInputSchema = z.object({
 	position: z.number().int().nonnegative()
 });
 
-// AGENTS.md Abschnitt 3: Profil ist optional, kein Pflichtfeld.
+// AGENTS.md Abschnitt 3: Profil ist optional, kein Pflichtfeld. `isPublic` ist
+// standardmäßig false — öffentliche Sichtbarkeit ist Voraussetzung fürs
+// Eintragen von Veranstaltungen (AGENTS.md Abschnitt 3, events.create).
 export const updateProfileInputSchema = z.object({
 	displayName: z.string().trim().min(1).max(80).optional(),
 	avatarS3Key: z.string().trim().min(1).optional(),
 	websiteUrl: z.string().trim().url().optional(),
 	instagramUrl: z.string().trim().url().optional(),
 	bio: z.string().trim().max(2000).optional(),
+	isPublic: z.boolean().optional(),
 	links: z.array(userLinkInputSchema).max(20).optional()
 });
 

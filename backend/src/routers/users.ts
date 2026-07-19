@@ -97,7 +97,9 @@ export const usersRouter = router({
         .select()
         .from(userProfile)
         .where(eq(userProfile.slug, input.slug));
-      if (!profileRow) return null;
+      // Private Profile sind unter ihrer URL nicht erreichbar (AGENTS.md
+      // Abschnitt 3) — wie "nicht gefunden" behandelt, kein Hinweis auf Existenz.
+      if (!profileRow || !profileRow.isPublic) return null;
 
       const [links, events] = await Promise.all([
         ctx.db

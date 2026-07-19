@@ -95,7 +95,7 @@ export async function getVeranstalterSitemapEntries(db: Database) {
   const rows = await db
     .select({ slug: userProfile.slug, updatedAt: userProfile.updatedAt })
     .from(userProfile)
-    .where(isNotNull(userProfile.slug));
+    .where(and(isNotNull(userProfile.slug), eq(userProfile.isPublic, true)));
 
   return rows
     .filter(
