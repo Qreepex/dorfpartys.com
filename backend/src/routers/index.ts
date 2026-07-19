@@ -1,5 +1,6 @@
 import { router } from "../trpc/trpc.js";
 import { eventsRouter } from "./events.js";
+import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
 import { savedEventsRouter } from "./saved-events.js";
 import { sitemapRouter } from "./sitemap.js";
@@ -14,6 +15,7 @@ export const appRouter = router({
   taxonomy: taxonomyRouter,
   users: usersRouter,
   uploads: uploadsRouter,
+  reports: reportsRouter,
   sitemap: sitemapRouter,
   stats: statsRouter,
   savedEvents: savedEventsRouter,

@@ -26,6 +26,22 @@ export const slugTypeEnum = pgEnum("slug_type", [
   "monat",
 ]);
 
+export const reportTypeEnum = pgEnum("report_type", [
+  "normal",
+  "dmca",
+  "copyright",
+  "dsa",
+  "netzdk",
+  "netsperrer",
+  "swisslaw",
+]);
+
+export const reportStatusEnum = pgEnum("report_status", [
+  "open",
+  "reviewed",
+  "resolved",
+]);
+
 // --- Taxonomie / Stammdaten ---------------------------------------------
 
 export const bundesland = pgTable("bundesland", {
@@ -204,6 +220,35 @@ export const savedEvent = pgTable(
   (t) => [uniqueIndex("saved_event_user_event_idx").on(t.userId, t.eventId)],
 );
 
+// --- Reports ---------------------------------------------------------------
+
+export const report = pgTable("report", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: reportTypeEnum("type").notNull(),
+  subjectType: text("subject_type").notNull(), // "event" | "user" | "profile"
+  subjectId: text("subject_id"), // nullable - for unrelated content reports
+  url: text("url").notNull(),
+  description: text("description").notNull(),
+  reporterEmail: text("reporter_email"), // required for legal types
+  reporterName: text("reporter_name"),
+  country: countryEnum("country"), // for legal compliance context
+  status: reportStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Rate limiting for reports (IP-based)
+export const reportRateLimit = pgTable("report_rate_limit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ipAddress: text("ip_address").notNull(),
+  reportCount: integer("report_count").notNull().default(1),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+});
+
 // --- Relations ---------------------------------------------------------
 
 export const bundeslandRelations = relations(bundesland, ({ many }) => ({
@@ -271,3 +316,5 @@ export const savedEventRelations = relations(savedEvent, ({ one }) => ({
   user: one(user, { fields: [savedEvent.userId], references: [user.id] }),
   event: one(event, { fields: [savedEvent.eventId], references: [event.id] }),
 }));
+
+export const reportRelations = relations(report, ({}) => ({}));

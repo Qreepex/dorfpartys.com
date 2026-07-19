@@ -4,7 +4,7 @@ import { resolveAuthContext } from "../auth/context.js";
 
 export async function createContext({ req }: CreateFastifyContextOptions) {
   const { user } = await resolveAuthContext(req, db);
-  return { db, user };
+  return { db, user, req };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
