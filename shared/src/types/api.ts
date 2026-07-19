@@ -14,24 +14,11 @@ export interface ApiErrorBody {
 	};
 }
 
-export interface StatsResponse {
-	totalEvents: number;
-	upcomingEvents: number;
-	totalStates: number;
-	totalCities: number;
-	byCategory: Array<{ category: string; count: number }>;
-	byState: Array<{ state: string; count: number }>;
-}
-
-export interface SearchTreeNode {
-	state: string;
-	cities: Array<{
-		city: string;
-		categories: string[];
-	}>;
-}
-
 export interface SitemapEventEntry {
 	slug: string;
 	updatedAt: string;
+}
+
+export interface SitemapTaxonomyEntry {
+	loc: string;
 }

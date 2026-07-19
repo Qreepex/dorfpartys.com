@@ -3,24 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "description": "dorfpartys.com",
-  "workspaces": [
-    "frontend",
-    "backend",
-    "shared"
-  ],
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev:frontend": "npm run dev -w frontend",
-    "dev:backend": "npm run dev -w backend",
-    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
-    "build:shared": "npm run build -w shared",
-    "db:generate": "npm run db:generate -w backend",
-    "db:migrate": "npm run db:migrate -w backend",
-    "lint": "npm run lint -w frontend",
-    "format": "npm run format -w frontend",
-    "check": "npm run check -w frontend --if-present && npm run check -w backend --if-present && npm run check -w shared --if-present"
+    "dev": "pnpm run --parallel --filter frontend --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "build": "pnpm --filter shared build && pnpm --filter backend build && pnpm --filter frontend build",
+    "build:shared": "pnpm --filter shared build",
+    "db:generate": "pnpm --filter backend db:generate",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:seed": "pnpm --filter backend db:seed",
+    "lint": "pnpm --filter frontend lint",
+    "format": "pnpm --filter frontend format",
+    "check": "pnpm --filter shared check && pnpm --filter backend check && pnpm --filter frontend check",
+    "test": "pnpm --filter backend test"
   },
   "repository": {
     "type": "git",
