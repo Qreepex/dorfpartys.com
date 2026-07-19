@@ -1,0 +1,38 @@
+{
+  "name": "dorfpartys.com",
+  "version": "1.0.0",
+  "private": true,
+  "description": "dorfpartys.com",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "build:shared": "npm run build -w shared",
+    "db:generate": "npm run db:generate -w backend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "lint": "npm run lint -w frontend",
+    "format": "npm run format -w frontend",
+    "check": "npm run check -w frontend --if-present && npm run check -w backend --if-present && npm run check -w shared --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Qreepex/dorfpartys.com.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Qreepex/dorfpartys.com/issues"
+  },
+  "homepage": "https://github.com/Qreepex/dorfpartys.com#readme",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
