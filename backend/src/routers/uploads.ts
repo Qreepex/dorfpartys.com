@@ -1,61 +1,87 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  createPresignedAvatarUpload,
-  createPresignedEventPhotoUpload,
+  validateAndSanitizeImage,
+  createValidatedImage,
+  uploadToS3,
 } from "../storage/index.js";
 import { protectedProcedure, router } from "../trpc/trpc.js";
 
-const contentTypeSchema = z.enum(["image/jpeg", "image/png", "image/webp"]);
-const fileSizeSchema = z.number().int().positive();
+const contentTypeSchema = z.enum(["image/jpeg", "image/png"]);
+const bufferSchema = z.instanceof(Buffer);
 
 export const uploadsRouter = router({
-  // Keine Ownership-Prüfung gegen die DB möglich: die Event-ID wird vom
-  // Client vor `events.create` generiert (siehe submitEventInputSchema.id),
-  // das Event existiert zu diesem Zeitpunkt noch nicht. Der presignte Key
-  // allein legt nichts offen/an — erst events.create/update (mit
-  // Ownership-Check) macht die Datei über die App sichtbar.
-  requestEventPhotoUploadUrl: protectedProcedure
+  uploadEventPhoto: protectedProcedure
     .input(
       z.object({
         eventId: z.string().uuid(),
         contentType: contentTypeSchema,
-        fileSizeBytes: fileSizeSchema,
+        buffer: bufferSchema,
       }),
     )
     .mutation(async ({ input }) => {
       try {
-        return await createPresignedEventPhotoUpload(
-          input.eventId,
+        // Production-grade validation with re-encoding
+        const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
+          input.buffer,
           input.contentType,
-          input.fileSizeBytes,
         );
+
+        const validatedImage = createValidatedImage(
+          sanitizedBuffer,
+          mimeType,
+          input.eventId,
+          "event",
+        );
+
+        await uploadToS3(
+          validatedImage.s3Key,
+          validatedImage.buffer,
+          validatedImage.mimeType,
+        );
+
+        return { s3Key: validatedImage.s3Key };
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Upload abgelehnt",
+          message: err instanceof Error ? err.message : "Upload fehlgeschlagen",
         });
       }
     }),
 
-  requestAvatarUploadUrl: protectedProcedure
+  uploadAvatarPhoto: protectedProcedure
     .input(
       z.object({
         contentType: contentTypeSchema,
-        fileSizeBytes: fileSizeSchema,
+        buffer: bufferSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await createPresignedAvatarUpload(
-          ctx.user.id,
+        // Production-grade validation with re-encoding
+        const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
+          input.buffer,
           input.contentType,
-          input.fileSizeBytes,
         );
+
+        const validatedImage = createValidatedImage(
+          sanitizedBuffer,
+          mimeType,
+          ctx.user.id,
+          "profile",
+        );
+
+        await uploadToS3(
+          validatedImage.s3Key,
+          validatedImage.buffer,
+          validatedImage.mimeType,
+        );
+
+        return { s3Key: validatedImage.s3Key };
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Upload abgelehnt",
+          message: err instanceof Error ? err.message : "Upload fehlgeschlagen",
         });
       }
     }),

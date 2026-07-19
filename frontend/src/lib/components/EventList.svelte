@@ -11,7 +11,7 @@
 		bundeslandName: string;
 		kreisName: string;
 		partyArtName: string;
-		/** Nur nötig bei DACH-weiten Listen mit gemischten Ländern — sonst wird `country` (Prop) verwendet. */
+		/** Nur nötig bei DACH-weiten Listen mit gemischten Ländern - sonst wird `country` (Prop) verwendet. */
 		country?: Country;
 		/** Für `itemExtra`-Aktionen, die die Event-DB-ID brauchen (z.B. Entfernen auf /partyliste). */
 		eventId?: string;

@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Impressum — dorfpartys.com</title>
+	<title>Impressum - dorfpartys.com</title>
 	<meta name="description" content="Anbieterkennzeichnung nach § 5 TMG für dorfpartys.com." />
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
@@ -15,7 +15,7 @@
 	<h1>Impressum</h1>
 
 	<p class="notice">
-		Platzhalter — bitte vor dem Livegang durch die tatsächlichen Anbieterangaben nach § 5 TMG
+		Platzhalter - bitte vor dem Livegang durch die tatsächlichen Anbieterangaben nach § 5 TMG
 		ersetzen.
 	</p>
 

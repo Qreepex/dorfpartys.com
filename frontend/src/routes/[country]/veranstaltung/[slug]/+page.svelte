@@ -22,7 +22,7 @@
 		{ name: event.title, href: canonical }
 	]);
 	const metaDescription = $derived(
-		`${event.title} — ${new Date(event.startDate).toLocaleDateString('de-DE', {
+		`${event.title} - ${new Date(event.startDate).toLocaleDateString('de-DE', {
 			day: '2-digit',
 			month: 'long',
 			year: 'numeric'
@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head>
-	<title>{event.title} — dorfpartys.com</title>
+	<title>{event.title} - dorfpartys.com</title>
 	<meta name="description" content={metaDescription} />
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />

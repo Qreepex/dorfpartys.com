@@ -1,6 +1,6 @@
 /**
  * Der Bucket ist öffentlich lesbar (Fotos sind ohnehin öffentlich sichtbar),
- * daher genügt für die Anzeige eine einfache öffentliche URL — kein
+ * daher genügt für die Anzeige eine einfache öffentliche URL - kein
  * presigned GET nötig. Nur Uploads (PUT) laufen presigned (AGENTS.md 7).
  */
 export function buildPublicStorageUrl(s3Key: string): string {

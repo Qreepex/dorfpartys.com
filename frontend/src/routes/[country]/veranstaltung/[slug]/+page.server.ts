@@ -1,5 +1,5 @@
-import { error, fail, redirect } from '@sveltejs/kit';
 import { COUNTRIES, type Country } from '@dorfpartys/shared';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
 function isCountry(value: string): value is Country {
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-	// Merken/Entmerken (AGENTS.md item 2, /partyliste) — Login-Pflicht, sonst
+	// Merken/Entmerken (AGENTS.md item 2, /partyliste) - Login-Pflicht, sonst
 	// zurück zum Login mit Rücksprung auf die aktuelle Event-Seite.
 	toggleSave: async ({ request, locals, url }) => {
 		const formData = await request.formData();

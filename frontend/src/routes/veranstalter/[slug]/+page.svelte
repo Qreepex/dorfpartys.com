@@ -15,7 +15,7 @@
 	const metaDescription = $derived(
 		profile.bio
 			? profile.bio.slice(0, 155)
-			: `${displayName} auf dorfpartys.com — ${upcoming.length} kommende Veranstaltung${upcoming.length === 1 ? '' : 'en'}. Kostenlos, werbefrei, DACH-weit.`
+			: `${displayName} auf dorfpartys.com - ${upcoming.length} kommende Veranstaltung${upcoming.length === 1 ? '' : 'en'}. Kostenlos, werbefrei, DACH-weit.`
 	);
 
 	const jsonLd = $derived({
@@ -33,12 +33,12 @@
 </script>
 
 <svelte:head>
-	<title>{displayName} — Veranstalter auf dorfpartys.com</title>
+	<title>{displayName} - Veranstalter auf dorfpartys.com</title>
 	<meta name="description" content={metaDescription} />
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
 	<meta property="og:type" content="profile" />
-	<meta property="og:title" content={`${displayName} — Veranstalter auf dorfpartys.com`} />
+	<meta property="og:title" content={`${displayName} - Veranstalter auf dorfpartys.com`} />
 	<meta property="og:description" content={metaDescription} />
 	<meta property="og:url" content={canonical} />
 	{#if profile.avatarUrl}

@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-	<title>Mein Profil — dorfpartys.com</title>
+	<title>Mein Profil - dorfpartys.com</title>
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
@@ -72,7 +72,7 @@
 				checked={data.profile?.isPublic ?? false}
 			/>
 			<p class="mt-2 max-w-[55ch] text-[0.85rem] text-muted">
-				Nur mit öffentlichem Profil bist du unter deiner Veranstalter-Seite auffindbar — und nur
+				Nur mit öffentlichem Profil bist du unter deiner Veranstalter-Seite auffindbar - und nur
 				dann kannst du Veranstaltungen eintragen. Standardmäßig ist dein Profil privat.
 			</p>
 		</div>

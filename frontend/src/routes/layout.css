@@ -3,7 +3,7 @@
 /*
  * Tailwind-v4-Theme (CSS-first, kein tailwind.config.*): Tokens hier drin
  * erzeugen automatisch Utilities (bg-primary, text-muted, border-border, ...).
- * Werte sind die Dark-Defaults (konzeptioneller Standardzustand, DESIGN.md 6) —
+ * Werte sind die Dark-Defaults (konzeptioneller Standardzustand, DESIGN.md 6) -
  * der Light-Theme-Wechsel läuft weiterhin über reine CSS-Custom-Property-
  * Überschreibung unten (:root[data-theme='light']), NICHT über @theme, damit
  * die generierten Utility-Klassen (die intern var(--color-*) referenzieren)

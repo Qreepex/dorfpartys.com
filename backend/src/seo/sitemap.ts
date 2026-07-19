@@ -1,9 +1,9 @@
-import { and, eq, isNotNull, sql } from "drizzle-orm";
 import {
   buildFilterUrl,
   buildOrganizerUrl,
   type Country,
 } from "@dorfpartys/shared";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import {
   bundesland,
@@ -37,7 +37,7 @@ export async function getEventSitemapEntries(db: Database) {
 }
 
 /**
- * Alle Orte (Bundesland/Kreis) dieses Landes — nicht nur solche mit aktuellen
+ * Alle Orte (Bundesland/Kreis) dieses Landes - nicht nur solche mit aktuellen
  * Events. Bewusste Abweichung von AGENTS.md 1.8/1.6: valide Such-URLs sollen
  * schon vor dem ersten Event indexierbar sein (siehe ResolveResult.indexable,
  * TODO.md "seite ohne events indizieren lassen?").
@@ -78,7 +78,7 @@ export async function getOrteSitemapEntries(db: Database, country: Country) {
   return entries;
 }
 
-/** Alle aktiven Party-Arten — siehe Hinweis auf getOrteSitemapEntries oben. */
+/** Alle aktiven Party-Arten - siehe Hinweis auf getOrteSitemapEntries oben. */
 export async function getArtenSitemapEntries(db: Database, country: Country) {
   const rows = await db
     .select({ artSlug: partyArt.slug })

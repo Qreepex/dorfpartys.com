@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { EventListItem } from "@dorfpartys/shared";
+import { describe, expect, it } from "vitest";
 import { resolve } from "./resolve.js";
 import type { EventFilterIds, TaxonomyRepository } from "./types.js";
 
@@ -43,7 +43,7 @@ class FakeTaxonomyRepository implements TaxonomyRepository {
 const repo = new FakeTaxonomyRepository(1);
 const emptyRepo = new FakeTaxonomyRepository(0);
 
-describe("resolve — kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
+describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
   it("bundesland/kreis/art/monat", async () => {
     const result = await resolve(
       "de",
@@ -110,7 +110,7 @@ describe("resolve — kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => 
   });
 });
 
-describe("resolve — Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
+describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
   it("Kreis impliziert Bundesland: fehlt es, wird es per 301 ergänzt", async () => {
     const result = await resolve("de", ["ostholstein", "zeltfeten"], repo);
     expect(result).toEqual({
@@ -155,7 +155,7 @@ describe("resolve — Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
   });
 });
 
-describe("resolve — Indexierungsregeln (bewusste Abweichung von AGENTS.md 1.6, siehe TODO.md)", () => {
+describe("resolve - Indexierungsregeln (bewusste Abweichung von AGENTS.md 1.6, siehe TODO.md)", () => {
   it("Treffer > 0 -> indexable", async () => {
     const result = await resolve("de", ["schuetzenfeste"], repo);
     if (result.kind !== "result") throw new Error("expected result");

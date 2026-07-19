@@ -52,7 +52,7 @@ Weitere Scripts: `pnpm check` (Typecheck aller Workspaces), `pnpm test` (Resolve
 
 ## Deployment
 
-Läuft auf einem selbstverwalteten Kubernetes-Cluster. Manifeste liegen in `/infra/k8s` (separate Deployments für `frontend` und `backend`, gemeinsames Ingress, Postgres über CloudNativePG — siehe `infra/k8s/README.md`). Dockerfiles für beide Apps liegen in `/infra/docker` (Repo-Root als Build-Kontext, wegen pnpm-Workspace). CI-Pipeline zum Bauen/Pushen der Images ist noch nicht Teil dieses Repos.
+Läuft auf einem selbstverwalteten Kubernetes-Cluster. Manifeste liegen in `/infra/k8s` (separate Deployments für `frontend` und `backend`, gemeinsames Ingress, Postgres über CloudNativePG - siehe `infra/k8s/README.md`). Dockerfiles für beide Apps liegen in `/infra/docker` (Repo-Root als Build-Kontext, wegen pnpm-Workspace). CI-Pipeline zum Bauen/Pushen der Images ist noch nicht Teil dieses Repos.
 
 ## Aktueller Stand
 

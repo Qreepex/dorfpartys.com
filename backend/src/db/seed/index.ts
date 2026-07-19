@@ -1,5 +1,5 @@
-import "dotenv/config";
 import { MONTHS, PARTY_ART_SEED } from "@dorfpartys/shared";
+import "dotenv/config";
 import { db, queryClient } from "../index.js";
 import { bundesland, kreis, partyArt, slugRegistry } from "../schema.js";
 import { BUNDESLAND_SEED, PARTY_ART_EXTRA_SEED } from "./data.js";
@@ -52,7 +52,7 @@ async function seedTaxonomy() {
     await upsertSlugRegistry(art.slug, "party_art", artRow.id);
   }
 
-  // Monate sind ein festes Enum ohne eigene Tabelle (AGENTS.md Abschnitt 2) —
+  // Monate sind ein festes Enum ohne eigene Tabelle (AGENTS.md Abschnitt 2) -
   // trotzdem in der Slug-Registry führen, damit die globale Kollisionsfreiheit
   // über alle vier Vokabulare hinweg geprüft werden kann (AGENTS.md 1.5).
   for (const month of MONTHS) {

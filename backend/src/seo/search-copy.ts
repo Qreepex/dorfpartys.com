@@ -26,7 +26,7 @@ export interface SearchCopyInput {
 /**
  * Baut pro Segment-Kombination einzigartigen SEO-Text (Title, Meta-Description,
  * H1, Intro-Absatz) aus den Klarnamen der aufgelösten Filter. Rein textuell,
- * kein DB-Zugriff — reihenfolgeunabhängig, deckt alle Kombinationen aus
+ * kein DB-Zugriff - reihenfolgeunabhängig, deckt alle Kombinationen aus
  * AGENTS.md 1.2 ab (0–4 Segmente).
  */
 export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
@@ -58,7 +58,7 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
 
   const zeitraum = monat ? ` im ${monat}` : "";
   const h1 = `${subject}${zeitraum}`;
-  const title = `${h1} — ${SITE_NAME}`;
+  const title = `${h1} - ${SITE_NAME}`;
 
   const ortSatz = kr ? `${kr} (${bl})` : (bl ?? countryIn);
   const artSatzTeil = art
@@ -69,13 +69,13 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   const description =
     input.total > 0
       ? `${input.total} ${input.total === 1 ? "Party-Termin" : "Party-Termine"}: ${artSatzTeil} in ${ortSatz}${monatSatzTeil}. Kostenlos, werbefrei und ohne Anmeldung durchsuchbar.`
-      : `${artSatzTeil} in ${ortSatz}${monatSatzTeil} — aktuell noch keine Einträge. Kostenlos und werbefrei; trag dein Event ein und werde als Erste:r hier gelistet.`;
+      : `${artSatzTeil} in ${ortSatz}${monatSatzTeil} - aktuell noch keine Einträge. Kostenlos und werbefrei; trag dein Event ein und werde als Erste:r hier gelistet.`;
 
   const introParts: string[] = [];
   introParts.push(
     art
       ? `Hier findest du alle ${art} in ${ortSatz}${monatSatzTeil} auf einen Blick.`
-      : `Hier findest du alle Dorfpartys in ${ortSatz}${monatSatzTeil} auf einen Blick — von Schützenfest über Zeltfete bis Scheunenfete.`,
+      : `Hier findest du alle Dorfpartys in ${ortSatz}${monatSatzTeil} auf einen Blick - von Schützenfest über Zeltfete bis Scheunenfete.`,
   );
   if (input.total > 0) {
     introParts.push(
@@ -83,7 +83,7 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
     );
   } else {
     introParts.push(
-      "Für diese Auswahl ist noch kein Termin eingetragen — schau bald wieder vorbei oder trag die nächste Party in der Umgebung selbst ein.",
+      "Für diese Auswahl ist noch kein Termin eingetragen - schau bald wieder vorbei oder trag die nächste Party in der Umgebung selbst ein.",
     );
   }
   const intro = introParts.join(" ");

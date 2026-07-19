@@ -7,7 +7,7 @@ export interface MonthDefinition {
 	name: string;
 }
 
-// Evergreen month vocabulary — no year in the URL (see AGENTS.md 1.4).
+// Evergreen month vocabulary - no year in the URL (see AGENTS.md 1.4).
 export const MONTHS: MonthDefinition[] = [
 	{ slug: 'januar', number: 1, name: 'Januar' },
 	{ slug: 'februar', number: 2, name: 'Februar' },
@@ -29,7 +29,7 @@ export const MONTH_SLUGS = MONTHS.map((m) => m.slug) as [string, ...string[]];
 export const CANONICAL_SEGMENT_ORDER = ['bundesland', 'kreis', 'art', 'monat'] as const;
 export type SegmentType = (typeof CANONICAL_SEGMENT_ORDER)[number];
 
-// Startliste Party-Arten (AGENTS.md Abschnitt 10 — vollständige Liste ist offener Punkt).
+// Startliste Party-Arten (AGENTS.md Abschnitt 10 - vollständige Liste ist offener Punkt).
 export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
 	{ slug: 'schuetzenfeste', name: 'Schützenfest' },
 	{ slug: 'zeltfeten', name: 'Zeltfete' },
@@ -59,5 +59,8 @@ export type UserRole = (typeof USER_ROLES)[number];
 export const EVENT_STATUSES = ['draft', 'in_review', 'approved', 'rejected'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
-export const MAX_EVENT_PHOTOS = 3;
+export const MAX_EVENT_PHOTOS = 1;
 export const MAX_EVENT_LINKS = 3;
+
+export const MAX_IMAGE_SIZE_MB = 1;
+export const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;

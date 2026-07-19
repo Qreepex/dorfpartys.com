@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Kontext-Dokument für Agenten, die an der Implementierung von dorfpartys.com arbeiten. Beschreibt bereits getroffene Architektur-Entscheidungen — bitte als Vorgabe behandeln und nicht neu zur Diskussion stellen, sofern nicht explizit anders angewiesen.
+Kontext-Dokument für Agenten, die an der Implementierung von dorfpartys.com arbeiten. Beschreibt bereits getroffene Architektur-Entscheidungen - bitte als Vorgabe behandeln und nicht neu zur Diskussion stellen, sofern nicht explizit anders angewiesen.
 
 ## Projektüberblick
 
 dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform zum Finden und Eintragen von Partys, mit Fokus auf lokale Veranstaltungen (Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten etc.). Kernanforderung: sehr granulare, SEO-indizierbare Filter-URLs (Geografie × Party-Art × Monat), nach Vorbild von Faceted-Navigation-Portalen wie Zalando.
 
-**Scope dieser Phase:** ausschließlich technisches Fundament — Routing, Datenmodell, Auth, Nutzerprofile, Review-Workflow, SEO-Grundgerüst. Kein UI-Design/Styling.
+**Scope dieser Phase:** ausschließlich technisches Fundament - Routing, Datenmodell, Auth, Nutzerprofile, Review-Workflow, SEO-Grundgerüst. Kein UI-Design/Styling.
 
 ## 0. Repo-Struktur (Monorepo)
 
@@ -55,7 +55,7 @@ dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform z
 
 Package-Manager: **pnpm workspaces** (`pnpm-workspace.yaml` bindet frontend/backend/shared zusammen). Kommunikation frontend → backend läuft **intern im Cluster** (K8s-Service-DNS), nicht über die öffentliche Domain.
 
-Warum tRPC: Frontend und Backend sind beide TypeScript im selben Monorepo — der Frontend-Workspace importiert den `AppRouter`-Typ **nur als Typ** aus `/backend` (kein Laufzeit-Coupling), dadurch volle Typsicherheit zwischen Event-/Resolver-/Profil-Endpunkten ohne manuell gepflegtes OpenAPI-Schema. Zod-Schemas für Input-Validierung liegen in `/shared`, damit Frontend-Formulare dieselbe Validierung vor dem Absenden ausführen können wie das Backend.
+Warum tRPC: Frontend und Backend sind beide TypeScript im selben Monorepo - der Frontend-Workspace importiert den `AppRouter`-Typ **nur als Typ** aus `/backend` (kein Laufzeit-Coupling), dadurch volle Typsicherheit zwischen Event-/Resolver-/Profil-Endpunkten ohne manuell gepflegtes OpenAPI-Schema. Zod-Schemas für Input-Validierung liegen in `/shared`, damit Frontend-Formulare dieselbe Validierung vor dem Absenden ausführen können wie das Backend.
 
 ## 1. URL-Architektur
 
@@ -69,7 +69,7 @@ Resolver-Logik läuft **im Backend** (braucht DB-Zugriff auf Slug-Registry). Fro
 /ch/
 ```
 
-Land ist immer das erste Pfadsegment. Eine Domain (`dorfpartys.com`) für den gesamten DACH-Raum — keine separaten ccTLDs.
+Land ist immer das erste Pfadsegment. Eine Domain (`dorfpartys.com`) für den gesamten DACH-Raum - keine separaten ccTLDs.
 
 ### 1.2 Filter-Segmente (Suche/Browse)
 
@@ -143,9 +143,9 @@ Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **alle vier Vok
 
 ### 1.6 Indexierungsregeln
 
-- **Abweichung von der ursprünglichen Planung:** Jede gültige Filter-Kombination ist `index,follow`, **auch ohne aktuelle Treffer** — nicht nur solche mit mindestens einem aktuellen/kommenden Event. Begründung: valide Such-URLs sollen schon vor dem ersten eingetragenen Event Ranking aufbauen, damit künftig eingetragene Events sofort in einer bereits indexierten Seite auftauchen (siehe TODO.md "seite ohne events indizieren lassen? ich glaub ja"). Umgesetzt in `backend/src/resolver/resolve.ts` (`ResolveResult.indexable`) sowie in den Orte-/Arten-Sitemaps (`backend/src/seo/sitemap.ts`), die jetzt die volle Taxonomie statt nur Kombinationen mit Events auflisten.
+- **Abweichung von der ursprünglichen Planung:** Jede gültige Filter-Kombination ist `index,follow`, **auch ohne aktuelle Treffer** - nicht nur solche mit mindestens einem aktuellen/kommenden Event. Begründung: valide Such-URLs sollen schon vor dem ersten eingetragenen Event Ranking aufbauen, damit künftig eingetragene Events sofort in einer bereits indexierten Seite auftauchen (siehe TODO.md "seite ohne events indizieren lassen? ich glaub ja"). Umgesetzt in `backend/src/resolver/resolve.ts` (`ResolveResult.indexable`) sowie in den Orte-/Arten-Sitemaps (`backend/src/seo/sitemap.ts`), die jetzt die volle Taxonomie statt nur Kombinationen mit Events auflisten.
 - Leere Kombinationen: **kein 404**, sondern normale Seite mit Hinweis (Call-to-Action zum Eintragen).
-- Jede Segment-Kombination hat serverseitig gebauten, eindeutigen SEO-Text (Title/Description/H1/Intro) aus den Klarnamen der Filter — `backend/src/seo/search-copy.ts`, ausgeliefert über `resolver.resolve`.
+- Jede Segment-Kombination hat serverseitig gebauten, eindeutigen SEO-Text (Title/Description/H1/Intro) aus den Klarnamen der Filter - `backend/src/seo/search-copy.ts`, ausgeliefert über `resolver.resolve`.
 - `BreadcrumbList` JSON-LD auf allen Filter-/Suchseiten.
 
 ### 1.7 Event-Detailseiten (eigener URL-Baum)
@@ -174,7 +174,7 @@ Entkoppelt von den vier Filter-Vokabularen (kein Kollisionsrisiko), einfacheres 
 /sitemap-veranstalter.xml
 ```
 
-Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen — konsistent mit der Indexierungsregel in 1.6 — die volle Taxonomie, nicht nur Kombinationen mit aktuellen Events.
+Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen - konsistent mit der Indexierungsregel in 1.6 - die volle Taxonomie, nicht nur Kombinationen mit aktuellen Events.
 
 ## 2. Datenmodell
 
@@ -247,25 +247,25 @@ Constraints/Validierung im Backend (nicht nur UI):
 - `bundesland_id`/`kreis_id` verpflichtend, aus Stammdaten gewählt (kein Freitext); `kreis_id` muss zu `bundesland_id` gehören.
 - `address_description` verpflichtend, Freitext (nicht Teil des Resolvers/der Suche).
 - Event erst nach `status = approved` öffentlich sichtbar/indexierbar.
-- `custom_fields` ist bewusst ungetypter Escape-Hatch — häufig genutzte Ad-hoc-Felder sollen bei Bedarf in eigene Spalten migriert werden, nicht dauerhaft in `custom_fields` bleiben.
+- `custom_fields` ist bewusst ungetypter Escape-Hatch - häufig genutzte Ad-hoc-Felder sollen bei Bedarf in eigene Spalten migriert werden, nicht dauerhaft in `custom_fields` bleiben.
 
 ## 3. Nutzerprofile
 
-- Jeder über SSO angelegte `user` kann ein `user_profile` anlegen/bearbeiten — wird als **Veranstalter** auf Event-Seiten angezeigt.
-- Pflicht für Profil: keine (Profil ist optional, aber ohne `display_name` wird der User als Veranstalter nur mit generischem Platzhalter angezeigt — UI-Entscheidung, kein Blocker für Event-Einreichung).
+- Jeder über SSO angelegte `user` kann ein `user_profile` anlegen/bearbeiten - wird als **Veranstalter** auf Event-Seiten angezeigt.
+- Pflicht für Profil: keine (Profil ist optional, aber ohne `display_name` wird der User als Veranstalter nur mit generischem Platzhalter angezeigt - UI-Entscheidung, kein Blocker für Event-Einreichung).
 - Felder: `display_name`, `avatar_s3_key` (Upload über Backend `storage`-Modul, presigned URL zu IONOS S3), `website_url`, `instagram_url`, `bio`, plus beliebig viele weitere über `user_link`.
-- Profilbild-Upload läuft wie Event-Fotos über presigned Upload-URLs — kein direkter Client-Upload zu S3-Credentials.
-- **Öffentliche Veranstalter-Seite** unter `/veranstalter/{slug}/` (DACH-weit, nicht länderskaliert, da ein Veranstalter Events in mehreren Ländern eintragen kann) — zeigt Profil, Links sowie kommende/vergangene Events des Nutzers. `slug` wird beim Speichern des Profils aus `display_name` abgeleitet (Kollisions-Disambiguierung analog Event-Slugs, `backend/src/slug/index.ts`) und ist erst gesetzt, sobald ein `display_name` gepflegt wurde — ohne `display_name` existiert keine öffentliche Seite. Eigene Sitemap `/sitemap-veranstalter.xml`.
+- Profilbild-Upload läuft wie Event-Fotos über presigned Upload-URLs - kein direkter Client-Upload zu S3-Credentials.
+- **Öffentliche Veranstalter-Seite** unter `/veranstalter/{slug}/` (DACH-weit, nicht länderskaliert, da ein Veranstalter Events in mehreren Ländern eintragen kann) - zeigt Profil, Links sowie kommende/vergangene Events des Nutzers. `slug` wird beim Speichern des Profils aus `display_name` abgeleitet (Kollisions-Disambiguierung analog Event-Slugs, `backend/src/slug/index.ts`) und ist erst gesetzt, sobald ein `display_name` gepflegt wurde - ohne `display_name` existiert keine öffentliche Seite. Eigene Sitemap `/sitemap-veranstalter.xml`.
 
 ## 4. Event-Customization
 
 - Aktuell einzige Customization-Option: `custom_color` (Hex) für die Event-Detailseite, vom Einreicher beim Anlegen/Bearbeiten wählbar.
-- Bewusst minimal gehalten — weitere Customization (Layout, Cover-Bild-Position etc.) ist expliziter Nicht-Scope dieser Phase.
+- Bewusst minimal gehalten - weitere Customization (Layout, Cover-Bild-Position etc.) ist expliziter Nicht-Scope dieser Phase.
 
 ## 5. Auth & Submission-Workflow
 
 - **SSO via Authentik**, OpenID Connect.
-- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie, `dp_session` = ID-Token — die angefragten Scopes email/profile/groups landen laut OIDC-Spec im ID-Token, nicht im Access-Token; `backend/src/auth/verify.ts` erwartet diese Claims direkt im verifizierten Token).
+- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie, `dp_session` = ID-Token - die angefragten Scopes email/profile/groups landen laut OIDC-Spec im ID-Token, nicht im Access-Token; `backend/src/auth/verify.ts` erwartet diese Claims direkt im verifizierten Token).
 - **Backend** verifiziert eingehende Requests anhand des von Authentik ausgestellten JWT (Verifizierung über Authentik-JWKS-Endpoint, zustandslos). Rollen (`user`/`moderator`/`admin`) werden aus Authentik-Gruppen/Claims gemappt.
 - Rollen: `user` (einreichen/eigenes Profil & eigene Events bearbeiten), `moderator`/`admin` (Review-Dashboard unter `/review`).
 - **Registrierungs-Flow für neue Nutzer:innen:** `/auth/callback` prüft nach dem Token-Austausch `user.onboarding_completed_at`; ist es `null` (neuer oder noch nicht eingerichteter User), erfolgt Redirect zu `/willkommen?redirectTo=...` statt direkt zum ursprünglichen Ziel. `/willkommen` ist ein Multi-Step-Formular (Anzeigename → optionale Profildetails → Zusammenfassung, clientseitig gesteuert über `hidden`-Fieldsets, ein einziger Form-POST) und setzt `display_name`/`user_profile` sowie `onboarding_completed_at`. "Später einrichten" überspringt die Profildaten, markiert das Onboarding aber ebenfalls als gesehen (kein wiederholtes Nerven bei jedem Login). tRPC: `users.completeOnboarding` / `users.skipOnboarding`.
@@ -275,21 +275,21 @@ Constraints/Validierung im Backend (nicht nur UI):
 
 ## 5a. Gemerkte Veranstaltungen ("Partyliste")
 
-- Eingeloggte Nutzer:innen können Events merken/entmerken (Button auf der Event-Detailseite) — Tabelle `saved_event`, tRPC-Router `savedEvents` (`save`/`unsave`/`listMine`).
-- Eigene Übersicht unter `/partyliste` (geschützt, `requireUser`) — kommende/vergangene gemerkte Events, analog zur Veranstalter-Seite (Abschnitt 3) mit zusätzlichem "Entfernen"-Button pro Zeile.
+- Eingeloggte Nutzer:innen können Events merken/entmerken (Button auf der Event-Detailseite) - Tabelle `saved_event`, tRPC-Router `savedEvents` (`save`/`unsave`/`listMine`).
+- Eigene Übersicht unter `/partyliste` (geschützt, `requireUser`) - kommende/vergangene gemerkte Events, analog zur Veranstalter-Seite (Abschnitt 3) mit zusätzlichem "Entfernen"-Button pro Zeile.
 - `events.getBySlug` liefert zusätzlich `isSaved` (nur wenn eingeloggt) für den Merken/Gemerkt-Toggle-Zustand.
 - `noindex,nofollow` (rein personenbezogen, kein SEO-Wert).
 
 ## 5b. Land-Erkennung & -Fokus
 
-- Beim ersten Request ohne `country`-Cookie wird das Land serverseitig aus dem `Accept-Language`-Header geraten (`de-AT`/`fr-CH`/... → `at`/`ch`, sonst `de`) und als Cookie (1 Jahr, nicht `httpOnly`) gesetzt — **bewusst ohne externen IP-Geolocation-Dienst**, um die "kein Tracking"-Positionierung der Seite nicht zu unterlaufen (Abwägung, falls doch ein Geolocation-Dienst gewünscht ist: das wäre ein externer Request pro Erstbesuch).
+- Beim ersten Request ohne `country`-Cookie wird das Land serverseitig aus dem `Accept-Language`-Header geraten (`de-AT`/`fr-CH`/... → `at`/`ch`, sonst `de`) und als Cookie (1 Jahr, nicht `httpOnly`) gesetzt - **bewusst ohne externen IP-Geolocation-Dienst**, um die "kein Tracking"-Positionierung der Seite nicht zu unterlaufen (Abwägung, falls doch ein Geolocation-Dienst gewünscht ist: das wäre ein externer Request pro Erstbesuch).
 - Clientseitig wird die Vermutung einmalig per `Intl.DateTimeFormat().resolvedOptions().timeZone` verfeinert (`Europe/Vienna`/`Europe/Zurich` → `at`/`ch`), solange die Nutzerin das Land noch nie explizit gewechselt hat (`country_explicit`-Cookie).
-- **Explizites Wechseln:** Land-Switcher in der Navbar (DE/AT/CH) verlinkt auf `/land/{country}` (als `+page.server.ts`-Load implementiert, nicht `+server.ts` — sonst behandelt SvelteKits clientseitiger Router den Klick fälschlich als 404, siehe Hinweis in Abschnitt 5c) und setzt beide Cookies dauerhaft.
-- Wirkung des bevorzugten Landes: Die Startseite (`/`) fokussiert Hero-Suchformular und "Nächste Partys"-Lineup auf dieses Land; ein Link ("Alle Länder anzeigen" / "Nur {Land} anzeigen") wechselt explizit dazwischen. Die Länder-Baum-URLs (`/de/`, `/at/`, `/ch/`, Abschnitt 1.1) bleiben davon unabhängig direkt browsbar — das bevorzugte Land ist nur der **Startseiten**-Default, keine Umleitung/Sperre der anderen Länder.
+- **Explizites Wechseln:** Land-Switcher in der Navbar (DE/AT/CH) verlinkt auf `/land/{country}` (als `+page.server.ts`-Load implementiert, nicht `+server.ts` - sonst behandelt SvelteKits clientseitiger Router den Klick fälschlich als 404, siehe Hinweis in Abschnitt 5c) und setzt beide Cookies dauerhaft.
+- Wirkung des bevorzugten Landes: Die Startseite (`/`) fokussiert Hero-Suchformular und "Nächste Partys"-Lineup auf dieses Land; ein Link ("Alle Länder anzeigen" / "Nur {Land} anzeigen") wechselt explizit dazwischen. Die Länder-Baum-URLs (`/de/`, `/at/`, `/ch/`, Abschnitt 1.1) bleiben davon unabhängig direkt browsbar - das bevorzugte Land ist nur der **Startseiten**-Default, keine Umleitung/Sperre der anderen Länder.
 
 ## 5c. Hinweis: `+server.ts` vs. `+page.server.ts` für interne Navigationsziele
 
-SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu einer Route, die **nur** ein `+server.ts` (kein `+page.svelte`) hat, fälschlich als 404 — der automatische Fallback auf eine volle Seitennavigation greift nur bei tatsächlich externen URLs, nicht bei internen Routen ohne Client-Page. Betroffen waren `/auth/login`, `/auth/logout` (jetzt `+page.server.ts`-Loads mit trivialem `+page.svelte`-Fallback) sowie `/land/{country}` (von Anfang an so gebaut). Bei jeder neuen Route, die nur redirectet/Cookies setzt und von einem `<a href>` aus verlinkt wird, dieses Muster verwenden, nicht `+server.ts`.
+SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu einer Route, die **nur** ein `+server.ts` (kein `+page.svelte`) hat, fälschlich als 404 - der automatische Fallback auf eine volle Seitennavigation greift nur bei tatsächlich externen URLs, nicht bei internen Routen ohne Client-Page. Betroffen waren `/auth/login`, `/auth/logout` (jetzt `+page.server.ts`-Loads mit trivialem `+page.svelte`-Fallback) sowie `/land/{country}` (von Anfang an so gebaut). Bei jeder neuen Route, die nur redirectet/Cookies setzt und von einem `<a href>` aus verlinkt wird, dieses Muster verwenden, nicht `+server.ts`.
 
 ## 6. SEO-Implementierungsregeln (verbindlich)
 
@@ -302,26 +302,26 @@ SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu e
 
 ## 7. Domains & Storage
 
-- Hauptdomain: `dorfpartys.com` — Land als Pfadsegment, nicht als ccTLD.
+- Hauptdomain: `dorfpartys.com` - Land als Pfadsegment, nicht als ccTLD.
 - Optional als Marketing-/Redirect-Domain: `dorf.party`.
 - Kurzlink-Domain für Event-Shares: `dp.gg`, z. B. `dp.gg/schuetzenfest-eutin`.
-- Objektspeicher: **IONOS S3** (S3-kompatible API) über `speicher.dorfpartys.com`, für Event-Fotos und Profilbilder. Backend spricht ausschließlich über presigned URLs mit dem Bucket — Zugangsdaten bleiben serverseitig.
+- Objektspeicher: **IONOS S3** (S3-kompatible API) über `speicher.dorfpartys.com`, für Event-Fotos und Profilbilder. Backend spricht ausschließlich über presigned URLs mit dem Bucket - Zugangsdaten bleiben serverseitig.
 
 ### 7.1 S3-Struktur
 
-Bucket ist **public-read** (Fotos sind ohnehin öffentlich sichtbar), aber **nicht public-write** — Uploads laufen ausschließlich über presigned PUT-URLs vom Backend.
+Bucket ist **public-read** (Fotos sind ohnehin öffentlich sichtbar), aber **nicht public-write** - Uploads laufen ausschließlich über presigned PUT-URLs vom Backend.
 
 ```
 events/{event_id}/{event_photo_id}.{ext}
 profiles/{user_id}/{avatar_id}.{ext}
 ```
 
-- Key basiert auf `event_id` (UUID), **nicht** auf dem Slug — der Slug existiert erst nach Approval (siehe 1.7), Fotos werden aber schon beim Einreichen hochgeladen.
+- Key basiert auf `event_id` (UUID), **nicht** auf dem Slug - der Slug existiert erst nach Approval (siehe 1.7), Fotos werden aber schon beim Einreichen hochgeladen.
 - `event_photo_id`/`avatar_id` sind UUIDs → Pfade sind unerratbar, relevant weil auch Fotos von noch nicht freigeschalteten Events (`draft`/`in_review`) technisch unter ihrer URL abrufbar sind, sobald hochgeladen.
 - Bei jedem Foto-/Avatar-Austausch wird ein **neuer Key** erzeugt (kein Overwrite) → ermöglicht `Cache-Control: public, max-age=31536000, immutable`.
 - Presigned-URL-Erstellung im Backend validiert Content-Type (nur `image/jpeg`, `image/png`, `image/webp`) und Dateigröße, bevor die URL ausgestellt wird.
 - Beim Löschen/Ersetzen eines Fotos entfernt das Backend aktiv den alten S3-Key (keine verwaisten öffentlichen Dateien).
-- Öffentliche Lese-URL: `https://speicher.dorfpartys.com/{key}` — kein Signing nötig für GET.
+- Öffentliche Lese-URL: `https://speicher.dorfpartys.com/{key}` - kein Signing nötig für GET.
 
 ## 8. Tech-Stack (verbindlich für diese Phase)
 
@@ -336,28 +336,28 @@ profiles/{user_id}/{avatar_id}.{ext}
 ## 9. Nicht-Ziele in dieser Phase
 
 - Kein UI-Design, kein Styling, kein Branding (außer der einen Farb-Option pro Event).
-- Keine E-Mail-Benachrichtigungen (Review-Status etc.) — Hook/Stelle im Code vorsehen, nicht implementieren.
+- Keine E-Mail-Benachrichtigungen (Review-Status etc.) - Hook/Stelle im Code vorsehen, nicht implementieren.
 - Keine Bezahlfunktionen/Promotion von Events.
 - Keine weiteren Event-Customization-Optionen außer Farbe.
 
 ## 10. Offene Punkte (vor/während Implementierung zu klären)
 
-- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Erledigt:** `backend/src/db/seed/data.ts` enthält alle 16 DE-Bundesländer (401 Kreise/kreisfreie Städte plus Berlin-Bezirke, Hamburg-Bezirke, Bremen/Bremerhaven), alle 9 AT-Bundesländer (93 Bezirke/Statutarstädte) und alle 26 CH-Kantone (124 Bezirke/Wahlkreise/Amtsbezirke, wo administrativ vorhanden). Quelle ist Modell-Wissen zu den Standard-Verwaltungsgliederungen (Destatis/Statistik Austria/BFS) zum Trainingsstand — bei künftigen Gebietsreformen (Kreisfusionen etc.) manuell nachziehen.
+- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Erledigt:** `backend/src/db/seed/data.ts` enthält alle 16 DE-Bundesländer (401 Kreise/kreisfreie Städte plus Berlin-Bezirke, Hamburg-Bezirke, Bremen/Bremerhaven), alle 9 AT-Bundesländer (93 Bezirke/Statutarstädte) und alle 26 CH-Kantone (124 Bezirke/Wahlkreise/Amtsbezirke, wo administrativ vorhanden). Quelle ist Modell-Wissen zu den Standard-Verwaltungsgliederungen (Destatis/Statistik Austria/BFS) zum Trainingsstand - bei künftigen Gebietsreformen (Kreisfusionen etc.) manuell nachziehen.
 - Finale Liste der Party-Arten festlegen (Startpunkt: Schützenfest, Zeltfete, Scheunenfete, Stoppelfete). **Startliste umgesetzt** (`shared/src/constants/index.ts` → `PARTY_ART_SEED`), finale Liste weiterhin offen.
 - Vollständige Liste optionaler Event-Felder über `custom_fields` hinaus abstimmen (aktuell: Preis, Altersbeschränkung/Muttizettel, Open Air als dedizierte Spalten).
-- Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung). **Aktuell:** on-demand, ohne Caching — jeder Aufruf von `/sitemap-*.xml` fragt live gegen die DB ab (`backend/src/seo/sitemap.ts`). Für Produktionslast ggf. Cronjob + Cache/S3-Ablage nachziehen.
+- Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung). **Aktuell:** on-demand, ohne Caching - jeder Aufruf von `/sitemap-*.xml` fragt live gegen die DB ab (`backend/src/seo/sitemap.ts`). Für Produktionslast ggf. Cronjob + Cache/S3-Ablage nachziehen.
 
 ### Bekannter Implementierungsstand vs. aktueller Spezifikation
 
 - **`allows_muttizettel`** (Abschnitt 2): umgesetzt (Drizzle-Schema/Migration, Zod-Schema, Typen, Submit-/Detailseite). Migrationshistorie wurde dabei auf eine einzige saubere Erstmigration zurückgesetzt, da noch kein echtes Deployment mit Daten existiert.
-- **S3-Struktur** (Abschnitt 7.1): umgesetzt — `events/{event_id}/{event_photo_id}.{ext}` bzw. `profiles/{user_id}/{avatar_id}.{ext}` (`backend/src/storage/presign.ts`), Dateigrößen-Validierung (Server-seitiger Grenzwert-Check auf den vom Client angegebenen Wert — SigV4-presignte PUT-URLs erzwingen keine Content-Length-Range kryptographisch) sowie aktives Löschen alter S3-Keys beim Ersetzen eines Event-Fotos/Avatars (`backend/src/storage/delete.ts`). Die Event-ID wird dafür vom Client vor `events.create` generiert (`submitEventInputSchema.id`) — ein clientseitiges Upload-Widget (Datei-Picker + presigned PUT) ist noch **nicht** gebaut, nur die Backend-Endpunkte (`uploads.requestEventPhotoUploadUrl`/`requestAvatarUploadUrl`).
+- **S3-Struktur** (Abschnitt 7.1): umgesetzt - `events/{event_id}/{event_photo_id}.{ext}` bzw. `profiles/{user_id}/{avatar_id}.{ext}` (`backend/src/storage/presign.ts`), Dateigrößen-Validierung (Server-seitiger Grenzwert-Check auf den vom Client angegebenen Wert - SigV4-presignte PUT-URLs erzwingen keine Content-Length-Range kryptographisch) sowie aktives Löschen alter S3-Keys beim Ersetzen eines Event-Fotos/Avatars (`backend/src/storage/delete.ts`). Die Event-ID wird dafür vom Client vor `events.create` generiert (`submitEventInputSchema.id`) - ein clientseitiges Upload-Widget (Datei-Picker + presigned PUT) ist noch **nicht** gebaut, nur die Backend-Endpunkte (`uploads.requestEventPhotoUploadUrl`/`requestAvatarUploadUrl`).
 - **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): Kommentar an beiden Review-Entscheidungen ergänzt (`backend/src/routers/events.ts`, `review`-Mutation).
 - **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.
-- **Rollen-Mapping Authentik-Gruppen → App-Rollen** (Abschnitt 5): erledigt. In der echten Authentik-Instanz existieren die Gruppen `Dorfpartys.com - Admin` (Gruppen-ID `4e4f3f40-20ce-4492-b0d9-5e908597f3da`) und `Dorfpartys.com - Moderator` (Gruppen-ID `182f4f89-8e94-435a-aaef-2c28cf0952b9`), verdrahtet über `AUTHENTIK_ADMIN_GROUP`/`AUTHENTIK_MODERATOR_GROUP` in `.env.example` bzw. `infra/k8s/backend/configmap.yaml` (`backend/src/auth/roles.ts`). Wichtig: Der JWT-`groups`-Claim führt Gruppen-**Namen**, nicht die Authentik-Gruppen-IDs (siehe die `profile`-Scope-Mapping der Authentik-Instanz) — die IDs oben dienen nur der Rückverfolgbarkeit in Authentik selbst.
-- **SSO-Login-Flow in Authentik** (Abschnitt 5): für die Anwendung `dorf-partys-com` ist ein dedizierter Login-Flow eingerichtet, der ausschließlich Federated Login über die Quellen `discord-dorfpartys`, `google-dorfpartys` und `facebook-dorfpartys` anbietet — kein lokales Nutzername/Passwort-Formular, keine Nutzername-Eingabe bei Erstregistrierung (Identification-Stage ohne `user_fields`, Enrollment-Flow ohne Prompt-Stage). Reine Authentik-Konfiguration (Flows/Stages/Sources), kein Code in diesem Repo; die drei Quellen sind dediziert für diese App und werden nicht mit anderen in derselben Authentik-Instanz laufenden Anwendungen geteilt.
+- **Rollen-Mapping Authentik-Gruppen → App-Rollen** (Abschnitt 5): erledigt. In der echten Authentik-Instanz existieren die Gruppen `Dorfpartys.com - Admin` (Gruppen-ID `4e4f3f40-20ce-4492-b0d9-5e908597f3da`) und `Dorfpartys.com - Moderator` (Gruppen-ID `182f4f89-8e94-435a-aaef-2c28cf0952b9`), verdrahtet über `AUTHENTIK_ADMIN_GROUP`/`AUTHENTIK_MODERATOR_GROUP` in `.env.example` bzw. `infra/k8s/backend/configmap.yaml` (`backend/src/auth/roles.ts`). Wichtig: Der JWT-`groups`-Claim führt Gruppen-**Namen**, nicht die Authentik-Gruppen-IDs (siehe die `profile`-Scope-Mapping der Authentik-Instanz) - die IDs oben dienen nur der Rückverfolgbarkeit in Authentik selbst.
+- **SSO-Login-Flow in Authentik** (Abschnitt 5): für die Anwendung `dorf-partys-com` ist ein dedizierter Login-Flow eingerichtet, der ausschließlich Federated Login über die Quellen `discord-dorfpartys`, `google-dorfpartys` und `facebook-dorfpartys` anbietet - kein lokales Nutzername/Passwort-Formular, keine Nutzername-Eingabe bei Erstregistrierung (Identification-Stage ohne `user_fields`, Enrollment-Flow ohne Prompt-Stage). Reine Authentik-Konfiguration (Flows/Stages/Sources), kein Code in diesem Repo; die drei Quellen sind dediziert für diese App und werden nicht mit anderen in derselben Authentik-Instanz laufenden Anwendungen geteilt.
 - **Stats-Endpunkt** (TODO.md "stats endpunkt backend"): `stats.overview` (`backend/src/routers/stats.ts`) liefert aggregierte, nicht-personenbezogene Kennzahlen (freigeschaltete/kommende Events, abgedeckte Kreise/Bundesländer, aktive Party-Arten, Anzahl Veranstalter mit öffentlichem Profil) für die Vertrauensleiste auf der Startseite.
-- **Landingpage** (Abschnitt 9 hebt den Design-Ausschluss für diese Phase auf, sobald DESIGN.md gilt): umgesetzt (`frontend/src/routes/+page.svelte`) — Hero mit Land/Bundesland/Art/Monat-Suchformular (Poster-/Lineup-Ästhetik nach `brand-mockup.html`), Stats-Leiste, DACH-weite "Nächste Partys"-Lineup-Sektion (`events.listUpcoming`) sowie ein Erklärungsblock (Herkunft der Events, Vorteile fürs Eintragen: kostenlos, werbefrei, kein Tracking, bessere Sichtbarkeit).
-- **Demo-Daten** (für lokales Testen): `pnpm --filter backend db:seed:demo` (nach `db:seed`) legt einen Demo-Veranstalter mit öffentlichem Profil und 5 bereits freigeschaltete Beispiel-Events in unterschiedlichen Ländern/Bundesländern/Party-Arten an (`backend/src/db/seed/demo-events.ts`) — nicht Teil des Produktions-Seeds.
-- **Legal-Seiten** `/impressum`, `/datenschutz`, `/nutzungsbedingungen`: Routen existierten als leere Verzeichnisse ohne `+page.svelte` (von Footer verlinkt, aber ohne Inhalt). Jetzt mit Platzhaltertexten befüllt — **vor Livegang durch rechtsverbindliche Inhalte ersetzen** (insbesondere Anbieterkennzeichnung nach § 5 TMG).
+- **Landingpage** (Abschnitt 9 hebt den Design-Ausschluss für diese Phase auf, sobald DESIGN.md gilt): umgesetzt (`frontend/src/routes/+page.svelte`) - Hero mit Land/Bundesland/Art/Monat-Suchformular (Poster-/Lineup-Ästhetik nach `brand-mockup.html`), Stats-Leiste, DACH-weite "Nächste Partys"-Lineup-Sektion (`events.listUpcoming`) sowie ein Erklärungsblock (Herkunft der Events, Vorteile fürs Eintragen: kostenlos, werbefrei, kein Tracking, bessere Sichtbarkeit).
+- **Demo-Daten** (für lokales Testen): `pnpm --filter backend db:seed:demo` (nach `db:seed`) legt einen Demo-Veranstalter mit öffentlichem Profil und 5 bereits freigeschaltete Beispiel-Events in unterschiedlichen Ländern/Bundesländern/Party-Arten an (`backend/src/db/seed/demo-events.ts`) - nicht Teil des Produktions-Seeds.
+- **Legal-Seiten** `/impressum`, `/datenschutz`, `/nutzungsbedingungen`: Routen existierten als leere Verzeichnisse ohne `+page.svelte` (von Footer verlinkt, aber ohne Inhalt). Jetzt mit Platzhaltertexten befüllt - **vor Livegang durch rechtsverbindliche Inhalte ersetzen** (insbesondere Anbieterkennzeichnung nach § 5 TMG).
 - **Registrierungs-Flow, Partyliste, Land-Erkennung**: umgesetzt, siehe Abschnitte 5/5a/5b.
-- **Fastify `maxParamLength`**: tRPCs `httpBatchLink` fügt bei parallelen Queries alle Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter ein (z.B. Startseite: `stats.overview,events.listUpcoming,taxonomy.partyArten,taxonomy.bundeslaender,...`). Fastifys Default-Limit von 100 Zeichen wird dabei schnell überschritten (`FST_ERR_MAX_PARAM_LENGTH`, führt clientseitig zu einem irreführenden `TRPCClientError: Unable to transform response from server`, da die 414-Fehlerantwort kein gültiges Batch-JSON ist). Behoben über `Fastify({ maxParamLength: 5000 })` in `backend/src/index.ts` — bei neuen Seiten mit vielen parallelen tRPC-Calls im Hinterkopf behalten.
+- **Fastify `maxParamLength`**: tRPCs `httpBatchLink` fügt bei parallelen Queries alle Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter ein (z.B. Startseite: `stats.overview,events.listUpcoming,taxonomy.partyArten,taxonomy.bundeslaender,...`). Fastifys Default-Limit von 100 Zeichen wird dabei schnell überschritten (`FST_ERR_MAX_PARAM_LENGTH`, führt clientseitig zu einem irreführenden `TRPCClientError: Unable to transform response from server`, da die 414-Fehlerantwort kein gültiges Batch-JSON ist). Behoben über `Fastify({ maxParamLength: 5000 })` in `backend/src/index.ts` - bei neuen Seiten mit vielen parallelen tRPC-Calls im Hinterkopf behalten.

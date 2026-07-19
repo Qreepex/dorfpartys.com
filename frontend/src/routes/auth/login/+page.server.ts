@@ -1,6 +1,6 @@
-import { createHash, randomBytes } from 'node:crypto';
-import { redirect } from '@sveltejs/kit';
 import { buildAuthorizationUrl } from '$lib/server/oidc.js';
+import { redirect } from '@sveltejs/kit';
+import { createHash, randomBytes } from 'node:crypto';
 import type { PageServerLoad } from './$types.js';
 
 function base64url(input: Buffer): string {
@@ -14,7 +14,7 @@ const OIDC_COOKIE_MAX_AGE = 600;
  * hat sonst keine Client-Route (kein `+page.svelte`), wodurch SvelteKits
  * clientseitiger Router eine Navigation dorthin (Klick auf den Login-Link,
  * oder ein serverseitiger `redirect()` aus `requireUser()`) fälschlich als
- * 404 behandelt, statt auf eine volle Seitennavigation zurückzufallen — das
+ * 404 behandelt, statt auf eine volle Seitennavigation zurückzufallen - das
  * passiert nur bei tatsächlich externen URLs. Als Load-Funktion findet der
  * Router eine passende Route, führt sie serverseitig aus und folgt dem
  * (echten externen) Redirect zu Authentik korrekt.

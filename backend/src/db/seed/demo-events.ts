@@ -1,5 +1,9 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
+import {
+  generateUniqueEventSlug,
+  generateUniqueOrganizerSlug,
+} from "../../slug/index.js";
 import { db, queryClient } from "../index.js";
 import {
   bundesland,
@@ -10,13 +14,9 @@ import {
   user,
   userProfile,
 } from "../schema.js";
-import {
-  generateUniqueEventSlug,
-  generateUniqueOrganizerSlug,
-} from "../../slug/index.js";
 
 /**
- * Demo-Datensatz für lokale Entwicklung/Tests (AGENTS.md item 4) — legt einen
+ * Demo-Datensatz für lokale Entwicklung/Tests (AGENTS.md item 4) - legt einen
  * Demo-Veranstalter und 5 bereits freigeschaltete Beispiel-Events an. Setzt
  * voraus, dass `db:seed` (Taxonomie) vorher gelaufen ist. Nicht Teil des
  * Produktions-Deployments, nur manuell über `db:seed:demo` auszuführen.
@@ -92,7 +92,7 @@ const DEMO_EVENTS: DemoEventInput[] = [
   {
     title: "Stoppelfete Wiesenhof",
     description:
-      "Traditionelle Stoppelfete direkt nach der Ernte auf dem Wiesenhof — mit Traktor-Corso und Tanz auf dem Stoppelfeld.",
+      "Traditionelle Stoppelfete direkt nach der Ernte auf dem Wiesenhof - mit Traktor-Corso und Tanz auf dem Stoppelfeld.",
     daysFromNow: 14,
     durationHours: 6,
     bundeslandSlug: "nordrhein-westfalen",
@@ -149,7 +149,7 @@ async function ensureDemoOrganizer(index: number) {
       slug,
       displayName,
       isPublic: true,
-      bio: "Demo-Veranstalter für Testzwecke — trägt Beispiel-Events auf dorfpartys.com ein.",
+      bio: "Demo-Veranstalter für Testzwecke - trägt Beispiel-Events auf dorfpartys.com ein.",
     });
   }
 
@@ -175,7 +175,7 @@ async function seedDemoEvents() {
 
     if (!bundeslandRow || !kreisRow || !partyArtRow) {
       console.warn(
-        `Überspringe "${demo.title}" — Taxonomie fehlt (${demo.bundeslandSlug}/${demo.kreisSlug}/${demo.partyArtSlug}). Erst "pnpm db:seed" ausführen.`,
+        `Überspringe "${demo.title}" - Taxonomie fehlt (${demo.bundeslandSlug}/${demo.kreisSlug}/${demo.partyArtSlug}). Erst "pnpm db:seed" ausführen.`,
       );
       continue;
     }

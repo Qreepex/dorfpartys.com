@@ -35,7 +35,7 @@
 	</p>
 	<h1>Willkommen bei dorfpartys.com</h1>
 	<p class="mb-6 text-muted">
-		Bevor es losgeht, richten wir kurz dein Veranstalter-Profil ein — das dauert eine Minute.
+		Bevor es losgeht, richten wir kurz dein Veranstalter-Profil ein - das dauert eine Minute.
 	</p>
 
 	<div
@@ -70,7 +70,7 @@
 				error={form?.fieldErrors?.displayName?.[0]}
 			/>
 			<p class="text-[0.85rem] text-muted">
-				Das ist dein öffentlicher Name als Veranstalter:in — sichtbar auf jeder Party, die du
+				Das ist dein öffentlicher Name als Veranstalter:in - sichtbar auf jeder Party, die du
 				einträgst, und auf deiner eigenen Veranstalter-Seite.
 			</p>
 		</fieldset>
@@ -104,7 +104,7 @@
 			<dl class="mb-4 border-y border-border py-4">
 				<div class="flex justify-between gap-3 py-1">
 					<dt class="text-muted">Anzeigename</dt>
-					<dd class="m-0 text-right font-semibold">{displayName || '—'}</dd>
+					<dd class="m-0 text-right font-semibold">{displayName || '-'}</dd>
 				</div>
 				{#if websiteUrl}
 					<div class="flex justify-between gap-3 py-1">

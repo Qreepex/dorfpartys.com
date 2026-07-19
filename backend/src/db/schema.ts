@@ -52,7 +52,7 @@ export const partyArt = pgTable("party_art", {
 });
 
 // Zentrale Slug-Registry mit Unique-Constraint über alle vier Vokabulare
-// hinweg (AGENTS.md 1.5) — verhindert, dass z.B. ein Kreis- und ein
+// hinweg (AGENTS.md 1.5) - verhindert, dass z.B. ein Kreis- und ein
 // Party-Art-Slug kollidieren.
 export const slugRegistry = pgTable("slug_registry", {
   slug: text("slug").primaryKey(),
@@ -81,11 +81,11 @@ export const userProfile = pgTable("user_profile", {
   userId: uuid("user_id")
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
-  // Veranstalter-Slug für /{country}/veranstalter/{slug}/ — vergeben, sobald
+  // Veranstalter-Slug für /{country}/veranstalter/{slug}/ - vergeben, sobald
   // ein display_name gesetzt wird; eigener URL-Baum ohne Kollisionsrisiko zu
   // den vier Filter-Vokabularen, analog zu Event-Slugs (AGENTS.md 1.7).
   slug: text("slug").unique(),
-  // Standardmäßig privat — öffentliche Sichtbarkeit ist Voraussetzung fürs
+  // Standardmäßig privat - öffentliche Sichtbarkeit ist Voraussetzung fürs
   // Eintragen von Veranstaltungen (enforced sowohl im Backend als auch im
   // Frontend, siehe events.create und /veranstaltung-eintragen).
   isPublic: boolean("is_public").notNull().default(false),

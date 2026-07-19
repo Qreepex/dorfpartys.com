@@ -12,7 +12,7 @@ export interface BundeslandSeed {
 // von Destatis (Kreise/kreisfreie Städte, DE), Statistik Austria (politische Bezirke,
 // inkl. Statutarstädte, AT) und dem Bundesamt für Statistik / BFS (Kantone und Bezirke/
 // Wahlkreise/Amtsbezirke, CH), Wissensstand zum Modell-Trainingsschnitt. Gebietsreformen
-// (Gemeinde-/Kreisfusionen, Bezirksauflösungen) kommen gelegentlich vor — bei Bedarf
+// (Gemeinde-/Kreisfusionen, Bezirksauflösungen) kommen gelegentlich vor - bei Bedarf
 // periodisch gegen die jeweilige amtliche Quelle abgleichen und aktualisieren.
 //
 // Kreis-Slugs sind global eindeutig (DB-Unique-Constraint über die gesamte
@@ -25,7 +25,7 @@ export interface BundeslandSeed {
 // - Berlin, Hamburg: Bezirke als Kreis-Ebene verwendet (Berlin 12, Hamburg 7).
 // - Bremen: Zwei-Städte-Gliederung (Bremen/Bremerhaven) als Kreis-Ebene.
 // - Wien (AT): keine Bezirksebene unterhalb des Bundeslands in dieser Taxonomie (Wien
-//   ist zugleich Land und Gemeinde) — `kreise: []`, wie auch für Kantone ohne
+//   ist zugleich Land und Gemeinde) - `kreise: []`, wie auch für Kantone ohne
 //   Bezirks-/Distriktebene (z.B. Zug, Glarus, Basel-Stadt, Appenzell A.Rh./I.Rh.).
 export const BUNDESLAND_SEED: BundeslandSeed[] = [
   {

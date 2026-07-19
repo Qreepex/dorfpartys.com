@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { COUNTRIES, type Country, type User } from '@dorfpartys/shared';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		user?: Pick<User, 'role'> | null;
@@ -30,7 +30,7 @@
 		theme = preferred;
 		document.documentElement.setAttribute('data-theme', preferred);
 
-		// Zeitzonen-Verfeinerung der Land-Erkennung (AGENTS.md item 3) — nur
+		// Zeitzonen-Verfeinerung der Land-Erkennung (AGENTS.md item 3) - nur
 		// solange der Nutzer das Land noch nie explizit selbst gewählt hat.
 		if (!document.cookie.includes('country_explicit=1')) {
 			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

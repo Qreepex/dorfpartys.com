@@ -19,7 +19,7 @@ ${entries
 `;
 }
 
-// Statische, nicht datenbankgestützte Seiten (AGENTS.md item 3) — jede
+// Statische, nicht datenbankgestützte Seiten (AGENTS.md item 3) - jede
 // Detailseite ist außerdem in einer der anderen Sitemaps enthalten.
 const STATIC_PAGES = [
 	'/',
@@ -35,7 +35,7 @@ const STATIC_PAGES = [
  * Bedient sitemap-pages.xml, sitemap-events.xml, sitemap-veranstalter.xml,
  * sitemap-{country}-orte.xml und sitemap-{country}-arten.xml (AGENTS.md 1.8).
  * Orte/Arten enthalten inzwischen bewusst auch Kombinationen ohne aktuelle
- * Events (siehe seo/sitemap.ts) — Datenaufbereitung läuft im Backend.
+ * Events (siehe seo/sitemap.ts) - Datenaufbereitung läuft im Backend.
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const rest = params.rest;

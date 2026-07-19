@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
 	import { Button, DropdownSelect, FormGrid, TextInput, Toggle } from '$lib/components/index.js';
+	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import { SITE_URL } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
@@ -15,6 +16,7 @@
 
 	let bundeslandId = $state('');
 	let kreisId = $state('');
+	let uploadedPhotoS3Key = $state<string | null>(null);
 
 	const bundeslandOptions = $derived(
 		data.bundeslaenderByCountry.flatMap((group) =>
@@ -121,6 +123,16 @@
 
 	<form method="POST">
 		<FormGrid>
+			<div class="sm:col-span-full">
+				<ImageUpload
+					name="photo"
+					label="Foto (optional)"
+					onUploadComplete={(s3Key) => {
+						uploadedPhotoS3Key = s3Key;
+					}}
+				/>
+			</div>
+
 			<div class="sm:col-span-full">
 				<TextInput
 					label="Titel"
@@ -230,6 +242,10 @@
 			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" />
 			<Toggle label="Open Air" name="isOutdoor" />
 		</FormGrid>
+
+		{#if uploadedPhotoS3Key}
+			<input type="hidden" name="photoS3Key" value={uploadedPhotoS3Key} />
+		{/if}
 
 		{#if canSubmit}
 			<Button type="submit">Kostenlos eintragen</Button>

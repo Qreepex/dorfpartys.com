@@ -1,10 +1,11 @@
-import { and, eq } from "drizzle-orm";
-import { z } from "zod";
 import {
   completeOnboardingInputSchema,
   updateProfileInputSchema,
   type UpdateProfileInput,
 } from "@dorfpartys/shared";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod";
+import type { Database } from "../db/index.js";
 import {
   bundesland,
   event,
@@ -17,11 +18,10 @@ import {
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
-import type { Database } from "../db/index.js";
 
 /**
  * Gemeinsame Upsert-Logik für `updateMyProfile` und `completeOnboarding`
- * (Onboarding-Formular, AGENTS.md Abschnitt 5) — inkl. Slug-Neuvergabe bei
+ * (Onboarding-Formular, AGENTS.md Abschnitt 5) - inkl. Slug-Neuvergabe bei
  * geändertem Anzeigenamen (Veranstalter-Seite, AGENTS.md 3/8).
  */
 async function upsertProfile(
@@ -34,7 +34,7 @@ async function upsertProfile(
       .select({ avatarS3Key: userProfile.avatarS3Key })
       .from(userProfile)
       .where(eq(userProfile.userId, userId));
-    // Alter Avatar-Key wird aktiv aus S3 entfernt — keine verwaisten
+    // Alter Avatar-Key wird aktiv aus S3 entfernt - keine verwaisten
     // öffentlichen Dateien (AGENTS.md 7.1).
     if (
       existing?.avatarS3Key &&
@@ -98,7 +98,7 @@ export const usersRouter = router({
         .from(userProfile)
         .where(eq(userProfile.slug, input.slug));
       // Private Profile sind unter ihrer URL nicht erreichbar (AGENTS.md
-      // Abschnitt 3) — wie "nicht gefunden" behandelt, kein Hinweis auf Existenz.
+      // Abschnitt 3) - wie "nicht gefunden" behandelt, kein Hinweis auf Existenz.
       if (!profileRow || !profileRow.isPublic) return null;
 
       const [links, events] = await Promise.all([
@@ -176,7 +176,7 @@ export const usersRouter = router({
     }),
 
   // Registrierungs-Multi-Step-Formular nach dem ersten Authentik-Login
-  // (AGENTS.md Abschnitt 5) — legt den Anzeigenamen/Veranstalter-Profil an
+  // (AGENTS.md Abschnitt 5) - legt den Anzeigenamen/Veranstalter-Profil an
   // und markiert das Onboarding als abgeschlossen.
   completeOnboarding: protectedProcedure
     .input(completeOnboardingInputSchema)
@@ -189,7 +189,7 @@ export const usersRouter = router({
       return { userId: ctx.user.id };
     }),
 
-  // "Später einrichten" — Onboarding gilt als gesehen, ohne Profildaten zu setzen.
+  // "Später einrichten" - Onboarding gilt als gesehen, ohne Profildaten zu setzen.
   skipOnboarding: protectedProcedure.mutation(async ({ ctx }) => {
     await ctx.db
       .update(user)

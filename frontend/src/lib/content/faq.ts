@@ -1,7 +1,7 @@
 import type { FaqEntry } from '$lib/seo.js';
 
 /**
- * Zentrale FAQ-Inhalte — sowohl für die sichtbare FAQ-Sektion (Landingpage,
+ * Zentrale FAQ-Inhalte - sowohl für die sichtbare FAQ-Sektion (Landingpage,
  * /faq) als auch für schema.org/FAQPage JSON-LD (siehe seo.ts). Antworten
  * bewusst als vollständige, in sich verständliche Sätze formuliert (kein
  * "siehe oben"), damit sie auch isoliert von KI-Suchmaschinen zitiert werden
@@ -16,7 +16,7 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 	{
 		question: 'Ist dorfpartys.com wirklich kostenlos?',
 		answer:
-			'Ja, vollständig und dauerhaft. Sowohl das Durchsuchen der Veranstaltungen als auch das Eintragen eigener Events ist kostenlos — es gibt keine versteckten Kosten, keine Promotion-Gebühren und keine Bezahlfunktionen.'
+			'Ja, vollständig und dauerhaft. Sowohl das Durchsuchen der Veranstaltungen als auch das Eintragen eigener Events ist kostenlos - es gibt keine versteckten Kosten, keine Promotion-Gebühren und keine Bezahlfunktionen.'
 	},
 	{
 		question: 'Wie trage ich meine Veranstaltung ein?',
@@ -37,7 +37,7 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 		question:
 			'Warum sollte ich mein Event auf dorfpartys.com eintragen statt nur auf Instagram/Facebook zu posten?',
 		answer:
-			'Social-Media-Posts verschwinden nach wenigen Tagen im Feed und sind kaum über Suchmaschinen auffindbar. dorfpartys.com ist speziell für die Google- und KI-Suche optimiert: Jede Region, jede Party-Art und jeder Monat hat eine eigene Seite, sodass Leute, die z.B. nach "Scheunenfeten im August in Schleswig-Holstein" suchen, dein Event dort finden — auch Monate im Voraus, dauerhaft, ohne dass du dafür bezahlen musst.'
+			'Social-Media-Posts verschwinden nach wenigen Tagen im Feed und sind kaum über Suchmaschinen auffindbar. dorfpartys.com ist speziell für die Google- und KI-Suche optimiert: Jede Region, jede Party-Art und jeder Monat hat eine eigene Seite, sodass Leute, die z.B. nach "Scheunenfeten im August in Schleswig-Holstein" suchen, dein Event dort finden - auch Monate im Voraus, dauerhaft, ohne dass du dafür bezahlen musst.'
 	},
 	{
 		question: 'Welche Arten von Veranstaltungen kann ich eintragen?',
@@ -52,21 +52,21 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 	{
 		question: 'Sammelt dorfpartys.com meine Daten oder zeigt Werbung?',
 		answer:
-			'Nein. dorfpartys.com ist werbefrei und verzichtet auf Tracking durch Dritte. Es werden nur die für den Betrieb notwendigen Daten verarbeitet (siehe Datenschutzerklärung) — keine Analyse-Cookies, kein Weiterverkauf von Daten, keine externen Tracking- oder Werbenetzwerke.'
+			'Nein. dorfpartys.com ist werbefrei und verzichtet auf Tracking durch Dritte. Es werden nur die für den Betrieb notwendigen Daten verarbeitet (siehe Datenschutzerklärung) - keine Analyse-Cookies, kein Weiterverkauf von Daten, keine externen Tracking- oder Werbenetzwerke.'
 	},
 	{
 		question: 'Kann ich Veranstaltungen für später speichern?',
 		answer:
-			'Ja. Mit einem kostenlosen Account kannst du jede Veranstaltung über den "Merken"-Button speichern und findest sie danach gesammelt in deiner persönlichen Partyliste unter dorfpartys.com/partyliste wieder — praktisch, um mehrere Termine im Blick zu behalten.'
+			'Ja. Mit einem kostenlosen Account kannst du jede Veranstaltung über den "Merken"-Button speichern und findest sie danach gesammelt in deiner persönlichen Partyliste unter dorfpartys.com/partyliste wieder - praktisch, um mehrere Termine im Blick zu behalten.'
 	},
 	{
 		question: 'Was ist eine Veranstalter-Seite?',
 		answer:
-			'Jede:r Nutzer:in kann ein öffentliches Veranstalter-Profil unter dorfpartys.com/veranstalter/{name} anlegen. Dort werden Profilbild, Kurzbeschreibung, Links sowie alle kommenden und vergangenen Veranstaltungen dieses Veranstalters oder Vereins gebündelt angezeigt — gut für Vereine, die regelmäßig Feste ausrichten.'
+			'Jede:r Nutzer:in kann ein öffentliches Veranstalter-Profil unter dorfpartys.com/veranstalter/{name} anlegen. Dort werden Profilbild, Kurzbeschreibung, Links sowie alle kommenden und vergangenen Veranstaltungen dieses Veranstalters oder Vereins gebündelt angezeigt - gut für Vereine, die regelmäßig Feste ausrichten.'
 	},
 	{
 		question: 'Wie oft finden Schützenfeste, Zeltfeten und Scheunenfeten typischerweise statt?',
 		answer:
-			'Die meisten Dorf- und Vereinsfeste in Deutschland, Österreich und der Schweiz konzentrieren sich auf die wärmeren Monate von Mai bis September, mit einem deutlichen Schwerpunkt in den Sommerferienmonaten Juli und August — der klassischen Schützenfest- und Zeltfeten-Saison. Osterfeuer finden im Frühjahr statt, Weihnachtsmärkte im Winter. Auf dorfpartys.com lässt sich gezielt nach Monat filtern, um die Saison einer bestimmten Party-Art in einer Region zu sehen.'
+			'Die meisten Dorf- und Vereinsfeste in Deutschland, Österreich und der Schweiz konzentrieren sich auf die wärmeren Monate von Mai bis September, mit einem deutlichen Schwerpunkt in den Sommerferienmonaten Juli und August - der klassischen Schützenfest- und Zeltfeten-Saison. Osterfeuer finden im Frühjahr statt, Weihnachtsmärkte im Winter. Auf dorfpartys.com lässt sich gezielt nach Monat filtern, um die Saison einer bestimmten Party-Art in einer Region zu sehen.'
 	}
 ];

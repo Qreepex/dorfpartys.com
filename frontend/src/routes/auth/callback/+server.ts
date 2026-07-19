@@ -1,6 +1,6 @@
-import { error, redirect } from '@sveltejs/kit';
 import { exchangeCodeForTokens } from '$lib/server/oidc.js';
 import { createBackendClient } from '$lib/trpc-client/index.js';
+import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types.js';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
@@ -21,11 +21,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const tokens = await exchangeCodeForTokens(code, codeVerifier);
 
 	// dp_session wird vom Backend zustandslos gegen die Authentik-JWKS
-	// verifiziert (AGENTS.md Abschnitt 5) — kein Session-Store nötig. Der
+	// verifiziert (AGENTS.md Abschnitt 5) - kein Session-Store nötig. Der
 	// ID-Token (nicht der Access-Token) wird gespeichert, weil die
 	// angefragten Scopes (email/profile/groups) die entsprechenden Claims
 	// laut OIDC-Spezifikation in den ID-Token schreiben, nicht in den
-	// Access-Token — backend/src/auth/verify.ts erwartet email/groups direkt
+	// Access-Token - backend/src/auth/verify.ts erwartet email/groups direkt
 	// im verifizierten Token.
 	cookies.set('dp_session', tokens.id_token, {
 		path: '/',
@@ -46,7 +46,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		const me = await trpc.users.me.query();
 		onboardingCompleted = Boolean(me.onboardingCompletedAt);
 	} catch {
-		// Verifizierung schlägt hier nur bei einem kaputten Token fehl — dann
+		// Verifizierung schlägt hier nur bei einem kaputten Token fehl - dann
 		// einfach normal weiterleiten, statt den Login-Flow abzubrechen.
 	}
 

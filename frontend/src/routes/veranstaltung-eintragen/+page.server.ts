@@ -36,6 +36,36 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	uploadPhoto: async ({ request, locals, url }) => {
+		try {
+			await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		const formData = await request.formData();
+		const eventId = formData.get('eventId') as string;
+		const contentType = formData.get('contentType') as string;
+		const file = formData.get('file') as File;
+
+		if (!file || file.size === 0) {
+			return fail(400, { error: 'Keine Datei ausgewählt' });
+		}
+
+		try {
+			const buffer = Buffer.from(await file.arrayBuffer());
+			const result = await locals.trpc.uploads.uploadEventPhoto.mutate({
+				eventId,
+				contentType: contentType as 'image/jpeg' | 'image/png',
+				buffer
+			});
+			return { success: true, s3Key: result.s3Key };
+		} catch (err) {
+			return fail(400, {
+				error: err instanceof Error ? err.message : 'Upload fehlgeschlagen'
+			});
+		}
+	},
 	default: async ({ request, locals, url }) => {
 		try {
 			await locals.trpc.users.me.query();
@@ -48,6 +78,7 @@ export const actions: Actions = {
 		const startDateRaw = formData.get('startDate');
 		const endDateRaw = formData.get('endDate');
 		const minAgeRaw = formData.get('minAge');
+		const photoS3Key = formData.get('photoS3Key');
 
 		const raw = {
 			title: formData.get('title'),
@@ -62,7 +93,8 @@ export const actions: Actions = {
 			priceInfo: formData.get('priceInfo') || undefined,
 			minAge: minAgeRaw ? Number(minAgeRaw) : undefined,
 			allowsMuttizettel: formData.get('allowsMuttizettel') === 'on',
-			isOutdoor: formData.get('isOutdoor') === 'on'
+			isOutdoor: formData.get('isOutdoor') === 'on',
+			...(photoS3Key ? { photos: [{ s3Key: String(photoS3Key), position: 1 }] } : {})
 		};
 
 		const parsed = submitEventInputSchema.safeParse(raw);

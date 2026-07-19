@@ -1,4 +1,4 @@
-import { like, ne, and } from "drizzle-orm";
+import { and, like, ne } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import { event, userProfile } from "../db/schema.js";
 
@@ -16,7 +16,7 @@ export function slugify(input: string): string {
 }
 
 /**
- * Slug-Vergabe für Event-Detailseiten (AGENTS.md 1.7) — entkoppelt von der
+ * Slug-Vergabe für Event-Detailseiten (AGENTS.md 1.7) - entkoppelt von der
  * Slug-Registry der vier Filter-Vokabulare (1.5), da eigener URL-Baum ohne
  * Kollisionsrisiko dorthin. Bei Kollision wird ein Disambiguator angehängt,
  * i.d.R. der Ortsname; da `address_description` Freitext ist, wird ersatzweise
@@ -48,7 +48,7 @@ export async function generateUniqueEventSlug(
 
 /**
  * Slug-Vergabe für Veranstalter-Profile (/{country}/veranstalter/{slug}/,
- * AGENTS.md Abschnitt 3/8) — eigener URL-Baum, kein Kollisionsrisiko zu den
+ * AGENTS.md Abschnitt 3/8) - eigener URL-Baum, kein Kollisionsrisiko zu den
  * vier Filter-Vokabularen. Wird beim Speichern des Profils neu aus dem
  * `display_name` abgeleitet, sofern sich dieser geändert hat.
  */

@@ -9,7 +9,7 @@ import {
 import { publicProcedure, router } from "../trpc/trpc.js";
 
 /**
- * Zahlen für die Landingpage-Vertrauensleiste (AGENTS.md item 6/7) — bewusst
+ * Zahlen für die Landingpage-Vertrauensleiste (AGENTS.md item 6/7) - bewusst
  * nur aggregierte, bereits öffentliche Größen, kein personenbezogener Bezug.
  */
 export const statsRouter = router({

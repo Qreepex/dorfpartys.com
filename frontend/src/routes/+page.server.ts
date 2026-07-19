@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url, parent }) => {
 	const { country } = await parent();
-	// "Alle Länder" (AGENTS.md item 3) — explizites Verlassen des Landesfokus
+	// "Alle Länder" (AGENTS.md item 3) - explizites Verlassen des Landesfokus
 	// über einen Link, nicht über einen dauerhaften Präferenzwechsel.
 	const showAllCountries = url.searchParams.has('alle');
 

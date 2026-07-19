@@ -53,7 +53,7 @@ async function assertKreisBelongsToBundesland(
 
 /**
  * Öffentliches Profil ist Voraussetzung fürs Eintragen von Veranstaltungen
- * (AGENTS.md Abschnitt 3) — serverseitige Durchsetzung, das Frontend blendet
+ * (AGENTS.md Abschnitt 3) - serverseitige Durchsetzung, das Frontend blendet
  * das Formular nur zusätzlich entsprechend ein/aus (/veranstaltung-eintragen).
  */
 async function assertHasPublicProfile(db: Database, userId: string) {
@@ -94,7 +94,7 @@ async function replacePhotosAndLinks(
     }
 
     // Alte Keys, die nicht in der neuen Auswahl wiederverwendet werden, aktiv
-    // aus S3 entfernen — keine verwaisten öffentlichen Dateien (AGENTS.md 7.1).
+    // aus S3 entfernen - keine verwaisten öffentlichen Dateien (AGENTS.md 7.1).
     const nextKeys = new Set(photos.map((p) => p.s3Key));
     const staleKeys = previousPhotos
       .map((p) => p.s3Key)
@@ -339,7 +339,7 @@ export const eventsRouter = router({
       };
     }),
 
-  // Für die Landingpage-Lineup-Sektion (AGENTS.md item 7) — nächste Termine,
+  // Für die Landingpage-Lineup-Sektion (AGENTS.md item 7) - nächste Termine,
   // optional auf das bevorzugte Land des Nutzers gefiltert (item 3: "Seite
   // fokussiert sich auf das erkannte Land, bis explizit gewechselt wird").
   listUpcoming: publicProcedure
@@ -408,7 +408,7 @@ export const eventsRouter = router({
           .update(event)
           .set({ status: "rejected", updatedAt: new Date() })
           .where(eq(event.id, input.id));
-        // Hook für Review-Status-Benachrichtigung an existing.createdBy — bewusst
+        // Hook für Review-Status-Benachrichtigung an existing.createdBy - bewusst
         // nicht implementiert (AGENTS.md Abschnitt 9).
         return { id: input.id, status: "rejected" as const };
       }
@@ -436,7 +436,7 @@ export const eventsRouter = router({
         })
         .where(eq(event.id, input.id));
 
-      // Hook für Review-Status-Benachrichtigung an existing.createdBy — bewusst
+      // Hook für Review-Status-Benachrichtigung an existing.createdBy - bewusst
       // nicht implementiert (AGENTS.md Abschnitt 9).
       return { id: input.id, status: "approved" as const, slug };
     }),

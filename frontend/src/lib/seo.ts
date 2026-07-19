@@ -19,7 +19,7 @@ export interface FaqEntry {
 }
 
 /**
- * schema.org/FAQPage JSON-LD — macht FAQ-Inhalte für Suchmaschinen-Rich-Snippets
+ * schema.org/FAQPage JSON-LD - macht FAQ-Inhalte für Suchmaschinen-Rich-Snippets
  * und KI-/LLM-Antwortmaschinen (Perplexity, ChatGPT-Suche, Google AI Overviews)
  * strukturiert auffindbar, nicht nur den sichtbaren Text.
  */

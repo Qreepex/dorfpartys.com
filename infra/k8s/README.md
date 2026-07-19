@@ -31,7 +31,7 @@ docker build -f infra/docker/backend/Dockerfile -t registry.dorfpartys.com/dorfp
 docker build -f infra/docker/frontend/Dockerfile -t registry.dorfpartys.com/dorfpartys/frontend:latest .
 ```
 
-`registry.dorfpartys.com/...` ist ein Platzhalter — CI-Pipeline und tatsächliche
+`registry.dorfpartys.com/...` ist ein Platzhalter - CI-Pipeline und tatsächliche
 Registry sind kein Teil dieser Phase.
 
 ## Nicht enthalten

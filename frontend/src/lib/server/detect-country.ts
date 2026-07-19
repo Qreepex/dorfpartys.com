@@ -1,7 +1,7 @@
 import { COUNTRIES, type Country } from '@dorfpartys/shared';
 
 /**
- * Erste Länder-Vermutung aus dem `Accept-Language`-Header — kein externer
+ * Erste Länder-Vermutung aus dem `Accept-Language`-Header - kein externer
  * Aufruf (z.B. IP-Geolocation-Dienst), damit die "kein Tracking"-Position der
  * Seite (siehe Landingpage) nicht unterlaufen wird. Wird clientseitig per
  * Zeitzone verfeinert (siehe Navbar.svelte).

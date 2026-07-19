@@ -9,7 +9,7 @@ export interface CanonicalFilterSlugs {
 
 /**
  * Baut die kanonische Filter-URL aus vorhandenen Segmenten in fester Reihenfolge
- * bundesland -> kreis -> art -> monat (AGENTS.md 1.2/1.4). Reine Funktion, kein DB-Zugriff —
+ * bundesland -> kreis -> art -> monat (AGENTS.md 1.2/1.4). Reine Funktion, kein DB-Zugriff -
  * ruft NICHT das Backend auf, um z.B. den Bundesland-Slug zu einem Kreis nachzuschlagen.
  * Der Aufrufer muss kreisSlug nur zusammen mit dem passenden bundeslandSlug übergeben.
  */

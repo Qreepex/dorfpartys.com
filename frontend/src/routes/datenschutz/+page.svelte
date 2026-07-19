@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>Datenschutz — dorfpartys.com</title>
+	<title>Datenschutz - dorfpartys.com</title>
 	<meta
 		name="description"
 		content="Datenschutzerklärung: dorfpartys.com ist werbefrei und verzichtet auf Tracking durch Dritte."
@@ -18,7 +18,7 @@
 	<h1>Datenschutz</h1>
 
 	<p class="notice">
-		Platzhalter — bitte vor dem Livegang durch eine vollständige, rechtsverbindliche
+		Platzhalter - bitte vor dem Livegang durch eine vollständige, rechtsverbindliche
 		Datenschutzerklärung (Art. 13/14 DSGVO) ersetzen.
 	</p>
 
@@ -53,7 +53,7 @@
 	<h2>Cookies</h2>
 	<p>
 		Es werden ausschließlich technisch notwendige Cookies zur Aufrechterhaltung deiner
-		Anmeldesitzung gesetzt — keine Analyse- oder Marketing-Cookies.
+		Anmeldesitzung gesetzt - keine Analyse- oder Marketing-Cookies.
 	</p>
 
 	<h2>Deine Rechte</h2>

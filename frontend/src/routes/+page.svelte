@@ -31,13 +31,13 @@
 
 	function handleSearch(event: SubmitEvent) {
 		event.preventDefault();
-		// Kanonische Reihenfolge bundesland -> kreis -> art -> monat (AGENTS.md 1.2) — Kreis
+		// Kanonische Reihenfolge bundesland -> kreis -> art -> monat (AGENTS.md 1.2) - Kreis
 		// wird im Hero-Suchformular bewusst nicht angeboten (zu granular für den Einstieg).
 		const segments = [bundeslandSlug, artSlug, monatSlug].filter(Boolean).join('/');
 		goto(resolve('/[country]/[...segments]', { country, segments }));
 	}
 
-	// Interne Verlinkung zu den wichtigsten Party-Art- und Regions-Hub-Seiten —
+	// Interne Verlinkung zu den wichtigsten Party-Art- und Regions-Hub-Seiten -
 	// zentral für Crawlbarkeit: die Landingpage ist der Einstiegspunkt, von dem
 	// aus Suchmaschinen/LLMs zu den spezifisch optimierten Such-Seiten (AGENTS.md
 	// 1.2/1.6) gelangen, die konkrete Anfragen wie "Scheunenfeten im August in
@@ -72,17 +72,17 @@
 </script>
 
 <svelte:head>
-	<title>dorfpartys.com — Die größte kostenlose Liste für Dorfpartys in DACH</title>
+	<title>dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH</title>
 	<meta
 		name="description"
-		content="Alle Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten in Deutschland, Österreich und der Schweiz — kostenlos, werbefrei, filterbar nach Region, Art und Monat. Jede:r kann kostenlos eine Veranstaltung eintragen."
+		content="Alle Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten in Deutschland, Österreich und der Schweiz - kostenlos, werbefrei, filterbar nach Region, Art und Monat. Jede:r kann kostenlos eine Veranstaltung eintragen."
 	/>
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={SITE_URL + '/'} />
 	<meta property="og:type" content="website" />
 	<meta
 		property="og:title"
-		content="dorfpartys.com — Die größte kostenlose Liste für Dorfpartys in DACH"
+		content="dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH"
 	/>
 	<meta
 		property="og:description"
@@ -105,7 +105,7 @@
 	</h1>
 	<p class="mt-0 mb-8 max-w-[46ch] text-[clamp(1rem,2vw,1.2rem)] text-muted">
 		Die größte kostenlose Liste für Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im
-		ganzen DACH-Raum — filterbar nach Land, Bundesland, Art und Monat. Jede:r kann kostenlos eine
+		ganzen DACH-Raum - filterbar nach Land, Bundesland, Art und Monat. Jede:r kann kostenlos eine
 		Veranstaltung eintragen.
 	</p>
 
@@ -279,7 +279,7 @@
 	{#if data.upcoming.length === 0}
 		<p class="mb-6 text-[0.9rem] text-muted">
 			Noch keine Termine{#if !data.showAllCountries}
-				in {COUNTRY_LABELS[data.country]}{/if} eingetragen — sei die erste Person, die eine einträgt.
+				in {COUNTRY_LABELS[data.country]}{/if} eingetragen - sei die erste Person, die eine einträgt.
 		</p>
 	{:else}
 		<p class="mb-6 text-[0.9rem] text-muted">{data.upcoming.length} kommende Termine</p>
@@ -293,7 +293,7 @@
 		dorfpartys.com ist die größte kostenlose Übersicht für Dorfpartys, Schützenfeste, Zeltfeten,
 		Scheunenfeten, Stoppelfeten, Kirmes und Dorffeste in Deutschland, Österreich und der Schweiz.
 		Statt zwischen Instagram-Storys, WhatsApp-Gruppen und Vereins-Websites zu suchen, findest du
-		hier alle lokalen Feste einer Region gebündelt an einem Ort — durchsuchbar nach Bundesland,
+		hier alle lokalen Feste einer Region gebündelt an einem Ort - durchsuchbar nach Bundesland,
 		Kreis, Art der Veranstaltung und Monat.
 	</p>
 	<p class="mt-3 leading-relaxed text-muted">
@@ -334,7 +334,7 @@
 	<section class="mt-16">
 		<h2 class="text-[1.5rem]">Regionen in {COUNTRY_LABELS[data.country]}</h2>
 		<p class="mb-5 max-w-[60ch] text-muted">
-			Alle Dorfpartys in einem Bundesland — auch wenn dort noch kein Termin eingetragen ist, lohnt
+			Alle Dorfpartys in einem Bundesland - auch wenn dort noch kein Termin eingetragen ist, lohnt
 			sich ein späterer Blick.
 		</p>
 		<ul class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
@@ -357,25 +357,25 @@
 	<ul class="my-0 grid list-none gap-4 p-0">
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Die größte Liste im DACH-Raum.</strong> Alle 16 Bundesländer Deutschlands,
-			alle 9 Bundesländer Österreichs und alle 26 Kantone der Schweiz sind abgedeckt — dein Event erscheint
+			alle 9 Bundesländer Österreichs und alle 26 Kantone der Schweiz sind abgedeckt - dein Event erscheint
 			in seiner Region sofort neben allen anderen.
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Kostenlos für immer.</strong> Keine versteckten Kosten, keine Promotion-Gebühren,
-			keine Bezahlfunktionen — auch nicht später.
+			keine Bezahlfunktionen - auch nicht später.
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Reichweite, die Social Media nicht bietet.</strong> Jede Region, Party-Art
-			und jeder Monat hat eine eigene, für Suchmaschinen und KI-Assistenten optimierte Seite — dein Event
+			und jeder Monat hat eine eigene, für Suchmaschinen und KI-Assistenten optimierte Seite - dein Event
 			wird dauerhaft gefunden, nicht nur für 24 Stunden im Feed.
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein Tracking,
-			kein Weiterverkauf von Daten — weder deiner noch der deiner Gäste.
+			kein Weiterverkauf von Daten - weder deiner noch der deiner Gäste.
 		</li>
 		<li class="border-t border-b border-border py-4 leading-relaxed">
 			<strong class="text-text">Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen
-			Veranstaltungen an einem Ort — praktisch für Vereine mit wiederkehrenden Festen.
+			Veranstaltungen an einem Ort - praktisch für Vereine mit wiederkehrenden Festen.
 		</li>
 	</ul>
 	<a

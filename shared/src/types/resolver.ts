@@ -35,7 +35,7 @@ export interface ResolvedSeoCopy {
  * Basis-Ergebnis des reinen Resolvers (`backend/src/resolver/resolve.ts`, kein
  * DB-Zugriff für Klarnamen). Der `resolver.resolve`-tRPC-Endpunkt reichert dies
  * zusätzlich um `names`/`seo`/`breadcrumbJsonLd` an (siehe `routers/resolver.ts`)
- * — strukturell kompatibel, hier aber bewusst nicht Teil des Basistyps, damit
+ * - strukturell kompatibel, hier aber bewusst nicht Teil des Basistyps, damit
  * der Resolver selbst ohne DB-Namenslookup testbar bleibt.
  */
 export interface ResolveResult {
@@ -45,7 +45,7 @@ export interface ResolveResult {
 	total: number;
 	/**
 	 * index,follow für jede gültige Segment-Kombination, auch ohne aktuelle
-	 * Treffer — bewusste Abweichung von AGENTS.md 1.6: leere, aber valide
+	 * Treffer - bewusste Abweichung von AGENTS.md 1.6: leere, aber valide
 	 * Such-URLs sollen bereits jetzt Ranking aufbauen, damit künftig
 	 * eingetragene Events sofort sichtbar sind (siehe TODO.md).
 	 */

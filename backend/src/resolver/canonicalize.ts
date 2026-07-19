@@ -1,7 +1,7 @@
 import type { CanonicalFilterSlugs } from "@dorfpartys/shared";
 import type { ClassifiedSegments } from "./classify.js";
 
-/** Kanonische Slugs — Kreis impliziert Bundesland, falls kein explizites Bundesland vorhanden ist (AGENTS.md 1.4). */
+/** Kanonische Slugs - Kreis impliziert Bundesland, falls kein explizites Bundesland vorhanden ist (AGENTS.md 1.4). */
 export function canonicalSlugsFor(
   classified: ClassifiedSegments,
 ): CanonicalFilterSlugs {

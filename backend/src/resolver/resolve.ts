@@ -3,13 +3,13 @@ import {
   type Country,
   type ResolveOutcome,
 } from "@dorfpartys/shared";
-import { classifySegments } from "./classify.js";
 import { canonicalSegmentList, canonicalSlugsFor } from "./canonicalize.js";
+import { classifySegments } from "./classify.js";
 import type { TaxonomyRepository } from "./types.js";
 
 /**
  * Segment-Resolver + Kanonisierung/Redirect nach AGENTS.md 1.3–1.6.
- * Reine Orchestrierung — DB-Zugriff läuft ausschließlich über `repo`, damit
+ * Reine Orchestrierung - DB-Zugriff läuft ausschließlich über `repo`, damit
  * die Logik ohne echte Datenbank getestet werden kann.
  */
 export async function resolve(
@@ -66,7 +66,7 @@ export async function resolve(
     },
     results,
     total,
-    // Jede gültige Kombination ist index,follow, auch ohne aktuelle Treffer —
+    // Jede gültige Kombination ist index,follow, auch ohne aktuelle Treffer -
     // bewusste Abweichung von AGENTS.md 1.6, siehe ResolveResult.indexable.
     indexable: true,
   };

@@ -7,7 +7,7 @@
 
 	let { data }: { data: PageData } = $props();
 	let outcome = $derived(data.outcome);
-	// +page.server.ts löst redirect/not-found bereits vor dem Rendern auf — hier
+	// +page.server.ts löst redirect/not-found bereits vor dem Rendern auf - hier
 	// ist der Outcome immer 'result', aber svelte:head muss top-level bleiben,
 	// daher hier einmal auf den engeren Typ verschmälert.
 	let result = $derived(outcome.kind === 'result' ? outcome : null);
@@ -40,7 +40,7 @@
 		return slugs.filter((s): s is string => Boolean(s)).join('/');
 	}
 
-	// Sichtbare Breadcrumb-Navigation mit typsicheren Links — getrennt vom
+	// Sichtbare Breadcrumb-Navigation mit typsicheren Links - getrennt vom
 	// JSON-LD (result.breadcrumbJsonLd), das absolute URLs für Suchmaschinen braucht.
 	const breadcrumbs = $derived(
 		result
@@ -150,7 +150,7 @@
 				Kennst du eine Party in der Umgebung?
 				<a class="text-primary" href={resolve('/veranstaltung-eintragen')}>Trag sie kostenlos ein</a
 				>
-				— du bist als Erste:r auf dieser Seite gelistet.
+				- du bist als Erste:r auf dieser Seite gelistet.
 			</p>
 		{/if}
 	</article>
