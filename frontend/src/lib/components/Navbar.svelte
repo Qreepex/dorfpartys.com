@@ -60,7 +60,13 @@
 <header class="border-b border-border">
 	<div class="mx-auto flex max-w-240 flex-wrap items-center justify-between gap-4 px-5 py-4">
 		<a class="flex items-center gap-2.5 no-underline" href={resolve('/')}>
-			<svg class="drop-shadow-[0_0_6px_var(--color-primary)]" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+			<svg
+				class="drop-shadow-[0_0_6px_var(--color-primary)]"
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+			>
 				<path
 					d="M12 0 C12 6 14 10 20 12 C14 14 12 18 12 24 C12 18 10 14 4 12 C10 10 12 6 12 0 Z"
 					fill="var(--color-primary)"
@@ -86,10 +92,15 @@
 				{/each}
 			</div>
 			{#if user}
-				<a class="text-muted no-underline hover:text-text" href={resolve('/veranstaltung-eintragen')}>
+				<a
+					class="text-muted no-underline hover:text-text"
+					href={resolve('/veranstaltung-eintragen')}
+				>
 					Event einreichen
 				</a>
-				<a class="text-muted no-underline hover:text-text" href={resolve('/partyliste')}>Partyliste</a>
+				<a class="text-muted no-underline hover:text-text" href={resolve('/partyliste')}
+					>Partyliste</a
+				>
 				<a class="text-muted no-underline hover:text-text" href={resolve('/profil')}>Mein Profil</a>
 				{#if isModerator}
 					<a class="text-muted no-underline hover:text-text" href={resolve('/review')}>Review</a>

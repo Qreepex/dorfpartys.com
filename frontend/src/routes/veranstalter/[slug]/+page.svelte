@@ -50,7 +50,13 @@
 <article>
 	<header class="mb-2 flex items-center gap-4">
 		{#if profile.avatarUrl}
-			<img class="h-24 w-24 rounded-full object-cover" src={profile.avatarUrl} alt={displayName} width="96" height="96" />
+			<img
+				class="h-24 w-24 rounded-full object-cover"
+				src={profile.avatarUrl}
+				alt={displayName}
+				width="96"
+				height="96"
+			/>
 		{/if}
 		<div>
 			<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>

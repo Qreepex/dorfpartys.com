@@ -39,6 +39,8 @@
 	<p class="mt-10 text-muted">
 		Noch Fragen offen? Schau dir <a class="text-primary" href={resolve('/')}>die Startseite</a>
 		an oder
-		<a class="text-primary" href={resolve('/veranstaltung-eintragen')}>trag direkt deine Veranstaltung ein</a>.
+		<a class="text-primary" href={resolve('/veranstaltung-eintragen')}
+			>trag direkt deine Veranstaltung ein</a
+		>.
 	</p>
 </article>

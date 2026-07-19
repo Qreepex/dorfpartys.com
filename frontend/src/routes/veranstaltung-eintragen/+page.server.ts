@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const { profile } = await locals.trpc.users.getProfile.query({ userId: me.id });
 		isProfilePublic = profile?.isPublic ?? false;
 	} catch {
-		// nicht eingeloggt — Formular bleibt sichtbar, aber ohne Submit-Möglichkeit
+		// nicht eingeloggt - Formular bleibt sichtbar, aber ohne Submit-Möglichkeit
 	}
 
 	const partyArten = await locals.trpc.taxonomy.partyArten.query();

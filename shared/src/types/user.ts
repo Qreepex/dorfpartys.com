@@ -3,7 +3,6 @@ import type { UserRole } from '../constants/index.js';
 export interface User {
 	id: string;
 	authentikSubject: string;
-	email: string;
 	role: UserRole;
 	/** null = Onboarding-Flow nach dem Login noch nicht abgeschlossen/übersprungen. */
 	onboardingCompletedAt: string | null;
@@ -13,7 +12,7 @@ export interface User {
 export interface UserProfile {
 	userId: string;
 	slug: string | null;
-	/** Standardmäßig privat — öffentlich ist Voraussetzung fürs Eintragen von Veranstaltungen. */
+	/** Standardmäßig privat - öffentlich ist Voraussetzung fürs Eintragen von Veranstaltungen. */
 	isPublic: boolean;
 	displayName: string | null;
 	avatarS3Key: string | null;

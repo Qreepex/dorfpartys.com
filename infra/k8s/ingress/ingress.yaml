@@ -1,4 +1,4 @@
-# Nur das Frontend ist öffentlich erreichbar — das Backend wird ausschließlich
+# Nur das Frontend ist öffentlich erreichbar - das Backend wird ausschließlich
 # intern über K8s-Service-DNS angesprochen (AGENTS.md Abschnitt 0), daher kein
 # eigener Ingress-Pfad für den Backend-Service.
 apiVersion: networking.k8s.io/v1

@@ -80,7 +80,10 @@
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={SITE_URL + '/'} />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="dorfpartys.com — Die größte kostenlose Liste für Dorfpartys in DACH" />
+	<meta
+		property="og:title"
+		content="dorfpartys.com — Die größte kostenlose Liste für Dorfpartys in DACH"
+	/>
 	<meta
 		property="og:description"
 		content="Kostenlos, werbefrei und ohne Anmeldung durchsuchbar: alle Dorfpartys im DACH-Raum."
@@ -108,7 +111,9 @@
 
 	<form class="flex flex-wrap border border-border bg-bg-alt" onsubmit={handleSearch}>
 		<div class="flex-1 basis-35 border-r border-border p-3.5">
-			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="land">Land</label>
+			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="land"
+				>Land</label
+			>
 			<select
 				class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
 				id="land"
@@ -136,7 +141,8 @@
 			</select>
 		</div>
 		<div class="flex-1 basis-35 border-r border-border p-3.5">
-			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="art">Art</label>
+			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="art">Art</label
+			>
 			<select
 				class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
 				id="art"
@@ -149,7 +155,9 @@
 			</select>
 		</div>
 		<div class="flex-1 basis-35 border-r border-border p-3.5 sm:border-r-0">
-			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="monat">Monat</label>
+			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="monat"
+				>Monat</label
+			>
 			<select
 				class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
 				id="monat"
@@ -170,7 +178,12 @@
 	</form>
 </section>
 
-<svg class="my-8 block h-11 w-full" viewBox="0 0 800 60" preserveAspectRatio="none" aria-hidden="true">
+<svg
+	class="my-8 block h-11 w-full"
+	viewBox="0 0 800 60"
+	preserveAspectRatio="none"
+	aria-hidden="true"
+>
 	<path
 		d="M0,10 C100,50 200,-10 300,30 C400,60 500,0 600,30 C700,50 750,10 800,25"
 		fill="none"
@@ -178,25 +191,67 @@
 		stroke-width="1.5"
 	/>
 	<circle class="drop-shadow-[0_0_5px_var(--color-primary)]" cx="40" cy="18" r="5" fill="#39E67A" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-secondary)]" cx="160" cy="35" r="5" fill="#FF4B3E" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-primary)]" cx="280" cy="10" r="5" fill="#39E67A" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-primary)]" cx="400" cy="45" r="5" fill="#39E67A" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-secondary)]" cx="520" cy="15" r="5" fill="#FF4B3E" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-primary)]" cx="640" cy="35" r="5" fill="#39E67A" />
-	<circle class="drop-shadow-[0_0_5px_var(--color-primary)]" cx="760" cy="18" r="5" fill="#39E67A" />
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-secondary)]"
+		cx="160"
+		cy="35"
+		r="5"
+		fill="#FF4B3E"
+	/>
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-primary)]"
+		cx="280"
+		cy="10"
+		r="5"
+		fill="#39E67A"
+	/>
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-primary)]"
+		cx="400"
+		cy="45"
+		r="5"
+		fill="#39E67A"
+	/>
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-secondary)]"
+		cx="520"
+		cy="15"
+		r="5"
+		fill="#FF4B3E"
+	/>
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-primary)]"
+		cx="640"
+		cy="35"
+		r="5"
+		fill="#39E67A"
+	/>
+	<circle
+		class="drop-shadow-[0_0_5px_var(--color-primary)]"
+		cx="760"
+		cy="18"
+		r="5"
+		fill="#39E67A"
+	/>
 </svg>
 
 <section class="grid grid-cols-2 gap-6 border-b border-border py-6 sm:grid-cols-4">
 	<div class="flex flex-col">
-		<strong class="font-display text-[2rem] font-bold text-primary">{data.stats.approvedEvents}</strong>
+		<strong class="font-display text-[2rem] font-bold text-primary"
+			>{data.stats.approvedEvents}</strong
+		>
 		<span class="text-[0.8rem] text-muted">Events insgesamt</span>
 	</div>
 	<div class="flex flex-col">
-		<strong class="font-display text-[2rem] font-bold text-primary">{data.stats.upcomingEvents}</strong>
+		<strong class="font-display text-[2rem] font-bold text-primary"
+			>{data.stats.upcomingEvents}</strong
+		>
 		<span class="text-[0.8rem] text-muted">kommende Termine</span>
 	</div>
 	<div class="flex flex-col">
-		<strong class="font-display text-[2rem] font-bold text-primary">{data.stats.kreisCoverage}</strong>
+		<strong class="font-display text-[2rem] font-bold text-primary"
+			>{data.stats.kreisCoverage}</strong
+		>
 		<span class="text-[0.8rem] text-muted">Regionen mit Events</span>
 	</div>
 	<div class="flex flex-col">
@@ -242,15 +297,18 @@
 		Kreis, Art der Veranstaltung und Monat.
 	</p>
 	<p class="mt-3 leading-relaxed text-muted">
-		Jede Veranstaltung wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst
-		kostenlos eingetragen und durchläuft vor der Veröffentlichung eine kurze redaktionelle
-		Prüfung, damit die Liste verlässlich und werbefrei bleibt.
+		Jede Veranstaltung wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst kostenlos
+		eingetragen und durchläuft vor der Veröffentlichung eine kurze redaktionelle Prüfung, damit die
+		Liste verlässlich und werbefrei bleibt.
 	</p>
 </section>
 
 {#if popularPartyArten.length > 0}
 	<section class="mt-16">
-		<h2 class="text-[1.5rem]">Beliebte Party-Arten{#if currentMonth} im {currentMonth.name}{/if}</h2>
+		<h2 class="text-[1.5rem]">
+			Beliebte Party-Arten{#if currentMonth}
+				im {currentMonth.name}{/if}
+		</h2>
 		<p class="mb-5 max-w-[60ch] text-muted">
 			Direkt zur Übersicht einer Party-Art in {COUNTRY_LABELS[data.country]} springen:
 		</p>
@@ -259,7 +317,10 @@
 				<li>
 					<a
 						class="inline-block border border-border px-4 py-2 text-[0.9rem] text-text no-underline hover:border-primary hover:text-primary"
-						href={buildFilterUrl(data.country, { artSlug: art.slug, monatSlug: currentMonth?.slug })}
+						href={buildFilterUrl(data.country, {
+							artSlug: art.slug,
+							monatSlug: currentMonth?.slug
+						})}
 					>
 						{art.name}
 					</a>
@@ -296,8 +357,8 @@
 	<ul class="my-0 grid list-none gap-4 p-0">
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Die größte Liste im DACH-Raum.</strong> Alle 16 Bundesländer Deutschlands,
-			alle 9 Bundesländer Österreichs und alle 26 Kantone der Schweiz sind abgedeckt — dein Event
-			erscheint in seiner Region sofort neben allen anderen.
+			alle 9 Bundesländer Österreichs und alle 26 Kantone der Schweiz sind abgedeckt — dein Event erscheint
+			in seiner Region sofort neben allen anderen.
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Kostenlos für immer.</strong> Keine versteckten Kosten, keine Promotion-Gebühren,
@@ -305,16 +366,16 @@
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">Reichweite, die Social Media nicht bietet.</strong> Jede Region, Party-Art
-			und jeder Monat hat eine eigene, für Suchmaschinen und KI-Assistenten optimierte Seite — dein
-			Event wird dauerhaft gefunden, nicht nur für 24 Stunden im Feed.
+			und jeder Monat hat eine eigene, für Suchmaschinen und KI-Assistenten optimierte Seite — dein Event
+			wird dauerhaft gefunden, nicht nur für 24 Stunden im Feed.
 		</li>
 		<li class="border-t border-border py-4 leading-relaxed">
 			<strong class="text-text">100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein Tracking,
 			kein Weiterverkauf von Daten — weder deiner noch der deiner Gäste.
 		</li>
 		<li class="border-t border-b border-border py-4 leading-relaxed">
-			<strong class="text-text">Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen Veranstaltungen
-			an einem Ort — praktisch für Vereine mit wiederkehrenden Festen.
+			<strong class="text-text">Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen
+			Veranstaltungen an einem Ort — praktisch für Vereine mit wiederkehrenden Festen.
 		</li>
 	</ul>
 	<a
@@ -328,7 +389,9 @@
 <section class="mt-16">
 	<div class="flex flex-wrap items-baseline justify-between gap-3">
 		<h2 class="text-[1.5rem]">Häufig gestellte Fragen</h2>
-		<a class="text-[0.85rem] text-primary no-underline hover:underline" href={faqHref}>Alle Fragen ansehen</a>
+		<a class="text-[0.85rem] text-primary no-underline hover:underline" href={faqHref}
+			>Alle Fragen ansehen</a
+		>
 	</div>
 	<div class="mt-5">
 		<FaqList items={FAQ_ENTRIES.slice(0, 6)} />

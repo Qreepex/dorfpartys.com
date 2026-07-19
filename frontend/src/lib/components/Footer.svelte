@@ -22,9 +22,13 @@
 		<span class="flex flex-wrap gap-x-1.5">
 			<a class="text-muted no-underline hover:text-primary" href={resolve('/faq')}>FAQ</a>
 			·
-			<a class="text-muted no-underline hover:text-primary" href={resolve('/impressum')}>Impressum</a>
+			<a class="text-muted no-underline hover:text-primary" href={resolve('/impressum')}
+				>Impressum</a
+			>
 			·
-			<a class="text-muted no-underline hover:text-primary" href={resolve('/datenschutz')}>Datenschutz</a>
+			<a class="text-muted no-underline hover:text-primary" href={resolve('/datenschutz')}
+				>Datenschutz</a
+			>
 			·
 			<a class="text-muted no-underline hover:text-primary" href={resolve('/nutzungsbedingungen')}>
 				Nutzungsbedingungen

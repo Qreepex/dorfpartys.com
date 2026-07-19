@@ -45,7 +45,9 @@ export const statsRouter = router({
       ctx.db
         .select({ total: count() })
         .from(userProfile)
-        .where(and(isNotNull(userProfile.slug), eq(userProfile.isPublic, true))),
+        .where(
+          and(isNotNull(userProfile.slug), eq(userProfile.isPublic, true)),
+        ),
     ]);
 
     const [{ total: totalKreise }] = await ctx.db

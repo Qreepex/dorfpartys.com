@@ -29,7 +29,9 @@ export const actions: Actions = {
 		// sinnvolle Veranstalter-Seite (AGENTS.md Abschnitt 3).
 		if (parsed.data.isPublic && !parsed.data.displayName) {
 			return fail(400, {
-				fieldErrors: { displayName: ['Anzeigename ist nötig, um das Profil öffentlich zu stellen.'] }
+				fieldErrors: {
+					displayName: ['Anzeigename ist nötig, um das Profil öffentlich zu stellen.']
+				}
 			});
 		}
 

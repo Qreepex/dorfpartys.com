@@ -45,16 +45,22 @@
 					error={form?.fieldErrors?.displayName?.[0]}
 				/>
 			</div>
-			<TextInput label="Website" name="websiteUrl" type="url" value={data.profile?.websiteUrl ?? ''} />
-			<TextInput label="Instagram" name="instagramUrl" type="url" value={data.profile?.instagramUrl ?? ''} />
+			<TextInput
+				label="Website"
+				name="websiteUrl"
+				type="url"
+				value={data.profile?.websiteUrl ?? ''}
+			/>
+			<TextInput
+				label="Instagram"
+				name="instagramUrl"
+				type="url"
+				value={data.profile?.instagramUrl ?? ''}
+			/>
 			<div class="sm:col-span-full">
 				<label class="field-label" for="bio">Bio</label>
-				<textarea
-					class="field-control"
-					id="bio"
-					name="bio"
-					maxlength="2000"
-					rows="4">{data.profile?.bio ?? ''}</textarea
+				<textarea class="field-control" id="bio" name="bio" maxlength="2000" rows="4"
+					>{data.profile?.bio ?? ''}</textarea
 				>
 			</div>
 		</FormGrid>

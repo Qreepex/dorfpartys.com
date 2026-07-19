@@ -38,7 +38,13 @@
 		Bevor es losgeht, richten wir kurz dein Veranstalter-Profil ein — das dauert eine Minute.
 	</p>
 
-	<div class="mb-8 flex gap-1.5" role="progressbar" aria-valuenow={step} aria-valuemin="1" aria-valuemax={totalSteps}>
+	<div
+		class="mb-8 flex gap-1.5"
+		role="progressbar"
+		aria-valuenow={step}
+		aria-valuemin="1"
+		aria-valuemax={totalSteps}
+	>
 		{#each stepIndicators as i (i)}
 			<span class="h-1 flex-1" class:bg-primary={i < step} class:bg-border={i >= step}></span>
 		{/each}
@@ -51,7 +57,9 @@
 		<input type="hidden" name="instagramUrl" value={instagramUrl} />
 
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 1}>
-			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Wie sollen wir dich nennen?</legend>
+			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold"
+				>Wie sollen wir dich nennen?</legend
+			>
 			<TextInput
 				label="Anzeigename"
 				name="displayName"
@@ -68,7 +76,9 @@
 		</fieldset>
 
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 2}>
-			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Erzähl uns kurz von dir (optional)</legend>
+			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold"
+				>Erzähl uns kurz von dir (optional)</legend
+			>
 			<TextInput label="Website" type="url" bind:value={websiteUrl} placeholder="https://…" />
 			<TextInput
 				label="Instagram"
@@ -82,10 +92,11 @@
 					class="mt-1.5 block w-full resize-y border border-border bg-bg-alt px-3 py-2.5 font-body text-[0.95rem] text-text"
 					maxlength="2000"
 					bind:value={bio}
-					rows="4"
-				></textarea>
+					rows="4"></textarea>
 			</label>
-			<p class="text-[0.85rem] text-muted">Kannst du auch jederzeit später in deinem Profil ergänzen.</p>
+			<p class="text-[0.85rem] text-muted">
+				Kannst du auch jederzeit später in deinem Profil ergänzen.
+			</p>
 		</fieldset>
 
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 3}>
@@ -124,7 +135,9 @@
 			{:else}
 				<Button type="submit">Fertig einrichten</Button>
 			{/if}
-			<Button type="submit" formaction="?/skip" formnovalidate variant="ghost">Später einrichten</Button>
+			<Button type="submit" formaction="?/skip" formnovalidate variant="ghost"
+				>Später einrichten</Button
+			>
 		</div>
 	</form>
 </div>
