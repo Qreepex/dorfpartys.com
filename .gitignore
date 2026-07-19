@@ -1,5 +1,11 @@
 node_modules/
 .env
 dist/
+build/
 *.tsbuildinfo
 .svelte-kit/
+
+# lokal ausgefüllte K8s-Secrets, nie committen (siehe *.example.yaml)
+infra/k8s/**/secret.yaml
+infra/k8s/**/*.local.yaml
+infra/k8s/**/credentials.yaml

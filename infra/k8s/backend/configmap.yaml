@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: dorfpartys
+data:
+  PORT: '3000'
+  NODE_ENV: 'production'
+  S3_ENDPOINT: 'https://speicher.dorfpartys.com'
+  S3_REGION: 'eu-central-1'
+  # Konkrete Werte sind offene Punkte (AGENTS.md 10) und werden pro Umgebung
+  # (staging/prod) überschrieben.
+  AUTHENTIK_ISSUER: ''
+  AUTHENTIK_JWKS_URL: ''
+  AUTHENTIK_ADMIN_GROUP: 'admin'
+  AUTHENTIK_MODERATOR_GROUP: 'moderator'
+  S3_BUCKET: ''

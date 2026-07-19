@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: dorfpartys
+data:
+  PORT: '3000'
+  NODE_ENV: 'production'
+  # K8s-Service-DNS, nicht die öffentliche Domain (AGENTS.md Abschnitt 0).
+  BACKEND_INTERNAL_URL: 'http://backend:3000'
+  PUBLIC_SITE_URL: 'https://dorfpartys.com'
+  AUTHENTIK_ISSUER: ''
+  AUTHENTIK_REDIRECT_URI: 'https://dorfpartys.com/auth/callback'
