@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import Button from '$lib/components/Button.svelte';
 	import { EventList, FaqList } from '$lib/components/index.js';
 	import { FAQ_ENTRIES } from '$lib/content/faq.js';
 	import { buildFaqJsonLd, jsonLdScriptTag } from '$lib/seo.js';
+	import { countryStore } from '$lib/stores.js';
 	import { COUNTRIES, MONTHS, SITE_URL, buildFilterUrl, type Country } from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
 
@@ -15,7 +17,7 @@
 		ch: 'Schweiz'
 	};
 
-	let country = $state<Country>(data.country);
+	let country = $derived.by(() => $countryStore);
 	let bundeslandSlug = $state('');
 	let artSlug = $state('');
 	let monatSlug = $state('');
@@ -266,12 +268,12 @@
 <section class="mt-12">
 	<div class="flex flex-wrap items-baseline justify-between gap-3">
 		<h2>
-			Nächste Partys{#if !data.showAllCountries}
-				in {COUNTRY_LABELS[data.country]}{/if}
+			Nächste Partys {#if !data.showAllCountries}
+				in {COUNTRY_LABELS[country]}{/if}
 		</h2>
 		{#if data.showAllCountries}
 			<a class="text-[0.85rem] text-primary no-underline hover:underline" href={homeHref}>
-				Nur {COUNTRY_LABELS[data.country]} anzeigen
+				Nur {COUNTRY_LABELS[country]} anzeigen
 			</a>
 		{:else}
 			<a class="text-[0.85rem] text-primary no-underline hover:underline" href={allCountriesHref}>
@@ -282,11 +284,11 @@
 	{#if data.upcoming.length === 0}
 		<p class="mb-6 text-[0.9rem] text-muted">
 			Noch keine Termine{#if !data.showAllCountries}
-				in {COUNTRY_LABELS[data.country]}{/if} eingetragen - sei die erste Person, die eine einträgt.
+				in {COUNTRY_LABELS[country]}{/if} eingetragen - sei die erste Person, die eine einträgt.
 		</p>
 	{:else}
 		<p class="mb-6 text-[0.9rem] text-muted">{data.upcoming.length} kommende Termine</p>
-		<EventList events={data.upcoming} country={data.country} />
+		<EventList events={data.upcoming} {country} />
 	{/if}
 </section>
 
@@ -313,14 +315,14 @@
 				im {currentMonth.name}{/if}
 		</h2>
 		<p class="mb-5 max-w-[60ch] text-muted">
-			Direkt zur Übersicht einer Party-Art in {COUNTRY_LABELS[data.country]} springen:
+			Direkt zur Übersicht einer Party-Art in {COUNTRY_LABELS[country]} springen:
 		</p>
 		<ul class="flex flex-wrap gap-2">
 			{#each popularPartyArten as art (art.id)}
 				<li>
 					<a
 						class="inline-block border border-border px-4 py-2 text-[0.9rem] text-text no-underline hover:border-primary hover:text-primary"
-						href={buildFilterUrl(data.country, {
+						href={buildFilterUrl(country, {
 							artSlug: art.slug,
 							monatSlug: currentMonth?.slug
 						})}
@@ -335,7 +337,7 @@
 
 {#if popularBundeslaender.length > 0}
 	<section class="mt-16">
-		<h2>Regionen in {COUNTRY_LABELS[data.country]}</h2>
+		<h2>Regionen in {COUNTRY_LABELS[country]}</h2>
 		<p class="text-lg text-muted">
 			Alle Dorfpartys in einem Bundesland - auch wenn dort noch kein Termin eingetragen ist, lohnt
 			sich ein späterer Blick.
@@ -345,7 +347,7 @@
 				<li>
 					<a
 						class="text-[0.9rem] text-text no-underline hover:text-primary hover:underline"
-						href={resolve(buildFilterUrl(data.country, { bundeslandSlug: bl.slug }))}
+						href={buildFilterUrl(country, { bundeslandSlug: bl.slug })}
 					>
 						{bl.name}
 					</a>
@@ -381,12 +383,7 @@
 			Veranstaltungen an einem Ort - praktisch für Vereine mit wiederkehrenden Festen.
 		</li>
 	</ul>
-	<a
-		class="mt-6 inline-flex min-h-11 items-center justify-center bg-primary px-6 font-bold text-ink no-underline shadow-[0_0_18px_rgba(57,230,122,0.35)] hover:shadow-[0_0_24px_rgba(57,230,122,0.55)]"
-		href={veranstaltungEintragenHref}
-	>
-		Jetzt Event eintragen
-	</a>
+	<Button href={veranstaltungEintragenHref} class="mt-6">Jetzt Event eintragen</Button>
 </section>
 
 <section class="mt-16">

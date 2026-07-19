@@ -9,9 +9,13 @@ function getTransporter() {
 
   try {
     // Only create transporter if email config is present
-    if (!process.env.MAIL_HOST || !process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
+    if (
+      !process.env.MAIL_HOST ||
+      !process.env.MAIL_USERNAME ||
+      !process.env.MAIL_PASSWORD
+    ) {
       emailConfigError = new Error(
-        "Email configuration incomplete. Set MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env"
+        "Email configuration incomplete. Set MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD in .env",
       );
       return null;
     }
@@ -39,7 +43,8 @@ export async function sendReportNotification(
   url: string,
   description: string,
 ) {
-  const recipients = process.env.MAIL_REPORT_RECIPIENT?.split(",").map((r) => r.trim()) || [];
+  const recipients =
+    process.env.MAIL_REPORT_RECIPIENT?.split(",").map((r) => r.trim()) || [];
   if (recipients.length === 0) {
     console.warn("No MAIL_REPORT_RECIPIENT configured");
     return;

@@ -1,15 +1,13 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { COUNTRIES, type Country, type User } from '@dorfpartys/shared';
+	import { countryStore, userStore } from '$lib/stores.js';
+	import { COUNTRIES, type Country } from '@dorfpartys/shared';
 	import { onMount } from 'svelte';
 
-	interface Props {
-		user?: Pick<User, 'role'> | null;
-		country?: Country;
-	}
-
-	let { user = null, country = 'de' }: Props = $props();
+	const user = $derived.by(() => $userStore);
+	const country = $derived.by(() => $countryStore);
 
 	const COUNTRY_LABELS: Record<Country, string> = { de: 'DE', at: 'AT', ch: 'CH' };
 	const TIMEZONE_COUNTRY: Record<string, Country> = {
@@ -48,13 +46,6 @@
 	}
 
 	const isModerator = $derived(user?.role === 'moderator' || user?.role === 'admin');
-
-	const countrySwitchLinks = $derived(
-		COUNTRIES.map((target) => {
-			const base = resolve('/land/[country]', { country: target });
-			return { country: target, href: `${base}?to=${encodeURIComponent(page.url.pathname)}` };
-		})
-	);
 </script>
 
 <header class="border-b border-border">
@@ -79,16 +70,24 @@
 
 		<nav class="flex flex-wrap items-center gap-4.5 text-[0.9rem]" aria-label="Hauptnavigation">
 			<div class="flex border border-border" role="group" aria-label="Land wählen">
-				{#each countrySwitchLinks as link, i (link.country)}
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolve()-Basis + dynamischer ?to=-Query (aktuelle Seite), siehe countrySwitchLinks -->
-					<a
-						class="px-2.5 py-1.5 text-[0.78rem] font-bold tracking-[0.03em] text-muted no-underline hover:text-text"
-						class:border-r={i < countrySwitchLinks.length - 1}
-						class:border-border={i < countrySwitchLinks.length - 1}
-						class:bg-primary={link.country === country}
-						class:text-ink={link.country === country}
-						href={link.href}>{COUNTRY_LABELS[link.country]}</a
+				{#each COUNTRIES as c, i (c)}
+					<button
+						class="cursor-pointer px-2.5 py-1.5 text-[0.78rem] font-bold tracking-[0.03em] no-underline"
+						class:border-r={i < COUNTRIES.length - 1}
+						class:border-border={i < COUNTRIES.length - 1}
+						class:bg-primary={c === country}
+						class:text-ink={c === country}
+						onclick={() => {
+							countryStore.set(c);
+							goto(
+								resolve(`/land/[country]?to=${encodeURIComponent(page.url.pathname)}`, {
+									country: c
+								})
+							);
+						}}
 					>
+						{COUNTRY_LABELS[c]}
+					</button>
 				{/each}
 			</div>
 			{#if user}

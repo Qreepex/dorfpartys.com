@@ -44,6 +44,7 @@
 	{#if profile.avatarUrl}
 		<meta property="og:image" content={profile.avatarUrl} />
 	{/if}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(jsonLd)}
 </svelte:head>
 

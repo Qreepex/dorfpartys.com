@@ -121,8 +121,10 @@
 		<meta property="og:description" content={result.seo.description} />
 		<meta property="og:url" content={canonical} />
 		<meta name="twitter:card" content="summary" />
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html jsonLdScriptTag(result.breadcrumbJsonLd)}
 		{#if itemListJsonLd}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html jsonLdScriptTag(itemListJsonLd)}
 		{/if}
 	{/if}

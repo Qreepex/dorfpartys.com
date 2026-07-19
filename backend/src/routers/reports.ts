@@ -2,7 +2,10 @@ import { submitReportSchema } from "@dorfpartys/shared";
 import { and, eq, gt } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import { report, reportRateLimit } from "../db/schema.js";
-import { sendReportConfirmation, sendReportNotification } from "../email/service.js";
+import {
+  sendReportConfirmation,
+  sendReportNotification,
+} from "../email/service.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 
 // Rate limiting: 5 reports per IP per hour
@@ -60,7 +63,9 @@ async function checkRateLimit(
   } catch (err: any) {
     // If rate_limit table doesn't exist (error code 42P01), skip rate limiting
     if (err?.code === "42P01") {
-      console.warn("report_rate_limit table not found - skipping rate limit check. Run: pnpm --filter backend db:migrate");
+      console.warn(
+        "report_rate_limit table not found - skipping rate limit check. Run: pnpm --filter backend db:migrate",
+      );
       return { allowed: true, remainingReports: RATE_LIMIT_REPORTS - 1 };
     }
 
@@ -71,7 +76,14 @@ async function checkRateLimit(
 }
 
 function requiresReporterEmail(type: string): boolean {
-  return ["dmca", "copyright", "dsa", "netzdk", "netsperrer", "swisslaw"].includes(type);
+  return [
+    "dmca",
+    "copyright",
+    "dsa",
+    "netzdk",
+    "netsperrer",
+    "swisslaw",
+  ].includes(type);
 }
 
 export const reportsRouter = router({
@@ -82,7 +94,9 @@ export const reportsRouter = router({
         // Get IP address from headers
         const forwardedFor = ctx.req.headers["x-forwarded-for"];
         const ipAddress =
-          (typeof forwardedFor === "string" ? forwardedFor.split(",")[0] : null) ||
+          (typeof forwardedFor === "string"
+            ? forwardedFor.split(",")[0]
+            : null) ||
           ctx.req.ip ||
           "unknown";
 
@@ -135,7 +149,11 @@ export const reportsRouter = router({
 
         // Send confirmation to reporter if required by law
         if (requiresReporterEmail(input.type) && input.reporterEmail) {
-          await sendReportConfirmation(input.reporterEmail, input.type, ticketNumber);
+          await sendReportConfirmation(
+            input.reporterEmail,
+            input.type,
+            ticketNumber,
+          );
         }
 
         return {

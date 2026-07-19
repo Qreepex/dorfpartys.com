@@ -58,7 +58,7 @@
 </svelte:head>
 
 <article>
-	<header class="max-w-[70ch]">
+	<header>
 		<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
 			Kostenlos · Werbefrei · In 5 Minuten
 		</p>
@@ -92,7 +92,7 @@
 			<p class="font-display text-lg font-semibold">Für Google & KI-Suche optimiert</p>
 			<p class="mt-1 text-muted">
 				Jede Region, Party-Art und jeder Monat hat eine eigene Seite - dein Event taucht dort auf,
-				wo Menschen (und KI-Assistenten) danach fragen.
+				wo Menschen danach fragen.
 			</p>
 		</li>
 		<li class="border-t border-border py-4 sm:border-b">

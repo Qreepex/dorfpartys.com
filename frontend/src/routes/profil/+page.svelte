@@ -15,7 +15,7 @@
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
-<div class="max-w-[70ch]">
+<div>
 	<h1>Mein Profil</h1>
 
 	{#if form?.success}

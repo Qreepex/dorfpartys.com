@@ -20,13 +20,14 @@
 		fullWidth = false,
 		onclick,
 		children,
+		class: className,
 		...rest
 	}: Props = $props();
 </script>
 
 {#if href}
 	<a
-		class="button button-{variant}"
+		class="button button-{variant} {className}"
 		class:full-width={fullWidth}
 		class:disabled
 		{href}
