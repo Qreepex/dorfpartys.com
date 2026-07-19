@@ -4,7 +4,10 @@ import type { RequestHandler } from './$types.js';
 export const GET: RequestHandler = async () => {
 	const files = [
 		'sitemap-events.xml',
-		...COUNTRIES.flatMap((country) => [`sitemap-${country}-orte.xml`, `sitemap-${country}-arten.xml`])
+		...COUNTRIES.flatMap((country) => [
+			`sitemap-${country}-orte.xml`,
+			`sitemap-${country}-arten.xml`
+		])
 	];
 
 	const body = `<?xml version="1.0" encoding="UTF-8"?>

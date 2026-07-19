@@ -1,2 +1,2 @@
-export * from './json-ld.js';
-export * from './sitemap.js';
+export * from "./json-ld.js";
+export * from "./sitemap.js";

@@ -98,12 +98,12 @@ Kein literales `/art/`- oder `/monat/`-Präfix. Welches Segment was bedeutet, wi
 
 Vier kontrollierte Vokabulare, **global kollisionsfrei** (siehe 1.5):
 
-| Vokabular | Beispiele | Herkunft |
-|---|---|---|
-| Bundesland | schleswig-holstein, bayern, ... | Stammdaten je Land |
-| Kreis | ostholstein, ... | Stammdaten, referenziert ein Bundesland |
-| Party-Art | schuetzenfeste, zeltfeten, scheunenfeten, stoppelfeten, ... | Admin-gepflegte Liste |
-| Monat | januar … dezember | fest, 12 Werte |
+| Vokabular  | Beispiele                                                   | Herkunft                                |
+| ---------- | ----------------------------------------------------------- | --------------------------------------- |
+| Bundesland | schleswig-holstein, bayern, ...                             | Stammdaten je Land                      |
+| Kreis      | ostholstein, ...                                            | Stammdaten, referenziert ein Bundesland |
+| Party-Art  | schuetzenfeste, zeltfeten, scheunenfeten, stoppelfeten, ... | Admin-gepflegte Liste                   |
+| Monat      | januar … dezember                                           | fest, 12 Werte                          |
 
 Resolver-Logik (Pseudocode, Backend):
 

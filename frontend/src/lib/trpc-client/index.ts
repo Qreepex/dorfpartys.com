@@ -1,6 +1,6 @@
-import { createTRPCClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '@dorfpartys/backend';
 import { env } from '$env/dynamic/private';
+import type { AppRouter } from '@dorfpartys/backend';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
 
 /**
  * Frontend -> Backend läuft intern im Cluster über K8s-Service-DNS, nicht
@@ -12,7 +12,7 @@ export function createBackendClient(cookieHeader: string | null) {
 	return createTRPCClient<AppRouter>({
 		links: [
 			httpBatchLink({
-				url: `${env.BACKEND_INTERNAL_URL ?? 'http://backend:3000'}/trpc`,
+				url: `${env.BACKEND_INTERNAL_URL ?? 'http://localhost:3033'}/trpc`,
 				headers: () => (cookieHeader ? { cookie: cookieHeader } : {})
 			})
 		]

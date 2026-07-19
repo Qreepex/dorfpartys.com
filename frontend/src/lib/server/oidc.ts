@@ -44,7 +44,10 @@ export interface TokenResponse {
 	expires_in: number;
 }
 
-export async function exchangeCodeForTokens(code: string, codeVerifier: string): Promise<TokenResponse> {
+export async function exchangeCodeForTokens(
+	code: string,
+	codeVerifier: string
+): Promise<TokenResponse> {
 	const discovery = await getDiscoveryDocument();
 	const body = new URLSearchParams({
 		grant_type: 'authorization_code',

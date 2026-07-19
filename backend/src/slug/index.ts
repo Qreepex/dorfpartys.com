@@ -1,18 +1,18 @@
-import { like } from 'drizzle-orm';
-import type { Database } from '../db/index.js';
-import { event } from '../db/schema.js';
+import { like } from "drizzle-orm";
+import type { Database } from "../db/index.js";
+import { event } from "../db/schema.js";
 
 export function slugify(input: string): string {
-	return input
-		.toLowerCase()
-		.replace(/ä/g, 'ae')
-		.replace(/ö/g, 'oe')
-		.replace(/ü/g, 'ue')
-		.replace(/ß/g, 'ss')
-		.normalize('NFKD')
-		.replace(/\p{Diacritic}/gu, '')
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
+  return input
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /**
@@ -23,25 +23,25 @@ export function slugify(input: string): string {
  * der Kreis-Name als strukturierter Näherungswert verwendet.
  */
 export async function generateUniqueEventSlug(
-	db: Database,
-	title: string,
-	disambiguator: string
+  db: Database,
+  title: string,
+  disambiguator: string,
 ): Promise<string> {
-	const base = slugify(title);
-	const existingRows = await db
-		.select({ slug: event.slug })
-		.from(event)
-		.where(like(event.slug, `${base}%`));
-	const taken = new Set(existingRows.map((row) => row.slug));
+  const base = slugify(title);
+  const existingRows = await db
+    .select({ slug: event.slug })
+    .from(event)
+    .where(like(event.slug, `${base}%`));
+  const taken = new Set(existingRows.map((row) => row.slug));
 
-	if (!taken.has(base)) return base;
+  if (!taken.has(base)) return base;
 
-	const withDisambiguator = `${base}-${slugify(disambiguator)}`;
-	if (!taken.has(withDisambiguator)) return withDisambiguator;
+  const withDisambiguator = `${base}-${slugify(disambiguator)}`;
+  if (!taken.has(withDisambiguator)) return withDisambiguator;
 
-	let suffix = 2;
-	while (taken.has(`${withDisambiguator}-${suffix}`)) {
-		suffix += 1;
-	}
-	return `${withDisambiguator}-${suffix}`;
+  let suffix = 2;
+  while (taken.has(`${withDisambiguator}-${suffix}`)) {
+    suffix += 1;
+  }
+  return `${withDisambiguator}-${suffix}`;
 }

@@ -2,4 +2,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://dorfpartys.com/sitemap-index.xml
+Sitemap: https://dorfpartys.com/sitemap.xml

@@ -56,7 +56,9 @@ export const actions: Actions = {
 			const created = await locals.trpc.events.create.mutate(parsed.data);
 			await locals.trpc.events.submitForReview.mutate({ id: created.id });
 		} catch (err) {
-			return fail(400, { error: err instanceof Error ? err.message : 'Einreichung fehlgeschlagen' });
+			return fail(400, {
+				error: err instanceof Error ? err.message : 'Einreichung fehlgeschlagen'
+			});
 		}
 
 		return { success: true };

@@ -20,7 +20,7 @@ dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform z
         review/                          # Moderations-Dashboard (geschützt: moderator/admin)
         submit/                          # Event-Einreichungsformular (geschützt: eingeloggt)
         profil/                          # Nutzerprofil-Editor (geschützt: eingeloggt)
-      sitemap-index.xml/, sitemap-[...].xml/
+      sitemap.xml/, sitemap-[...].xml/
     lib/
       trpc-client/                       # tRPC-Client, importiert AppRouter-Typ (type-only) aus /backend
       components/
@@ -98,12 +98,12 @@ Kein literales `/art/`- oder `/monat/`-Präfix. Welches Segment was bedeutet, wi
 
 Vier kontrollierte Vokabulare, **global kollisionsfrei** (siehe 1.5):
 
-| Vokabular | Beispiele | Herkunft |
-|---|---|---|
-| Bundesland | schleswig-holstein, bayern, ... | Stammdaten je Land |
-| Kreis | ostholstein, ... | Stammdaten, referenziert ein Bundesland |
-| Party-Art | schuetzenfeste, zeltfeten, scheunenfeten, stoppelfeten, ... | Admin-gepflegte Liste |
-| Monat | januar … dezember | fest, 12 Werte |
+| Vokabular  | Beispiele                                                   | Herkunft                                |
+| ---------- | ----------------------------------------------------------- | --------------------------------------- |
+| Bundesland | schleswig-holstein, bayern, ...                             | Stammdaten je Land                      |
+| Kreis      | ostholstein, ...                                            | Stammdaten, referenziert ein Bundesland |
+| Party-Art  | schuetzenfeste, zeltfeten, scheunenfeten, stoppelfeten, ... | Admin-gepflegte Liste                   |
+| Monat      | januar … dezember                                           | fest, 12 Werte                          |
 
 Resolver-Logik (Pseudocode, Backend):
 
@@ -165,7 +165,7 @@ Entkoppelt von den vier Filter-Vokabularen (kein Kollisionsrisiko), einfacheres 
 ### 1.8 Sitemaps
 
 ```
-/sitemap-index.xml
+/sitemap.xml
 /sitemap-{country}-orte.xml
 /sitemap-{country}-arten.xml
 /sitemap-events.xml
