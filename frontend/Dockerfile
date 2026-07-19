@@ -17,12 +17,13 @@ RUN pnpm fetch
 COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY shared/ ./shared/
 COPY frontend/ ./frontend/
+RUN rm -rf ./frontend/build/
 
 # Installiert alle Abhängigkeiten (inkl. devDependencies für den Build) direkt aus dem Store
 RUN pnpm install --offline --frozen-lockfile
 
 # SvelteKit App bauen
-RUN pnpm --filter @dorfpartys/frontend build
+RUN pnpm --filter ./frontend build
 
 # 3. DevDependencies entfernen, aber pnpm zwingen, die node_modules physisch auszupacken
 RUN CI=true pnpm install --prod --offline --frozen-lockfile

@@ -20,7 +20,7 @@ COPY backend/src/ ./backend/src/
 COPY backend/scripts/ ./backend/scripts/
 
 # TypeScript Build ausführen (erzeugt backend/dist)
-RUN pnpm --filter @dorfpartys/backend build
+RUN pnpm --filter ./backend build
 
 # DevDependencies entfernen, um Image klein zu halten
 RUN CI=true pnpm install --prod --filter @dorfpartys/backend... --frozen-lockfile
