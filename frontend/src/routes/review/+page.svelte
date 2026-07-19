@@ -1,10 +1,19 @@
 <script lang="ts">
+	import { Button } from '$lib/components/index.js';
+	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	const verificationHref = resolve('/review/verification');
 </script>
 
 <h1>Review-Dashboard</h1>
+
+<nav class="mb-6 flex gap-3">
+	<a href="/review" class="font-semibold text-primary">Events</a>
+	<a href={verificationHref} class="font-semibold text-primary">Verifizierung</a>
+</nav>
 
 {#if form?.error}
 	<p>{form.error}</p>

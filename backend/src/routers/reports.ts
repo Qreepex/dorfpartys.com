@@ -6,6 +6,7 @@ import {
   sendReportConfirmation,
   sendReportNotification,
 } from "../email/service.js";
+import { sanitizeText } from "../sanitization/index.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 
 // Rate limiting: 5 reports per IP per hour
@@ -115,6 +116,10 @@ export const reportsRouter = router({
           );
         }
 
+        // Sanitiere Text-Eingaben vor Ablage
+        const sanitizedDescription = sanitizeText(input.description);
+        const sanitizedReporterName = input.reporterName ? sanitizeText(input.reporterName) : null;
+
         // Insert report into database
         const reportId = await ctx.db
           .insert(report)
@@ -123,9 +128,9 @@ export const reportsRouter = router({
             subjectType: input.subjectType as any,
             subjectId: input.subjectId ?? null,
             url: input.url,
-            description: input.description,
+            description: sanitizedDescription,
             reporterEmail: input.reporterEmail ?? null,
-            reporterName: input.reporterName ?? null,
+            reporterName: sanitizedReporterName,
             country: input.country ?? null,
             status: "open",
           })

@@ -1,8 +1,9 @@
 import {
   completeOnboardingInputSchema,
   updateProfileInputSchema,
-  type UpdateProfileInput,
+  type UpdateProfileInput
 } from "@dorfpartys/shared";
+import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
@@ -15,21 +16,34 @@ import {
   userLink,
   userProfile,
 } from "../db/schema.js";
+import { sanitizeText } from "../sanitization/index.js";
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
+import { isSlugAvailable, validateSlugFormat } from "../slug/validation.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
+import {
+  generateVerificationCode,
+  isVerificationRelevantChange,
+} from "../verification/index.js";
 
 /**
  * Gemeinsame Upsert-Logik für `updateMyProfile` und `completeOnboarding`
  * (Onboarding-Formular, AGENTS.md Abschnitt 5) - inkl. Slug-Neuvergabe bei
  * geändertem Anzeigenamen (Veranstalter-Seite, AGENTS.md 3/8).
+ * Sanitiert User-Input vor Ablage in der DB.
  */
 async function upsertProfile(
   db: Database,
   userId: string,
   profileFields: Omit<UpdateProfileInput, "links">,
 ) {
-  if (profileFields.avatarS3Key) {
+  // Sanitiere Textfelder
+  const sanitized = {
+    ...profileFields,
+    displayName: profileFields.displayName ? sanitizeText(profileFields.displayName) : profileFields.displayName,
+    bio: profileFields.bio ? sanitizeText(profileFields.bio) : profileFields.bio,
+  };
+  if (sanitized.avatarS3Key) {
     const [existing] = await db
       .select({ avatarS3Key: userProfile.avatarS3Key })
       .from(userProfile)
@@ -38,35 +52,90 @@ async function upsertProfile(
     // öffentlichen Dateien (AGENTS.md 7.1).
     if (
       existing?.avatarS3Key &&
-      existing.avatarS3Key !== profileFields.avatarS3Key
+      existing.avatarS3Key !== sanitized.avatarS3Key
     ) {
       await deleteS3Object(existing.avatarS3Key);
     }
   }
 
   let slugUpdate: { slug: string } | Record<string, never> = {};
-  if (profileFields.displayName) {
-    const [existing] = await db
-      .select({ displayName: userProfile.displayName, slug: userProfile.slug })
-      .from(userProfile)
-      .where(eq(userProfile.userId, userId));
-    if (!existing?.slug || existing.displayName !== profileFields.displayName) {
+  let verificationReset: Record<string, null> = {};
+
+  const [existing] = await db
+    .select({
+      displayName: userProfile.displayName,
+      slug: userProfile.slug,
+      websiteUrl: userProfile.websiteUrl,
+      instagramUrl: userProfile.instagramUrl,
+      tiktokUrl: userProfile.tiktokUrl,
+      facebookUrl: userProfile.facebookUrl,
+      verifiedAt: userProfile.verifiedAt,
+    })
+    .from(userProfile)
+    .where(eq(userProfile.userId, userId));
+
+  // Slug-Handling: Benutzer kann einen Custom-Slug setzen, sonst auto-generieren
+  if (sanitized.slug) {
+    // Benutzer hat einen custom Slug eingegeben - validieren
+    const validation = validateSlugFormat(sanitized.slug);
+    if (!validation.valid) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: validation.error,
+      });
+    }
+
+    // Prüfe Eindeutigkeit
+    const available = await isSlugAvailable(db, sanitized.slug, userId);
+    if (!available) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: `Der Slug "${sanitized.slug}" ist bereits vergeben`,
+      });
+    }
+
+    slugUpdate = { slug: sanitized.slug };
+  } else if (sanitized.displayName) {
+    // Kein custom slug, auto-generieren aus displayName
+    if (!existing?.slug || existing.displayName !== sanitized.displayName) {
       slugUpdate = {
         slug: await generateUniqueOrganizerSlug(
           db,
-          profileFields.displayName,
+          sanitized.displayName,
           userId,
         ),
       };
     }
   }
 
+  // Wenn sich eine verifizierungsrelevante Profilfeld ändert, Reset der Verifizierung
+  if (existing?.verifiedAt && isVerificationRelevantChange(existing, sanitized)) {
+    verificationReset = {
+      verifiedAt: null,
+      verificationMethod: null,
+      verificationCode: null,
+      verificationRequestedAt: null,
+      verifiedInstagramHandle: null,
+      verifiedTiktokHandle: null,
+    };
+  }
+
   await db
     .insert(userProfile)
-    .values({ userId, ...profileFields, ...slugUpdate, updatedAt: new Date() })
+    .values({
+      userId,
+      ...sanitized,
+      ...slugUpdate,
+      updatedAt: new Date(),
+    })
     .onConflictDoUpdate({
       target: userProfile.userId,
-      set: { ...profileFields, ...slugUpdate, updatedAt: new Date() },
+      set: {
+        ...sanitized,
+        ...slugUpdate,
+        ...verificationReset,
+        updatedAt: new Date(),
+      },
     });
 }
 
@@ -89,12 +158,26 @@ export const usersRouter = router({
       return { profile: profileRow ?? null, links };
     }),
 
-  // Öffentliche Veranstalter-Seite /{country}/veranstalter/{slug}/ (AGENTS.md 3/8).
+  // Öffentliche Veranstalter-Seite //veranstalter/{slug}/ (AGENTS.md 3/8).
   getProfileBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       const [profileRow] = await ctx.db
-        .select()
+        .select({
+          userId: userProfile.userId,
+          slug: userProfile.slug,
+          isPublic: userProfile.isPublic,
+          displayName: userProfile.displayName,
+          avatarS3Key: userProfile.avatarS3Key,
+          websiteUrl: userProfile.websiteUrl,
+          instagramUrl: userProfile.instagramUrl,
+          facebookUrl: userProfile.facebookUrl,
+          tiktokUrl: userProfile.tiktokUrl,
+          bio: userProfile.bio,
+          verifiedAt: userProfile.verifiedAt,
+          verificationMethod: userProfile.verificationMethod,
+          updatedAt: userProfile.updatedAt,
+        })
         .from(userProfile)
         .where(eq(userProfile.slug, input.slug));
       // Private Profile sind unter ihrer URL nicht erreichbar (AGENTS.md
@@ -165,7 +248,7 @@ export const usersRouter = router({
             links.map((l) => ({
               userId: ctx.user.id,
               url: l.url,
-              label: l.label,
+              label: sanitizeText(l.label),
               position: l.position,
             })),
           );
@@ -196,5 +279,56 @@ export const usersRouter = router({
       .set({ onboardingCompletedAt: new Date() })
       .where(eq(user.id, ctx.user.id));
     return { userId: ctx.user.id };
+  }),
+
+  // Verifizierungsanfrage: generiert einen Code, den der User per Mail/DM schicken kann.
+  // Erfordert displayName und mindestens einen verifizierbaren Kanal (Website, Insta, TikTok).
+  requestVerification: protectedProcedure.mutation(async ({ ctx }) => {
+    const [profile] = await ctx.db
+      .select()
+      .from(userProfile)
+      .where(eq(userProfile.userId, ctx.user.id));
+
+    if (!profile) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Bitte richte zunächst dein Profil ein.",
+      });
+    }
+
+    if (!profile.displayName) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Bitte lege einen Anzeigenamen fest.",
+      });
+    }
+
+    // Mindestens ein Kanal muss vorhanden sein
+    const hasEmail = !!profile.websiteUrl;
+    const hasInstagram = !!profile.instagramUrl;
+    const hasTiktok = !!profile.tiktokUrl;
+
+    if (!hasEmail && !hasInstagram && !hasTiktok) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "Bitte hinterlege mindestens einen Kanal: Website, Instagram oder TikTok.",
+      });
+    }
+
+    const code = generateVerificationCode();
+
+    await ctx.db
+      .update(userProfile)
+      .set({
+        verificationCode: code,
+        verificationRequestedAt: new Date(),
+      })
+      .where(eq(userProfile.userId, ctx.user.id));
+
+    return {
+      code,
+      channels: { email: hasEmail, instagram: hasInstagram, tiktok: hasTiktok },
+    };
   }),
 });

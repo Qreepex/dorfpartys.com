@@ -12,3 +12,4 @@ export { default as EventList } from './EventList.svelte';
 export { default as Breadcrumbs } from './Breadcrumbs.svelte';
 export { default as FaqList } from './FaqList.svelte';
 export { default as FormGrid } from './FormGrid.svelte';
+export { default as VerifiedBadge } from './VerifiedBadge.svelte';

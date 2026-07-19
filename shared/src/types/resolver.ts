@@ -50,6 +50,8 @@ export interface ResolveResult {
 	 * eingetragene Events sofort sichtbar sind (siehe TODO.md).
 	 */
 	indexable: boolean;
+	/** Social-Media Preview-Bild für diese Filter-Kombination (optional, falls OG-Image generiert wurde) */
+	ogImageUrl?: string;
 }
 
 export interface ResolveNotFound {

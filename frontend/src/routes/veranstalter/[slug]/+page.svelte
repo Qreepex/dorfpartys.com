@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { EventList } from '$lib/components/index.js';
+	import { EventList, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildOrganizerUrl } from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
@@ -61,7 +61,12 @@
 		{/if}
 		<div>
 			<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>
-			<h1 class="m-0">{displayName}</h1>
+			<h1 class="flex items-center gap-2 m-0">
+				{displayName}
+				{#if profile.verifiedAt}
+					<VerifiedBadge title="Verifizierter Veranstalter" />
+				{/if}
+			</h1>
 		</div>
 	</header>
 

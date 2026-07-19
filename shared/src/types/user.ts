@@ -1,4 +1,4 @@
-import type { UserRole } from '../constants/index.js';
+import type { UserRole, VerificationMethod } from '../constants/index.js';
 
 export interface User {
 	id: string;
@@ -18,7 +18,13 @@ export interface UserProfile {
 	avatarS3Key: string | null;
 	websiteUrl: string | null;
 	instagramUrl: string | null;
+	facebookUrl: string | null;
+	tiktokUrl: string | null;
 	bio: string | null;
+	// Verifizierung
+	verifiedAt: string | null;
+	verificationMethod: VerificationMethod | null;
+	verificationRequestedAt: string | null;
 	updatedAt: string;
 }
 

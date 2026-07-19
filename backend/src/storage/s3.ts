@@ -17,7 +17,7 @@ export function getS3Client(): S3Client {
 
     client = new S3Client({
       endpoint,
-      region: process.env.S3_REGION ?? "eu-central-1",
+      region: process.env.S3_REGION ?? "eu-central-3",
       credentials: { accessKeyId, secretAccessKey },
       forcePathStyle: true,
     });

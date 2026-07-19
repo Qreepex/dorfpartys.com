@@ -120,7 +120,14 @@
 		<meta property="og:title" content={result.seo.title} />
 		<meta property="og:description" content={result.seo.description} />
 		<meta property="og:url" content={canonical} />
-		<meta name="twitter:card" content="summary" />
+		{#if result.ogImageUrl}
+			<meta property="og:image" content={result.ogImageUrl} />
+			<meta property="og:image:width" content="1200" />
+			<meta property="og:image:height" content="630" />
+			<meta name="twitter:card" content="summary_large_image" />
+		{:else}
+			<meta name="twitter:card" content="summary" />
+		{/if}
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html jsonLdScriptTag(result.breadcrumbJsonLd)}
 		{#if itemListJsonLd}

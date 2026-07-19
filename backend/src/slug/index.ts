@@ -47,7 +47,7 @@ export async function generateUniqueEventSlug(
 }
 
 /**
- * Slug-Vergabe für Veranstalter-Profile (/{country}/veranstalter/{slug}/,
+ * Slug-Vergabe für Veranstalter-Profile (/veranstalter/{slug}/,
  * AGENTS.md Abschnitt 3/8) - eigener URL-Baum, kein Kollisionsrisiko zu den
  * vier Filter-Vokabularen. Wird beim Speichern des Profils neu aus dem
  * `display_name` abgeleitet, sofern sich dieser geändert hat.

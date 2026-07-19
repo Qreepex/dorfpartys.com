@@ -1,4 +1,5 @@
 import { router } from "../trpc/trpc.js";
+import { adminVerificationRouter } from "./admin-verification.js";
 import { eventsRouter } from "./events.js";
 import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
@@ -19,6 +20,7 @@ export const appRouter = router({
   sitemap: sitemapRouter,
   stats: statsRouter,
   savedEvents: savedEventsRouter,
+  adminVerification: adminVerificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

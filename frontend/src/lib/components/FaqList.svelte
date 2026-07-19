@@ -13,7 +13,7 @@
 	unbedingt im DOM (kein "erst nach Klick sichtbar"), damit Suchmaschinen-
 	und LLM-Crawler jede Antwort ohne Interaktion lesen können.
 -->
-<dl class="divide-y divide-border border-t border-border">
+<div class="divide-y divide-border border-t border-border">
 	{#each items as item (item.question)}
 		<div class="py-5">
 			<details class="group">
@@ -30,4 +30,4 @@
 			</details>
 		</div>
 	{/each}
-</dl>
+</div>

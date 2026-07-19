@@ -31,22 +31,22 @@ export type SegmentType = (typeof CANONICAL_SEGMENT_ORDER)[number];
 
 // Startliste Party-Arten (AGENTS.md Abschnitt 10 - vollständige Liste ist offener Punkt).
 export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
-	{ slug: 'schuetzenfeste', name: 'Schützenfest' },
-	{ slug: 'zeltfeten', name: 'Zeltfete' },
-	{ slug: 'scheunenfeten', name: 'Scheunenfete' },
-	{ slug: 'stoppelfeten', name: 'Stoppelfete' },
-	{ slug: 'dorffeste', name: 'Dorffest' },
-	{ slug: 'maifeste', name: 'Maifest' },
-	{ slug: 'weinfeste', name: 'Weinfest' },
+	{ slug: 'schuetzenfeste', name: 'Schützenfeste' },
+	{ slug: 'zeltfeten', name: 'Zeltfeten' },
+	{ slug: 'scheunenfeten', name: 'Scheunenfeten' },
+	{ slug: 'stoppelfeten', name: 'Stoppelfeten' },
+	{ slug: 'dorffeste', name: 'Dorffeste' },
+	{ slug: 'maifeste', name: 'Maifeste' },
+	{ slug: 'weinfeste', name: 'Weinfeste' },
 	{ slug: 'kirmes', name: 'Kirmes' },
-	{ slug: 'straßenfeste', name: 'Straßenfest' },
+	{ slug: 'straßenfeste', name: 'Straßenfeste' },
 	{ slug: 'osterfeuer', name: 'Osterfeuer' },
-	{ slug: 'oktoberfeste', name: 'Oktoberfest' },
+	{ slug: 'oktoberfeste', name: 'Oktoberfeste' },
 	{ slug: 'karneval', name: 'Karneval' },
 	{ slug: 'fasching', name: 'Fasching' },
-	{ slug: 'weihnachtsmarkt', name: 'Weihnachtsmarkt' },
-	{ slug: 'sportfeste', name: 'Sportfest' },
-	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfest' }
+	{ slug: 'weihnachtsmarkt', name: 'Weihnachtsmärkte' },
+	{ slug: 'sportfeste', name: 'Sportfeste' },
+	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfeste' }
 ];
 
 export const SITE_URL = 'https://www.dorfpartys.com';
@@ -55,6 +55,9 @@ export const DEFAULT_PAGE_SIZE = 24;
 
 export const USER_ROLES = ['user', 'moderator', 'admin'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
+
+export const VERIFICATION_METHODS = ['email', 'instagram', 'tiktok'] as const;
+export type VerificationMethod = (typeof VERIFICATION_METHODS)[number];
 
 export const EVENT_STATUSES = ['draft', 'in_review', 'approved', 'rejected'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];

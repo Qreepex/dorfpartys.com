@@ -102,21 +102,15 @@
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 3}>
 			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold">Fertig?</legend>
 			<dl class="mb-4 border-y border-border py-4">
-				<div class="flex justify-between gap-3 py-1">
-					<dt class="text-muted">Anzeigename</dt>
-					<dd class="m-0 text-right font-semibold">{displayName || '-'}</dd>
-				</div>
+				<dt class="text-muted">Anzeigename</dt>
+				<dd class="m-0 mb-3 text-right font-semibold">{displayName || '-'}</dd>
 				{#if websiteUrl}
-					<div class="flex justify-between gap-3 py-1">
-						<dt class="text-muted">Website</dt>
-						<dd class="m-0 text-right font-semibold">{websiteUrl}</dd>
-					</div>
+					<dt class="text-muted">Website</dt>
+					<dd class="m-0 mb-3 text-right font-semibold">{websiteUrl}</dd>
 				{/if}
 				{#if instagramUrl}
-					<div class="flex justify-between gap-3 py-1">
-						<dt class="text-muted">Instagram</dt>
-						<dd class="m-0 text-right font-semibold">{instagramUrl}</dd>
-					</div>
+					<dt class="text-muted">Instagram</dt>
+					<dd class="m-0 text-right font-semibold">{instagramUrl}</dd>
 				{/if}
 			</dl>
 			<p class="text-[0.85rem] text-muted">

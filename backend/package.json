@@ -21,6 +21,9 @@
     "db:seed": "tsx src/db/seed/index.ts",
     "db:seed:demo": "tsx src/db/seed/demo-events.ts",
     "db:studio": "drizzle-kit studio",
+    "generate-og-images": "tsx --env-file=.env src/scripts/generate-og-images.ts",
+    "generate-og-images:test": "tsx --env-file=.env src/scripts/generate-og-images.ts --test-only",
+    "verify-user": "tsx --env-file=.env src/scripts/verify-user.ts",
     "test": "vitest run"
   },
   "dependencies": {

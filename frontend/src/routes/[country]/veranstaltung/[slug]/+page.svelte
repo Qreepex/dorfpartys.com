@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Breadcrumbs } from '$lib/components/index.js';
+	import { Breadcrumbs, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildEventUrl } from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
@@ -127,28 +127,20 @@
 		class="my-6 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 border-y border-border py-4"
 	>
 		{#if event.priceInfo}
-			<div>
-				<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Preis</dt>
-				<dd class="mt-0.5 font-semibold">{event.priceInfo}</dd>
-			</div>
+			<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Preis</dt>
+			<dd class="mt-0.5 font-semibold">{event.priceInfo}</dd>
 		{/if}
 		{#if event.minAge}
-			<div>
-				<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Mindestalter</dt>
-				<dd class="mt-0.5 font-semibold">{event.minAge} Jahre</dd>
-			</div>
+			<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Mindestalter</dt>
+			<dd class="mt-0.5 font-semibold">{event.minAge} Jahre</dd>
 		{/if}
 		{#if event.allowsMuttizettel}
-			<div>
-				<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Muttizettel</dt>
-				<dd class="mt-0.5 font-semibold">erforderlich</dd>
-			</div>
+			<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Muttizettel</dt>
+			<dd class="mt-0.5 font-semibold">erforderlich</dd>
 		{/if}
 		{#if event.isOutdoor}
-			<div>
-				<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Location</dt>
-				<dd class="mt-0.5 font-semibold">Open Air</dd>
-			</div>
+			<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Location</dt>
+			<dd class="mt-0.5 font-semibold">Open Air</dd>
 		{/if}
 	</dl>
 
@@ -168,12 +160,15 @@
 		</ul>
 	{/if}
 
-	<p class="text-muted">
+	<p class="flex items-center gap-2 text-muted">
 		Veranstalter:
 		{#if organizerHref}
 			<a class="text-primary no-underline" href={organizerHref}>{event.organizerName}</a>
 		{:else}
 			{event.organizerName}
+		{/if}
+		{#if event.organizerVerified}
+			<VerifiedBadge title="Von einem verifizierten Veranstalter" />
 		{/if}
 	</p>
 </article>

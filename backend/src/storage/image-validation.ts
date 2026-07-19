@@ -99,12 +99,12 @@ export async function validateAndSanitizeImage(
     // Re-encode based on format
     if (claimedMimeType === "image/jpeg") {
       // Re-encode as JPEG, removing all metadata
-      sanitizedBuffer = await sharp(buffer, { failOnError: true })
+      sanitizedBuffer = await sharp(buffer)
         .jpeg({ quality: 85, progressive: true })
         .toBuffer();
     } else {
       // Re-encode as PNG, removing all metadata
-      sanitizedBuffer = await sharp(buffer, { failOnError: true })
+      sanitizedBuffer = await sharp(buffer)
         .png({ compressionLevel: 9 })
         .toBuffer();
     }

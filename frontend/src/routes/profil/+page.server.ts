@@ -10,12 +10,14 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	updateProfile: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const raw = {
 			displayName: formData.get('displayName') || undefined,
 			websiteUrl: formData.get('websiteUrl') || undefined,
 			instagramUrl: formData.get('instagramUrl') || undefined,
+			facebookUrl: formData.get('facebookUrl') || undefined,
+			tiktokUrl: formData.get('tiktokUrl') || undefined,
 			bio: formData.get('bio') || undefined,
 			isPublic: formData.get('isPublic') === 'on'
 		};
@@ -37,5 +39,16 @@ export const actions: Actions = {
 
 		await locals.trpc.users.updateMyProfile.mutate(parsed.data);
 		return { success: true };
+	},
+
+	requestVerification: async ({ locals }) => {
+		try {
+			const result = await locals.trpc.users.requestVerification.mutate();
+			return { verificationRequested: true, ...result };
+		} catch (error: any) {
+			return fail(400, {
+				verificationError: error?.message || 'Verifizierung konnte nicht angefordert werden.'
+			});
+		}
 	}
 };

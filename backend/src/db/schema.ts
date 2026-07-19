@@ -42,6 +42,12 @@ export const reportStatusEnum = pgEnum("report_status", [
   "resolved",
 ]);
 
+export const verificationMethodEnum = pgEnum("verification_method", [
+  "email",
+  "instagram",
+  "tiktok",
+]);
+
 // --- Taxonomie / Stammdaten ---------------------------------------------
 
 export const bundesland = pgTable("bundesland", {
@@ -109,11 +115,32 @@ export const userProfile = pgTable("user_profile", {
   avatarS3Key: text("avatar_s3_key"),
   websiteUrl: text("website_url"),
   instagramUrl: text("instagram_url"),
+  facebookUrl: text("facebook_url"),
+  tiktokUrl: text("tiktok_url"),
   bio: text("bio"),
+  // Verifizierung (AGENTS.md Abschnitt Veranstalter-Verifizierung):
+  // verifiedAt = null: nicht verifiziert
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  verificationMethod: verificationMethodEnum("verification_method"),
+  verificationCode: text("verification_code"),
+  verificationRequestedAt: timestamp("verification_requested_at", {
+    withTimezone: true,
+  }),
+  // Normalisierte Handles (lowercase, @-frei) für Uniqueness-Checks across Users
+  verifiedInstagramHandle: text("verified_instagram_handle"),
+  verifiedTiktokHandle: text("verified_tiktok_handle"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+},
+(t) => [
+  uniqueIndex("user_profile_verified_instagram_handle_idx").on(
+    t.verifiedInstagramHandle,
+  ),
+  uniqueIndex("user_profile_verified_tiktok_handle_idx").on(
+    t.verifiedTiktokHandle,
+  ),
+]);
 
 export const userLink = pgTable("user_link", {
   id: uuid("id").primaryKey().defaultRandom(),

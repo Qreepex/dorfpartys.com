@@ -24,6 +24,7 @@ import {
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "../seo/index.js";
 import { generateUniqueEventSlug } from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
+import { sanitizeInput, sanitizeText } from "../sanitization/index.js";
 import {
   moderatorProcedure,
   protectedProcedure,
@@ -68,6 +69,25 @@ async function assertHasPublicProfile(db: Database, userId: string) {
         "Dein Profil muss öffentlich sichtbar sein, um Veranstaltungen einzutragen. Aktiviere das in deinen Profileinstellungen.",
     });
   }
+}
+
+/**
+ * Sanitiert Event-Input-Daten: entfernt HTML-Tags und gefährliche Zeichen
+ */
+function sanitizeEventInput(input: Record<string, any>) {
+  return {
+    ...input,
+    title: sanitizeText(input.title),
+    description: sanitizeText(input.description),
+    addressDescription: sanitizeText(input.addressDescription),
+    priceInfo: input.priceInfo ? sanitizeText(input.priceInfo) : input.priceInfo,
+    tags: input.tags?.map((tag: string) => sanitizeText(tag)),
+    links: input.links?.map((link: any) => ({
+      ...link,
+      label: sanitizeText(link.label),
+      url: link.url, // URLs sind bereits durch Zod validiert
+    })),
+  };
 }
 
 async function replacePhotosAndLinks(
@@ -127,34 +147,36 @@ export const eventsRouter = router({
         input.bundeslandId,
       );
 
+      const sanitized = sanitizeEventInput(input);
+
       const [row] = await ctx.db
         .insert(event)
         .values({
           // Vom Client vorab generierte ID, falls Event-Fotos schon vor dem
           // Anlegen unter diesem Pfad hochgeladen wurden (AGENTS.md 7.1).
           ...(input.id ? { id: input.id } : {}),
-          title: input.title,
+          title: sanitized.title,
           organizerUserId: ctx.user.id,
-          description: input.description,
+          description: sanitized.description,
           startDate: new Date(input.startDate),
           endDate: new Date(input.endDate),
           bundeslandId: input.bundeslandId,
           kreisId: input.kreisId,
-          addressDescription: input.addressDescription,
+          addressDescription: sanitized.addressDescription,
           partyArtId: input.partyArtId,
           status: "draft",
           ...(input.customColor ? { customColor: input.customColor } : {}),
-          priceInfo: input.priceInfo ?? null,
+          priceInfo: sanitized.priceInfo ?? null,
           minAge: input.minAge ?? null,
           allowsMuttizettel: input.allowsMuttizettel ?? false,
           isOutdoor: input.isOutdoor ?? false,
-          tags: input.tags ?? [],
+          tags: sanitized.tags ?? [],
           customFields: input.customFields ?? {},
           createdBy: ctx.user.id,
         })
         .returning({ id: event.id });
 
-      await replacePhotosAndLinks(ctx.db, row.id, input.photos, input.links);
+      await replacePhotosAndLinks(ctx.db, row.id, input.photos, sanitized.links);
 
       return { id: row.id };
     }),
@@ -179,6 +201,8 @@ export const eventsRouter = router({
         input.bundeslandId,
       );
 
+      const sanitized = sanitizeEventInput(input);
+
       // Eine inhaltliche Änderung an einem bereits freigeschalteten Event muss
       // erneut geprüft werden (README: "Jede Einreichung durchläuft eine
       // redaktionelle Prüfung, bevor sie öffentlich sichtbar wird").
@@ -188,27 +212,27 @@ export const eventsRouter = router({
       await ctx.db
         .update(event)
         .set({
-          title: input.title,
-          description: input.description,
+          title: sanitized.title,
+          description: sanitized.description,
           startDate: new Date(input.startDate),
           endDate: new Date(input.endDate),
           bundeslandId: input.bundeslandId,
           kreisId: input.kreisId,
-          addressDescription: input.addressDescription,
+          addressDescription: sanitized.addressDescription,
           partyArtId: input.partyArtId,
           status: nextStatus,
           ...(input.customColor ? { customColor: input.customColor } : {}),
-          priceInfo: input.priceInfo ?? null,
+          priceInfo: sanitized.priceInfo ?? null,
           minAge: input.minAge ?? null,
           allowsMuttizettel: input.allowsMuttizettel ?? false,
           isOutdoor: input.isOutdoor ?? false,
-          tags: input.tags ?? [],
+          tags: sanitized.tags ?? [],
           customFields: input.customFields ?? {},
           updatedAt: new Date(),
         })
         .where(eq(event.id, input.id));
 
-      await replacePhotosAndLinks(ctx.db, input.id, input.photos, input.links);
+      await replacePhotosAndLinks(ctx.db, input.id, input.photos, sanitized.links);
 
       return { id: input.id };
     }),
@@ -237,13 +261,85 @@ export const eventsRouter = router({
       return { id: input.id };
     }),
 
-  listMine: protectedProcedure.query(async ({ ctx }) =>
-    ctx.db
-      .select()
+  listMine: protectedProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({
+        id: event.id,
+        slug: event.slug,
+        title: event.title,
+        description: event.description,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        bundeslandId: event.bundeslandId,
+        kreisId: event.kreisId,
+        addressDescription: event.addressDescription,
+        partyArtId: event.partyArtId,
+        status: event.status,
+        customColor: event.customColor,
+        priceInfo: event.priceInfo,
+        minAge: event.minAge,
+        allowsMuttizettel: event.allowsMuttizettel,
+        isOutdoor: event.isOutdoor,
+        tags: event.tags,
+        customFields: event.customFields,
+        createdBy: event.createdBy,
+        approvedBy: event.approvedBy,
+        approvedAt: event.approvedAt,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+        organizerUserId: event.organizerUserId,
+        bundeslandName: bundeslandTable.name,
+        kreisName: kreis.name,
+        partyArtName: partyArt.name,
+      })
       .from(event)
+      .leftJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+      .leftJoin(kreis, eq(event.kreisId, kreis.id))
+      .leftJoin(partyArt, eq(event.partyArtId, partyArt.id))
       .where(eq(event.createdBy, ctx.user.id))
-      .orderBy(desc(event.updatedAt)),
-  ),
+      .orderBy(desc(event.updatedAt));
+
+    return rows;
+  }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [existing] = await ctx.db
+        .select()
+        .from(event)
+        .where(eq(event.id, input.id));
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      if (existing.createdBy !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      // Nur Draft oder Rejected Events dürfen gelöscht werden
+      // (Approved Events sollten archiviert, nicht gelöscht werden)
+      if (existing.status !== "draft" && existing.status !== "rejected") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Nur unveröffentlichte oder abgelehnte Events können gelöscht werden",
+        });
+      }
+
+      // Alle Fotos aus S3 löschen
+      const photos = await ctx.db
+        .select({ s3Key: eventPhoto.s3Key })
+        .from(eventPhoto)
+        .where(eq(eventPhoto.eventId, input.id));
+
+      await Promise.all(photos.map((p) => deleteS3Object(p.s3Key)));
+
+      // Event löschen (cascades: event_photo, event_link, saved_event)
+      await ctx.db.delete(event).where(eq(event.id, input.id));
+
+      return { id: input.id };
+    }),
 
   getBySlug: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES), slug: z.string().min(1) }))
@@ -272,6 +368,7 @@ export const eventsRouter = router({
             .select({
               displayName: userProfile.displayName,
               slug: userProfile.slug,
+              verifiedAt: userProfile.verifiedAt,
             })
             .from(userProfile)
             .where(eq(userProfile.userId, row.organizerUserId)),
@@ -332,6 +429,7 @@ export const eventsRouter = router({
         links,
         organizerName,
         organizerSlug: organizerProfile?.slug ?? null,
+        organizerVerified: organizerProfile?.verifiedAt != null,
         partyArtName: partyArtRow?.name ?? "",
         isSaved,
         jsonLd,

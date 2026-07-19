@@ -55,6 +55,19 @@ export async function resolve(
   const results =
     total > 0 ? await repo.listApprovedEvents(country, filterIds) : [];
 
+  // Konstruiere OG-Image-URL basierend auf Filters
+  // Format: og-image-{art}-{bundesland}-{kreis}-{country}
+  // Mindestens ein Filter sollte vorhanden sein (art oder bundesland)
+  const ogImageSlug = [
+    canonicalSlugs.artSlug,
+    canonicalSlugs.kreisSlug ?? canonicalSlugs.bundeslandSlug,
+    country
+  ].filter(Boolean).join("-");
+
+  const ogImageUrl = ogImageSlug
+    ? `https://speicher.dorfpartys.com/og-images/og-image-${ogImageSlug}.png`
+    : undefined;
+
   return {
     kind: "result",
     filters: {
@@ -69,5 +82,6 @@ export async function resolve(
     // Jede gültige Kombination ist index,follow, auch ohne aktuelle Treffer -
     // bewusste Abweichung von AGENTS.md 1.6, siehe ResolveResult.indexable.
     indexable: true,
+    ogImageUrl,
   };
 }
