@@ -72,7 +72,10 @@ export const savedEventsRouter = router({
     }
     // Dateless Events haben kein startDate zum Sortieren - hinten anstellen
     // (Infinity), statt bei Date(null) versehentlich auf 1970 zu landen.
-    function startMs(r: (typeof rows)[number], fallbackForPast = false): number {
+    function startMs(
+      r: (typeof rows)[number],
+      fallbackForPast = false,
+    ): number {
       if (r.startDate) return +new Date(r.startDate);
       return fallbackForPast ? 0 : Infinity;
     }

@@ -53,7 +53,8 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   // Title bekommt zusätzlich das Bundesland, wenn ein Kreis aufgelöst ist
   // (z.B. "Dorfpartys in Ostholstein, Schleswig-Holstein") - der H1 bleibt
   // unverändert bei "in {ort}", da `ort` bereits auf den Kreisnamen zeigt.
-  const title = kr && bl ? `${subject}, ${bl} | ${SITE_NAME}` : `${h1} | ${SITE_NAME}`;
+  const title =
+    kr && bl ? `${subject}, ${bl} | ${SITE_NAME}` : `${h1} | ${SITE_NAME}`;
 
   const ortSatz = kr ? `${kr} (${bl})` : (bl ?? countryIn);
   const artSatzTeil = art

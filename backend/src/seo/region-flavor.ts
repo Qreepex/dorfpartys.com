@@ -143,12 +143,12 @@ export function getRegionFlavorParagraphs(
   country: Country,
   bundeslandSlug: string | null,
 ): string[] {
-  const paragraphs: string[] = [COUNTRY_FLAVOR_PARAGRAPH[country]];
+  let paragraphs: string[] = [COUNTRY_FLAVOR_PARAGRAPH[country]];
 
   if (bundeslandSlug) {
     const flavor = BUNDESLAND_FLAVOR_PARAGRAPH[bundeslandSlug];
     if (flavor) {
-      paragraphs.push(flavor);
+      paragraphs = [flavor];
     }
   }
 

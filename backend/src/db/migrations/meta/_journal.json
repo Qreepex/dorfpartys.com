@@ -50,6 +50,13 @@
       "when": 1784564965388,
       "tag": "0006_slow_apocalypse",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784575844305,
+      "tag": "0007_puzzling_risque",
+      "breakpoints": true
     }
   ]
 }

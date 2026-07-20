@@ -3,6 +3,7 @@ import { accountClaimsRouter } from "./account-claims.js";
 import { adminVerificationRouter } from "./admin-verification.js";
 import { eventClaimsRouter } from "./event-claims.js";
 import { eventsRouter } from "./events.js";
+import { ghostAccountsRouter } from "./ghost-accounts.js";
 import { organizerNominationsRouter } from "./organizer-nominations.js";
 import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
@@ -19,6 +20,7 @@ export const appRouter = router({
   eventClaims: eventClaimsRouter,
   organizerNominations: organizerNominationsRouter,
   accountClaims: accountClaimsRouter,
+  ghostAccounts: ghostAccountsRouter,
   taxonomy: taxonomyRouter,
   users: usersRouter,
   uploads: uploadsRouter,

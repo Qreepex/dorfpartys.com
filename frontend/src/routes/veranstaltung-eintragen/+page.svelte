@@ -268,7 +268,8 @@
 			? isEditing
 				? 'Deine Änderungen wurden gespeichert.'
 				: 'Danke! Dein Event wurde zur redaktionellen Prüfung eingereicht und ist in Kürze sichtbar.'
-			: (form?.error ?? 'Bitte überprüfe deine Eingaben - Details stehen bei den betroffenen Feldern.')
+			: (form?.error ??
+					'Bitte überprüfe deine Eingaben - Details stehen bei den betroffenen Feldern.')
 	);
 
 	function dismissFeedback() {
@@ -289,9 +290,7 @@
 
 <svelte:head>
 	<title
-		>{isEditing
-			? 'Veranstaltung bearbeiten'
-			: 'Veranstaltung kostenlos eintragen'} | dorfpartys.com</title
+		>{isEditing ? 'Veranstaltung bearbeiten' : 'Veranstaltung kostenlos eintragen'} | dorfpartys.com</title
 	>
 	<meta
 		name="description"
@@ -368,9 +367,9 @@
 			</h1>
 			<p class="mt-4 max-w-[60ch] text-lg text-muted">
 				Egal ob Schützenfest, Zeltfete, Scheunenfete, Stoppelfete oder Dorffest: dorfpartys.com ist
-				die größte kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform, die für
-				genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht, findet dich
-				hier.
+				die größte kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform, die
+				für genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht, findet
+				dich hier.
 			</p>
 		</header>
 
@@ -398,8 +397,8 @@
 			<li class="border-t border-border py-4 sm:border-b">
 				<p class="font-display text-lg font-semibold">Eigene Veranstalter-Seite</p>
 				<p class="mt-1 text-muted">
-					Alle deine Veranstaltungen, Profil und Links gebündelt an einem Ort - ideal für Vereine mit
-					wiederkehrenden Festen.
+					Alle deine Veranstaltungen, Profil und Links gebündelt an einem Ort - ideal für Vereine
+					mit wiederkehrenden Festen.
 				</p>
 			</li>
 		</ul>
@@ -654,8 +653,8 @@
 			<div class="border-t border-border pt-4 sm:col-span-full">
 				<h2 class="field-label mb-2">Links (optional)</h2>
 				<p class="mb-3 text-xs text-muted">
-					TikTok, Instagram, Facebook oder Website - max. {MAX_EVENT_LINKS} Links, werden in dieser
-					Reihenfolge auf der Event-Seite angezeigt.
+					TikTok, Instagram, Facebook oder Website - max. {MAX_EVENT_LINKS} Links, werden in dieser Reihenfolge
+					auf der Event-Seite angezeigt.
 				</p>
 				{#each links as link, index (index)}
 					<div class="mb-3 flex flex-col gap-2 border border-border p-3 sm:flex-row sm:items-start">

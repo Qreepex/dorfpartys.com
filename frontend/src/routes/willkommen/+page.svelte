@@ -12,6 +12,7 @@
 	let bio = $state('');
 	let websiteUrl = $state('');
 	let instagramUrl = $state('');
+	let inviteCode = $state(data.prefillInviteCode ?? '');
 
 	const canContinueFromStep1 = $derived(displayName.trim().length > 0);
 
@@ -55,6 +56,7 @@
 		<input type="hidden" name="bio" value={bio} />
 		<input type="hidden" name="websiteUrl" value={websiteUrl} />
 		<input type="hidden" name="instagramUrl" value={instagramUrl} />
+		<input type="hidden" name="inviteCode" value={inviteCode} />
 
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 1}>
 			<legend class="mb-4 p-0 font-display text-[1.2rem] font-bold"
@@ -98,6 +100,17 @@
 			<p class="text-[0.85rem] text-muted">
 				Kannst du auch jederzeit später in deinem Profil ergänzen.
 			</p>
+			<TextInput
+				label="Hast du einen Einladungscode von uns erhalten? (optional)"
+				bind:value={inviteCode}
+				placeholder="z.B. AB3DE9GH"
+				maxlength={20}
+			/>
+			<p class="text-[0.85rem] text-muted">
+				Falls wir dich persönlich angeschrieben haben: Trag den Code aus unserer Nachricht hier ein
+				- deine bereits eingetragenen Veranstaltungen werden dann automatisch deinem Account
+				zugeordnet und du giltst direkt als verifizierter Veranstalter.
+			</p>
 		</fieldset>
 
 		<fieldset class="m-0 mb-6 border-none p-0" hidden={step !== 3}>
@@ -111,7 +124,11 @@
 				{/if}
 				{#if instagramUrl}
 					<dt class="text-muted">Instagram</dt>
-					<dd class="m-0 text-right font-semibold">{instagramUrl}</dd>
+					<dd class="m-0 mb-3 text-right font-semibold">{instagramUrl}</dd>
+				{/if}
+				{#if inviteCode}
+					<dt class="text-muted">Einladungscode</dt>
+					<dd class="m-0 text-right font-semibold">{inviteCode}</dd>
 				{/if}
 			</dl>
 			<p class="text-[0.85rem] text-muted">

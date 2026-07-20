@@ -220,9 +220,9 @@
 					<h1 class="m-0">{result.seo.h1}</h1>
 					<ShareButton title={result.seo.title} />
 				</div>
-				<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
+				<p class="mt-2 text-muted">{result.seo.intro}</p>
 				{#each result.seo.regionFlavorParagraphs as paragraph, index (index)}
-					<p class="mt-2 max-w-[60ch] text-muted">{paragraph}</p>
+					<p class="mt-2 text-muted">{paragraph}</p>
 				{/each}
 				<p class="mt-2 text-[0.85rem] text-muted">
 					{#if result.futureCount && result.pastCount}

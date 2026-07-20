@@ -5,7 +5,11 @@ import {
   createValidatedImage,
   uploadToS3,
 } from "../storage/index.js";
-import { enforceRateLimit, getClientIp, RATE_LIMITS } from "../rate-limit/index.js";
+import {
+  enforceRateLimit,
+  getClientIp,
+  RATE_LIMITS,
+} from "../rate-limit/index.js";
 import { protectedProcedure, router } from "../trpc/trpc.js";
 
 const contentTypeSchema = z.enum(["image/jpeg", "image/png"]);

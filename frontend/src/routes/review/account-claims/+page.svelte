@@ -31,6 +31,8 @@
 			>Organizer-Bestätigungen</a
 		>
 		<a href={resolve('/review/account-claims')} class="font-semibold text-primary">Profil-Claims</a>
+		<a href={resolve('/review/ghost-accounts')} class="font-semibold text-primary">Ghost-Accounts</a
+		>
 	</nav>
 
 	<h2>Ausstehende Profil-Übernahmen (Ghost-Accounts)</h2>

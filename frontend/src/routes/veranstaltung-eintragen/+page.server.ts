@@ -46,7 +46,7 @@ function toIsoStringOrNull(raw: FormDataEntryValue | null): string | null {
 // speichern" ist.
 function buildLinksFromFormData(
 	formData: FormData,
-	forceExplicit = false,
+	forceExplicit = false
 ): Array<{ url: string; label: string; position: 1 | 2 | 3 }> | undefined {
 	const urls = formData.getAll('linkUrl').map((v) => String(v).trim());
 	const labels = formData.getAll('linkLabel').map((v) => String(v).trim());
@@ -57,7 +57,7 @@ function buildLinksFromFormData(
 		.map((l, i) => ({
 			url: l.url,
 			label: l.label.length > 0 ? l.label : defaultEventLinkLabel(l.url),
-			position: (i + 1) as 1 | 2 | 3,
+			position: (i + 1) as 1 | 2 | 3
 		}));
 
 	if (links.length > 0) return links;
@@ -105,10 +105,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	let editingEvent: Awaited<ReturnType<typeof locals.trpc.events.getForEdit.query>> | null = null;
 	if (editId) {
 		if (!isLoggedIn) {
-			redirect(
-				302,
-				`/auth/login?redirectTo=${encodeURIComponent(`${url.pathname}${url.search}`)}`
-			);
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(`${url.pathname}${url.search}`)}`);
 		}
 		try {
 			editingEvent = await locals.trpc.events.getForEdit.query({ id: editId });

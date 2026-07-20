@@ -10,12 +10,12 @@
 -->
 <details class="legal-disclaimer mt-10 border border-border bg-bg-alt p-4 text-[0.8rem] text-muted">
 	<summary class="cursor-pointer font-semibold text-text select-none">Rechtlicher Hinweis</summary>
-	<p class="mt-2 leading-relaxed">
+	<p class="mt-2 mb-0 leading-relaxed">
 		dorfpartys.com ist nicht der Veranstalter der hier gelisteten Events - alle Entscheidungen vor
-		Ort obliegen ausschließlich dem jeweiligen Veranstalter. Wir übernehmen keine Verantwortung
-		oder Haftung für Schäden, Unfälle oder sonstige Vorkommnisse im Zusammenhang mit den
-		Veranstaltungen, keine Gewähr für die Richtigkeit der Angaben auf dieser Seite und keine
-		Verantwortung für Inhalte verlinkter externer Seiten. Ausführliche Regelungen in unseren
+		Ort obliegen ausschließlich dem jeweiligen Veranstalter. Wir übernehmen keine Verantwortung oder
+		Haftung für Schäden, Unfälle oder sonstige Vorkommnisse im Zusammenhang mit den Veranstaltungen,
+		keine Gewähr für die Richtigkeit der Angaben auf dieser Seite und keine Verantwortung für
+		Inhalte verlinkter externer Seiten. Ausführliche Regelungen in unseren
 		<a class="text-primary hover:underline" href={resolve('/nutzungsbedingungen')}
 			>Nutzungsbedingungen</a
 		>.

@@ -64,10 +64,7 @@ async function checkAndIncrement(
       .update(rateLimitCounter)
       .set({ count: existing.count + 1 })
       .where(
-        and(
-          eq(rateLimitCounter.scope, scope),
-          eq(rateLimitCounter.key, key),
-        ),
+        and(eq(rateLimitCounter.scope, scope), eq(rateLimitCounter.key, key)),
       );
     return { allowed: true };
   } catch (err: any) {

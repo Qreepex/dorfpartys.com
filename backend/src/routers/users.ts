@@ -26,6 +26,7 @@ import {
   generateVerificationCode,
   isVerificationRelevantChange,
 } from "../verification/index.js";
+import { redeemInviteCode } from "../invite-codes/index.js";
 
 /**
  * Gemeinsame Upsert-Logik für `updateMyProfile` und `completeOnboarding`
@@ -329,7 +330,10 @@ export const usersRouter = router({
         const fallback = e.endDate ?? e.startDate;
         return fallback ? new Date(fallback).getTime() : null;
       }
-      function startMs(e: (typeof events)[number], fallbackForPast = false): number {
+      function startMs(
+        e: (typeof events)[number],
+        fallbackForPast = false,
+      ): number {
         if (e.startDate) return +new Date(e.startDate);
         return fallbackForPast ? 0 : Infinity;
       }
@@ -418,11 +422,21 @@ export const usersRouter = router({
   completeOnboarding: protectedProcedure
     .input(completeOnboardingInputSchema)
     .mutation(async ({ ctx, input }) => {
-      await upsertProfile(ctx.db, ctx.user.id, input);
+      const { inviteCode, ...profileFields } = input;
+      await upsertProfile(ctx.db, ctx.user.id, profileFields);
       await ctx.db
         .update(user)
         .set({ onboardingCompletedAt: new Date() })
         .where(eq(user.id, ctx.user.id));
+
+      // Optionaler Einladungscode für die Übernahme eines vom Admin
+      // vorbereiteten Ghost-Accounts (siehe backend/src/invite-codes/index.ts)
+      // - ein ungültiger/bereits verwendeter Code wird bewusst still
+      // ignoriert, blockiert das Onboarding aber nie.
+      if (inviteCode) {
+        await redeemInviteCode(ctx.db, ctx.user.id, inviteCode);
+      }
+
       return { userId: ctx.user.id };
     }),
 

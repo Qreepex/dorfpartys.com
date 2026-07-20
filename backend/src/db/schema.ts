@@ -45,6 +45,10 @@ export const verificationMethodEnum = pgEnum("verification_method", [
   "email",
   "instagram",
   "tiktok",
+  // Verifizierung durch Einlösen eines Admin-Einladungscodes für einen
+  // Ghost-Account (siehe organizerInviteCode weiter unten) - kein manueller
+  // Review-Schritt nötig, da der Admin die Identität bereits vorab kennt.
+  "invite_code",
 ]);
 
 export const eventClaimStatusEnum = pgEnum("event_claim_status", [
@@ -358,6 +362,33 @@ export const accountClaim = pgTable(
   ],
 );
 
+// Einladungscodes für Ghost-Accounts, die der Admin selbst vorab anlegt (nicht
+// über die Event-Einreichung mit Freitext-Veranstalter, sondern proaktiv im
+// Admin-Dashboard /review/ghost-accounts). Der Admin trägt für den Ghost-
+// Account bereits Veranstaltungen ein und schickt dem echten Veranstalter
+// diesen Code direkt (E-Mail/DM). Bei Eingabe im Onboarding
+// (completeOnboardingInputSchema.inviteCode) werden alle Events des Ghost-
+// Accounts sofort auf den neu registrierten Account umgehängt und dieser gilt
+// direkt als verifiziert - reibungsloseres Gegenstück zum moderierten
+// `accountClaim`-Workflow oben, ohne Moderationsschritt, da der Admin die
+// Identität der Person bereits kennt (persönliche Ansprache).
+// Ein Code gehört zu genau einem Ghost-Account (kein M:N nötig).
+export const organizerInviteCode = pgTable("organizer_invite_code", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(),
+  ghostUserId: uuid("ghost_user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => user.id),
+  usedByUserId: uuid("used_by_user_id").references(() => user.id),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Gemerkte/gespeicherte Veranstaltungen, angezeigt unter /partyliste.
 export const savedEvent = pgTable(
   "saved_event",
@@ -421,7 +452,9 @@ export const rateLimitCounter = pgTable(
     count: integer("count").notNull().default(1),
     resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
   },
-  (table) => [uniqueIndex("rate_limit_scope_key_idx").on(table.scope, table.key)],
+  (table) => [
+    uniqueIndex("rate_limit_scope_key_idx").on(table.scope, table.key),
+  ],
 );
 
 // --- Relations ---------------------------------------------------------
@@ -464,6 +497,15 @@ export const userRelations = relations(user, ({ one, many }) => ({
   }),
   accountClaimsInitiated: many(accountClaim, {
     relationName: "accountClaimsInitiated",
+  }),
+  organizerInviteCodesForGhost: many(organizerInviteCode, {
+    relationName: "organizerInviteCodesForGhost",
+  }),
+  organizerInviteCodesCreated: many(organizerInviteCode, {
+    relationName: "organizerInviteCodesCreated",
+  }),
+  organizerInviteCodesRedeemed: many(organizerInviteCode, {
+    relationName: "organizerInviteCodesRedeemed",
   }),
 }));
 
@@ -561,6 +603,27 @@ export const accountClaimRelations = relations(accountClaim, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const organizerInviteCodeRelations = relations(
+  organizerInviteCode,
+  ({ one }) => ({
+    ghostUser: one(user, {
+      fields: [organizerInviteCode.ghostUserId],
+      references: [user.id],
+      relationName: "organizerInviteCodesForGhost",
+    }),
+    createdByUser: one(user, {
+      fields: [organizerInviteCode.createdBy],
+      references: [user.id],
+      relationName: "organizerInviteCodesCreated",
+    }),
+    usedByUser: one(user, {
+      fields: [organizerInviteCode.usedByUserId],
+      references: [user.id],
+      relationName: "organizerInviteCodesRedeemed",
+    }),
+  }),
+);
 
 export const savedEventRelations = relations(savedEvent, ({ one }) => ({
   user: one(user, { fields: [savedEvent.userId], references: [user.id] }),

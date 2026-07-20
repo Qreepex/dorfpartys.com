@@ -309,7 +309,8 @@
 								minute: '2-digit'
 							})}
 							{#if event.endDate}
-								{'–'} {new Date(event.endDate).toLocaleString('de-DE', {
+								{'–'}
+								{new Date(event.endDate).toLocaleString('de-DE', {
 									day: '2-digit',
 									month: 'long',
 									hour: '2-digit',

@@ -18,3 +18,15 @@ export async function requireModerator(trpc: BackendClient, currentPath: string)
 	}
 	return user;
 }
+
+/**
+ * Ghost-Account-/Einladungscode-Dashboard (/review/ghost-accounts) - enger als
+ * requireModerator, da hier stillschweigend "verifiziert" vergeben werden kann.
+ */
+export async function requireAdmin(trpc: BackendClient, currentPath: string) {
+	const user = await requireUser(trpc, currentPath);
+	if (user.role !== 'admin') {
+		error(403, 'Kein Zugriff auf dieses Dashboard');
+	}
+	return user;
+}

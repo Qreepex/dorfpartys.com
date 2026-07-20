@@ -31,7 +31,8 @@
 <main class="mx-auto max-w-[90ch]">
 	<div class="header-row">
 		<h1>Meine Veranstaltungen</h1>
-		<Button href={`${resolve('/veranstaltung-eintragen')}#formular`}>Neue Veranstaltung erstellen</Button
+		<Button href={`${resolve('/veranstaltung-eintragen')}#formular`}
+			>Neue Veranstaltung erstellen</Button
 		>
 	</div>
 
@@ -46,7 +47,8 @@
 					<div class="event-info">
 						<div class="event-header">
 							<h2>{event.title}</h2>
-							<span class="status {event.status}">{STATUS_LABELS[event.status] ?? event.status}</span
+							<span class="status {event.status}"
+								>{STATUS_LABELS[event.status] ?? event.status}</span
 							>
 						</div>
 						<p class="event-date">

@@ -26,13 +26,24 @@ export type UpdateProfileInput = z.infer<typeof updateProfileInputSchema>;
 
 // Registrierungs-/Onboarding-Formular nach dem ersten Login - im Gegensatz zu
 // `updateProfileInputSchema` ist `displayName` hier verpflichtend.
+// `inviteCode` ist optional (Ghost-Account-Übernahme via Einladungscode) -
+// ein ungültiger/bereits verwendeter Code darf das Onboarding NICHT blockieren
+// (möglichst kleine Hürde), daher hier bewusst kein strenges Format-Regex,
+// nur eine Längenbegrenzung. Prüfung/Einlösung passiert serverseitig.
 export const completeOnboardingInputSchema = z.object({
 	displayName: z.string().trim().min(1).max(80),
 	websiteUrl: z.string().trim().url().optional(),
 	instagramUrl: z.string().trim().url().optional(),
 	facebookUrl: z.string().trim().url().optional(),
 	tiktokUrl: z.string().trim().url().optional(),
-	bio: z.string().trim().max(2000).optional()
+	bio: z.string().trim().max(2000).optional(),
+	inviteCode: z
+		.string()
+		.trim()
+		.toUpperCase()
+		.max(20)
+		.optional()
+		.transform((v) => (v ? v : undefined))
 });
 
 export type CompleteOnboardingInput = z.infer<typeof completeOnboardingInputSchema>;

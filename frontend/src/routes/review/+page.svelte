@@ -8,10 +8,7 @@
 	// startDate/endDate sind optional (AGENTS.md 5, "Quantität über Qualität") -
 	// Moderator:innen sollen trotzdem eine plausible Aussage sehen statt eines
 	// "Invalid Date"-Strings.
-	function formatRange(
-		startInput: string | Date | null,
-		endInput: string | Date | null
-	) {
+	function formatRange(startInput: string | Date | null, endInput: string | Date | null) {
 		if (!startInput) return 'Termin folgt';
 		const start = new Date(startInput);
 		const startStr = start.toLocaleString('de-DE', {
@@ -50,6 +47,8 @@
 			>Organizer-Bestätigungen</a
 		>
 		<a href={resolve('/review/account-claims')} class="font-semibold text-primary">Profil-Claims</a>
+		<a href={resolve('/review/ghost-accounts')} class="font-semibold text-primary">Ghost-Accounts</a
+		>
 	</nav>
 
 	<h2>Zur Prüfung anstehende Veranstaltungen</h2>
@@ -66,7 +65,7 @@
 				{@const organizerHref = event.organizerSlug
 					? resolve('/veranstalter/[slug]', { slug: event.organizerSlug })
 					: null}
-				<li class="border border-border bg-card p-5">
+				<li class="bg-card border border-border p-5">
 					<div class="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
 						<div>
 							<h3 class="text-lg font-semibold">{event.title}</h3>
@@ -134,7 +133,9 @@
 							{/if}
 
 							{#if event.tags.length > 0}
-								<h4 class="mt-5 text-[0.75rem] font-semibold tracking-[0.08em] text-muted uppercase">
+								<h4
+									class="mt-5 text-[0.75rem] font-semibold tracking-[0.08em] text-muted uppercase"
+								>
 									Tags
 								</h4>
 								<ul class="mt-2 flex flex-wrap gap-2">
@@ -189,15 +190,17 @@
 								{/if}
 								{#if event.minAge}
 									<div>
-										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase"
-											>Mindestalter</dt
-										>
+										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">
+											Mindestalter
+										</dt>
 										<dd class="mt-0.5 font-semibold">{event.minAge} Jahre</dd>
 									</div>
 								{/if}
 								{#if event.allowsMuttizettel}
 									<div>
-										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Muttizettel</dt>
+										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">
+											Muttizettel
+										</dt>
 										<dd class="mt-0.5 font-semibold">erforderlich</dd>
 									</div>
 								{/if}
@@ -219,12 +222,12 @@
 								</div>
 								{#if event.customFields && Object.keys(event.customFields).length > 0}
 									<div>
-										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase"
-											>Zusatzfelder</dt
-										>
-										<dd class="mt-0.5 font-mono text-[0.8rem] whitespace-pre-wrap"
-											>{JSON.stringify(event.customFields, null, 2)}</dd
-										>
+										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">
+											Zusatzfelder
+										</dt>
+										<dd class="mt-0.5 font-mono text-[0.8rem] whitespace-pre-wrap">
+											{JSON.stringify(event.customFields, null, 2)}
+										</dd>
 									</div>
 								{/if}
 							</dl>

@@ -11,8 +11,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	await requireUser(locals.trpc, url.pathname);
 	// Als Hidden-Field durchgereicht: `action="?/complete"` ersetzt beim Absenden
 	// die komplette Query-String der Seite, ein `?redirectTo=...` aus der URL
-	// würde sonst beim Submit verloren gehen.
-	return { redirectTo: safeRedirectTarget(url.searchParams.get('redirectTo')) };
+	// würde sonst beim Submit verloren gehen. Gleiches gilt für `?code=...` -
+	// ein vom Admin verschickter Direktlink `/willkommen?code=XXXX` (siehe
+	// /review/ghost-accounts) füllt das optionale Einladungscode-Feld vor.
+	return {
+		redirectTo: safeRedirectTarget(url.searchParams.get('redirectTo')),
+		prefillInviteCode: url.searchParams.get('code') ?? ''
+	};
 };
 
 export const actions: Actions = {
@@ -22,7 +27,8 @@ export const actions: Actions = {
 			displayName: formData.get('displayName'),
 			websiteUrl: formData.get('websiteUrl') || undefined,
 			instagramUrl: formData.get('instagramUrl') || undefined,
-			bio: formData.get('bio') || undefined
+			bio: formData.get('bio') || undefined,
+			inviteCode: formData.get('inviteCode') || undefined
 		};
 
 		const parsed = completeOnboardingInputSchema.safeParse(raw);
