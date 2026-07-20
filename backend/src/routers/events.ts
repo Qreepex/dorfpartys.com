@@ -9,7 +9,7 @@ import {
   updateEventInputSchema,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
@@ -734,13 +734,89 @@ export const eventsRouter = router({
       }));
     }),
 
-  listInReview: moderatorProcedure.query(async ({ ctx }) =>
-    ctx.db
-      .select()
+  // Liefert alle zur Prüfung anstehenden Events inkl. aller für eine
+  // informierte Entscheidung nötigen Detaildaten (Taxonomie-Klarnamen,
+  // Veranstalter-Profil, Fotos, Links) - das Review-Dashboard soll den
+  // Moderator/innen einen vollständigen Blick auf das Event geben, ohne dass
+  // dafür manuell in der DB nachgeschaut werden muss.
+  listInReview: moderatorProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({
+        id: event.id,
+        slug: event.slug,
+        title: event.title,
+        description: event.description,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        addressDescription: event.addressDescription,
+        status: event.status,
+        customColor: event.customColor,
+        priceInfo: event.priceInfo,
+        minAge: event.minAge,
+        allowsMuttizettel: event.allowsMuttizettel,
+        isOutdoor: event.isOutdoor,
+        tags: event.tags,
+        customFields: event.customFields,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+        organizerUserId: event.organizerUserId,
+        organizerName: event.organizerName,
+        organizerVerified: event.organizerVerified,
+        organizerConfirmed: event.organizerConfirmed,
+        bundeslandName: bundeslandTable.name,
+        kreisName: kreis.name,
+        partyArtName: partyArt.name,
+        organizerDisplayName: userProfile.displayName,
+        organizerSlug: userProfile.slug,
+        organizerProfileVerifiedAt: userProfile.verifiedAt,
+      })
       .from(event)
+      .leftJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+      .leftJoin(kreis, eq(event.kreisId, kreis.id))
+      .leftJoin(partyArt, eq(event.partyArtId, partyArt.id))
+      .leftJoin(userProfile, eq(event.organizerUserId, userProfile.userId))
       .where(eq(event.status, "in_review"))
-      .orderBy(event.updatedAt),
-  ),
+      .orderBy(event.updatedAt);
+
+    if (rows.length === 0) return [];
+
+    const eventIds = rows.map((r) => r.id);
+    const [photos, links] = await Promise.all([
+      ctx.db
+        .select()
+        .from(eventPhoto)
+        .where(inArray(eventPhoto.eventId, eventIds))
+        .orderBy(eventPhoto.position),
+      ctx.db
+        .select()
+        .from(eventLink)
+        .where(inArray(eventLink.eventId, eventIds))
+        .orderBy(eventLink.position),
+    ]);
+
+    const photosByEvent = new Map<string, typeof photos>();
+    for (const photo of photos) {
+      const list = photosByEvent.get(photo.eventId) ?? [];
+      list.push(photo);
+      photosByEvent.set(photo.eventId, list);
+    }
+    const linksByEvent = new Map<string, typeof links>();
+    for (const link of links) {
+      const list = linksByEvent.get(link.eventId) ?? [];
+      list.push(link);
+      linksByEvent.set(link.eventId, list);
+    }
+
+    return rows.map((row) => ({
+      ...row,
+      organizerDisplayName: row.organizerDisplayName ?? row.organizerName,
+      photos: (photosByEvent.get(row.id) ?? []).map((p) => ({
+        ...p,
+        url: buildPublicStorageUrl(p.s3Key),
+      })),
+      links: linksByEvent.get(row.id) ?? [],
+    }));
+  }),
 
   review: moderatorProcedure
     .input(reviewEventInputSchema)
