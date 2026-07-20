@@ -16,3 +16,4 @@ export { default as FormGrid } from './FormGrid.svelte';
 export { default as VerifiedBadge } from './VerifiedBadge.svelte';
 export { default as LinkTypeIcon } from './LinkTypeIcon.svelte';
 export { default as LegalDisclaimer } from './LegalDisclaimer.svelte';
+export { default as ShareButton } from './ShareButton.svelte';

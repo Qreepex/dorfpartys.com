@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Button, EventList, VerifiedBadge } from '$lib/components/index.js';
+	import { Button, EventList, ShareButton, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildOrganizerUrl } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
@@ -57,25 +57,28 @@
 </svelte:head>
 
 <main class="mx-auto max-w-[90ch]">
-	<header class="mb-2 flex items-center gap-4">
-		{#if profile.avatarUrl}
-			<img
-				class="h-24 w-24 rounded-full object-cover"
-				src={profile.avatarUrl}
-				alt={displayName}
-				width="96"
-				height="96"
-			/>
-		{/if}
-		<div>
-			<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>
-			<h1 class="m-0 flex items-center gap-2">
-				{displayName}
-				{#if profile.verifiedAt}
-					<VerifiedBadge title="Verifizierter Veranstalter" />
-				{/if}
-			</h1>
+	<header class="mb-2 flex items-start justify-between gap-4">
+		<div class="flex items-center gap-4">
+			{#if profile.avatarUrl}
+				<img
+					class="h-24 w-24 rounded-full object-cover"
+					src={profile.avatarUrl}
+					alt={displayName}
+					width="96"
+					height="96"
+				/>
+			{/if}
+			<div>
+				<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>
+				<h1 class="m-0 flex items-center gap-2">
+					{displayName}
+					{#if profile.verifiedAt}
+						<VerifiedBadge title="Verifizierter Veranstalter" />
+					{/if}
+				</h1>
+			</div>
 		</div>
+		<ShareButton title={`${displayName} - Veranstalter auf dorfpartys.com`} />
 	</header>
 
 	{#if profile.bio}

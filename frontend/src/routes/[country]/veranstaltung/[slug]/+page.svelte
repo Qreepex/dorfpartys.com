@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Breadcrumbs, LegalDisclaimer, LinkTypeIcon, VerifiedBadge } from '$lib/components/index.js';
+	import {
+		Breadcrumbs,
+		LegalDisclaimer,
+		LinkTypeIcon,
+		ShareButton,
+		VerifiedBadge
+	} from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildEventUrl, detectEventLinkType } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
@@ -155,30 +161,33 @@
 	<article class="md:col-start-2 md:row-start-2">
 		<div class="flex items-start justify-between gap-4">
 			<h1>{event.title}</h1>
-			<form method="POST" action="?/toggleSave">
-				<input type="hidden" name="eventId" value={event.id} />
-				<input type="hidden" name="isSaved" value={event.isSaved} />
-				<button
-					type="submit"
-					class="flex min-h-11 shrink-0 items-center gap-1.5 border border-border bg-transparent px-4 font-body text-[0.85rem] font-semibold text-text hover:border-primary hover:text-primary"
-					class:bg-primary={event.isSaved}
-					class:border-primary={event.isSaved}
-					class:text-ink={event.isSaved}
-					aria-pressed={event.isSaved}
-				>
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill={event.isSaved ? 'currentColor' : 'none'}
-						stroke="currentColor"
-						stroke-width="2"
+			<div class="flex shrink-0 items-start gap-2">
+				<form method="POST" action="?/toggleSave">
+					<input type="hidden" name="eventId" value={event.id} />
+					<input type="hidden" name="isSaved" value={event.isSaved} />
+					<button
+						type="submit"
+						class="flex min-h-11 shrink-0 items-center gap-1.5 border border-border bg-transparent px-4 font-body text-[0.85rem] font-semibold text-text hover:border-primary hover:text-primary"
+						class:bg-primary={event.isSaved}
+						class:border-primary={event.isSaved}
+						class:text-ink={event.isSaved}
+						aria-pressed={event.isSaved}
 					>
-						<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
-					</svg>
-					{event.isSaved ? 'Gemerkt' : 'Merken'}
-				</button>
-			</form>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill={event.isSaved ? 'currentColor' : 'none'}
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+						</svg>
+						{event.isSaved ? 'Gemerkt' : 'Merken'}
+					</button>
+				</form>
+				<ShareButton title={event.title} />
+			</div>
 		</div>
 
 		{#if event.photos.length > 0}
