@@ -156,15 +156,17 @@
 	{/if}
 </svelte:head>
 
-{#if result}
-	<Breadcrumbs items={breadcrumbs} />
+<Breadcrumbs items={breadcrumbs} />
 
-	<div class="grid grid-cols-1 gap-6 md:grid-cols-[250px_1fr]">
+{#if result}
+	<div class="grid grid-cols-1 gap-6 md:grid-cols-[1fr_min(90ch,100%)_1fr] md:items-start">
 		<!-- Navigation Tree Sidebar -->
-		<NavTree {result} />
+		<div class="md:justify-self-end">
+			<NavTree {result} />
+		</div>
 
 		<!-- Main Content -->
-		<article>
+		<main class="md:col-start-2">
 			<header class="mb-8">
 				<h1>{result.seo.h1}</h1>
 				<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
@@ -242,6 +244,6 @@
 					- du bist als Erste:r auf dieser Seite gelistet.
 				</p>
 			{/if}
-		</article>
+		</main>
 	</div>
 {/if}

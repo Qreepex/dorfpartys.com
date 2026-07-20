@@ -26,7 +26,7 @@
 						aria-hidden="true">+</span
 					>
 				</summary>
-				<p class="mt-3 max-w-[65ch] leading-relaxed text-muted">{item.answer}</p>
+				<p class="mt-3 max-w-[80ch] leading-relaxed text-muted">{item.answer}</p>
 			</details>
 		</div>
 	{/each}
