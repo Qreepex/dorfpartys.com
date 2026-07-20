@@ -183,7 +183,17 @@ export const usersRouter = router({
         .where(eq(userLink.userId, input.userId))
         .orderBy(userLink.position);
 
-      return { profile: profileRow ?? null, links };
+      return {
+        profile: profileRow
+          ? {
+              ...profileRow,
+              avatarUrl: profileRow.avatarS3Key
+                ? buildPublicStorageUrl(profileRow.avatarS3Key)
+                : null,
+            }
+          : null,
+        links,
+      };
     }),
 
   // Autofill-Suche für die Veranstalter-Auswahl beim Eintragen einer

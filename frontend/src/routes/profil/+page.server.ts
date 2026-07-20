@@ -1,6 +1,6 @@
 import { requireUser } from '$lib/server/require-auth.js';
 import { updateProfileInputSchema } from '@dorfpartys/shared';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -11,8 +11,44 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
+	// Bild-Upload läuft als eigene Action (JS-Fetch aus AvatarUpload.svelte,
+	// analog zu `uploadPhoto` in veranstaltung-eintragen/+page.server.ts) -
+	// getrennt vom eigentlichen Formular-Save, damit die Vorschau sofort nach
+	// dem Hochladen verfügbar ist, ohne das restliche Formular abzuschicken.
+	// Persistiert wird der zurückgegebene S3-Key erst beim Speichern des
+	// Profils (verstecktes Feld, siehe +page.svelte) über `updateProfile`.
+	uploadAvatar: async ({ request, locals, url }) => {
+		try {
+			await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		const formData = await request.formData();
+		const contentType = formData.get('contentType') as string;
+		const file = formData.get('file') as File;
+
+		if (!file || file.size === 0) {
+			return fail(400, { error: 'Keine Datei ausgewählt' });
+		}
+
+		try {
+			const buffer = Buffer.from(await file.arrayBuffer());
+			const result = await locals.trpc.uploads.uploadAvatarPhoto.mutate({
+				contentType: contentType as 'image/jpeg' | 'image/png',
+				buffer
+			});
+			return { success: true, s3Key: result.s3Key };
+		} catch (err) {
+			return fail(400, {
+				error: err instanceof Error ? err.message : 'Upload fehlgeschlagen'
+			});
+		}
+	},
+
 	updateProfile: async ({ request, locals }) => {
 		const formData = await request.formData();
+		const avatarS3Key = formData.get('avatarS3Key');
 		const raw = {
 			displayName: formData.get('displayName') || undefined,
 			websiteUrl: formData.get('websiteUrl') || undefined,
@@ -20,7 +56,8 @@ export const actions: Actions = {
 			facebookUrl: formData.get('facebookUrl') || undefined,
 			tiktokUrl: formData.get('tiktokUrl') || undefined,
 			bio: formData.get('bio') || undefined,
-			isPublic: formData.get('isPublic') === 'on'
+			isPublic: formData.get('isPublic') === 'on',
+			...(avatarS3Key ? { avatarS3Key: String(avatarS3Key) } : {})
 		};
 
 		const parsed = updateProfileInputSchema.safeParse(raw);

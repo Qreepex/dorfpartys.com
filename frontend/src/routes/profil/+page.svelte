@@ -1,12 +1,20 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import '$lib/components/form-field.css';
-	import { Button, FormGrid, TextInput, Toggle, VerifiedBadge } from '$lib/components/index.js';
+	import {
+		AvatarUpload,
+		Button,
+		FormGrid,
+		TextInput,
+		Toggle,
+		VerifiedBadge
+	} from '$lib/components/index.js';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let verificationCode = $state<string | null>(null);
 	let showVerificationCode = $state(false);
+	let uploadedAvatarS3Key = $state<string | null>(null);
 
 	const organizerHref = $derived(
 		data.profile?.slug ? resolve('/veranstalter/[slug]', { slug: data.profile.slug }) : null
@@ -87,7 +95,17 @@
 	{/if}
 
 	<form method="POST" action="?/updateProfile" class="grid gap-6">
+		<input type="hidden" name="avatarS3Key" value={uploadedAvatarS3Key ?? ''} />
 		<FormGrid>
+			<div class="sm:col-span-full">
+				<AvatarUpload
+					name="avatarFile"
+					currentAvatarUrl={data.profile?.avatarUrl ?? null}
+					onUploadComplete={(s3Key) => {
+						uploadedAvatarS3Key = s3Key;
+					}}
+				/>
+			</div>
 			<div class="sm:col-span-full">
 				<TextInput
 					label="Anzeigename"

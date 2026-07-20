@@ -38,8 +38,7 @@
 	<h2>Ausstehende Profil-Übernahmen (Ghost-Accounts)</h2>
 	<p class="mb-4 text-sm text-muted">
 		Ein verifizierter Veranstalter möchte einen nicht registrierten Veranstalter-Eintrag (Ghost-
-		Account) übernehmen. Bei Genehmigung werden alle Events des Ghost-Accounts auf ihn übertragen
-		(AGENTS.md 5.4).
+		Account) übernehmen. Bei Genehmigung werden alle Events des Ghost-Accounts auf ihn übertragen.
 	</p>
 
 	{#if successMessage}

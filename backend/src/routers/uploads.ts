@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { MAX_AVATAR_DIMENSION } from "@dorfpartys/shared";
 import {
   validateAndSanitizeImage,
+  constrainToSquareMax,
   createValidatedImage,
   uploadToS3,
 } from "../storage/index.js";
@@ -100,8 +102,17 @@ export const uploadsRouter = router({
           input.contentType,
         );
 
-        const validatedImage = createValidatedImage(
+        // Erzwingt 128x128 (AGENTS.md Abschnitt 3) unabhängig davon, ob der
+        // Client tatsächlich clientseitig runterskaliert hat - die Mutation
+        // kann auch direkt angesprochen werden.
+        const avatarBuffer = await constrainToSquareMax(
           sanitizedBuffer,
+          mimeType,
+          MAX_AVATAR_DIMENSION,
+        );
+
+        const validatedImage = createValidatedImage(
+          avatarBuffer,
           mimeType,
           ctx.user.id,
           "profile",

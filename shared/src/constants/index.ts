@@ -85,3 +85,9 @@ export const MAX_EVENT_LINKS = 3;
 
 export const MAX_IMAGE_SIZE_MB = 1;
 export const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
+// Profilbild (AGENTS.md Abschnitt 3): "bis zu 128x128" - Obergrenze, kein
+// Pflichtmaß. Client skaliert/croppt darauf runter, Backend erzwingt das
+// serverseitig nochmal (nie dem Client vertrauen, siehe
+// backend/src/storage/image-validation.ts).
+export const MAX_AVATAR_DIMENSION = 128;

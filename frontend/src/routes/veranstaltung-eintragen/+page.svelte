@@ -840,7 +840,7 @@
 					required
 					bind:checked={rightsConfirmed}
 				/>
-				<p class="mt-2 max-w-[70ch] text-xs text-muted">
+				<p class="mt-2 text-xs text-muted">
 					Ich bestätige, dass ich alle erforderlichen Rechte an den hochgeladenen Texten und Bildern
 					besitze und die Verantwortung für die Inhalte übernehme. Ich räume dorfpartys.com das
 					Recht ein, diese Inhalte zu nutzen, zu vervielfältigen, zu verbreiten und öffentlich

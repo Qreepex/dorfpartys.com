@@ -133,6 +133,31 @@ export async function validateAndSanitizeImage(
 }
 
 /**
+ * Erzwingt eine quadratische Maximalgröße NACH der Kern-Validierung oben
+ * (Magic-Byte-Check + Re-Encode + Dimensions-/Größenlimit bleiben identisch
+ * für alle Uploads). Für Profilbilder (AGENTS.md Abschnitt 3: "bis zu
+ * 128x128") reicht das clientseitige Resizing/Cropping nicht als Garantie -
+ * die tRPC-Mutation kann auch direkt (ohne Frontend) angesprochen werden und
+ * damit das Frontend-Resizing umgehen. Center-Crop auf ein Quadrat +
+ * Downscale; kleinere Bilder werden nicht hochskaliert (`withoutEnlargement`).
+ */
+export async function constrainToSquareMax(
+  buffer: Buffer,
+  mimeType: "image/jpeg" | "image/png",
+  maxDimension: number,
+): Promise<Buffer> {
+  const resized = sharp(buffer).resize(maxDimension, maxDimension, {
+    fit: "cover",
+    position: "centre",
+    withoutEnlargement: true,
+  });
+
+  return mimeType === "image/jpeg"
+    ? resized.jpeg({ quality: 85, progressive: true }).toBuffer()
+    : resized.png({ compressionLevel: 9 }).toBuffer();
+}
+
+/**
  * Generates a validated image object ready for S3 upload.
  * Includes S3 key generation using event/user ID.
  */

@@ -34,7 +34,7 @@
 	<h2>Ausstehende Event-Claims</h2>
 	<p class="mb-4 text-sm text-muted">
 		Ein verifizierter Veranstalter möchte die Kontrolle über ein Event mit unverifiziertem oder
-		Ghost-Veranstalter übernehmen (AGENTS.md 5.4).
+		Ghost-Veranstalter übernehmen.
 	</p>
 
 	{#if successMessage}

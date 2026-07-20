@@ -38,8 +38,7 @@
 	<h2>Ausstehende Organizer-Nominierungen</h2>
 	<p class="mb-4 text-sm text-muted">
 		Beim Eintragen einer Veranstaltung wurde ein fremdes, bestehendes Profil als Veranstalter
-		angegeben - die Zuordnung muss vom Profil-Inhaber oder einem Moderator bestätigt werden
-		(AGENTS.md 5.3).
+		angegeben - die Zuordnung muss vom Profil-Inhaber oder einem Moderator bestätigt werden.
 	</p>
 
 	{#if successMessage}
