@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Breadcrumbs, EventList } from '$lib/components/index.js';
+	import { Breadcrumbs, EventList, LegalDisclaimer } from '$lib/components/index.js';
 	import NavTree from '$lib/components/NavTree.svelte';
 	import { jsonLdScriptTag, robotsContent } from '$lib/seo.js';
 	import {
@@ -267,6 +267,8 @@
 					- du bist als Erste:r auf dieser Seite gelistet.
 				</p>
 			{/if}
+
+			<LegalDisclaimer />
 		</article>
 	</main>
 {/if}

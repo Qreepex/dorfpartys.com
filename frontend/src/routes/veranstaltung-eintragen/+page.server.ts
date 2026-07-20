@@ -108,6 +108,11 @@ export const actions: Actions = {
 
 		const organizerUserId = formData.get('organizerUserId');
 		const organizerName = formData.get('organizerName');
+		// Pflicht-Bestätigung (Rechte an Inhalten + Einräumung Nutzungsrecht + Richtigkeit der
+		// Angaben, siehe AGENTS.md 5 / frontend Checkbox). Checkboxen werden nur als "on"
+		// übermittelt, wenn angehakt - clientseitiges `required` kann umgangen werden, daher
+		// zusätzlich hier geprüft, nicht Teil von submitEventInputSchema (wird nicht persistiert).
+		const rightsConfirmed = formData.get('rightsConfirmed') === 'on';
 
 		const raw = {
 			title: formData.get('title'),
@@ -129,8 +134,19 @@ export const actions: Actions = {
 		};
 
 		const parsed = submitEventInputSchema.safeParse(raw);
-		if (!parsed.success) {
-			return fail(400, { fieldErrors: parsed.error.flatten().fieldErrors });
+		if (!parsed.success || !rightsConfirmed) {
+			const fieldErrors: Record<string, string[]> = parsed.success
+				? {}
+				: { ...parsed.error.flatten().fieldErrors };
+			if (!rightsConfirmed) {
+				fieldErrors.rightsConfirmed = [
+					'Bitte bestätige die Rechte- und Inhaltsangaben, um fortzufahren.'
+				];
+			}
+			return fail(400, {
+				error: 'Bitte überprüfe deine Eingaben.',
+				fieldErrors
+			});
 		}
 
 		try {

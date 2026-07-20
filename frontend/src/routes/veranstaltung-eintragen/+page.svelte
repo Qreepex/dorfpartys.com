@@ -94,6 +94,11 @@
 	let organizerSelectedLabel = $state('');
 	let organizerError = $state('');
 
+	// Rechte-/Verantwortungsbestätigung (Pflicht-Checkbox vor Submit, siehe AGENTS.md 5 -
+	// Einreichungsformular). Wird serverseitig ebenfalls geprüft, da das `required`-Attribut
+	// clientseitig umgangen werden kann.
+	let rightsConfirmed = $state(false);
+
 	$effect(() => {
 		const query = organizerSearchQuery.trim();
 		if (organizerUserId || query.length < 1) {
@@ -166,7 +171,7 @@
 					: !!organizerName.trim())
 	);
 	const canSubmit = $derived(data.isLoggedIn);
-	const formValid = $derived(requiredFieldsFilled && organizerValid);
+	const formValid = $derived(requiredFieldsFilled && organizerValid && rightsConfirmed);
 </script>
 
 <svelte:head>
@@ -530,20 +535,46 @@
 		{/if}
 
 		{#if canSubmit}
-			<Button type="submit" disabled={submitStatus === 'submitting' || !formValid}>
-				{#if submitStatus === 'submitting'}
-					<span class="submit-spinner" aria-hidden="true"></span>
-					Wird gesendet...
-				{:else if submitStatus === 'success'}
-					<span aria-hidden="true">✓</span>
-					Eingereicht
-				{:else if submitStatus === 'error'}
-					<span aria-hidden="true">✗</span>
-					Erneut versuchen
-				{:else}
-					Kostenlos eintragen
+			<div class="mt-6 border-t border-border pt-4">
+				<Toggle
+					label="Ich bestätige die Rechte- und Inhaltsangaben *"
+					name="rightsConfirmed"
+					required
+					bind:checked={rightsConfirmed}
+				/>
+				<p class="mt-2 max-w-[70ch] text-xs text-muted">
+					Ich bestätige, dass ich alle erforderlichen Rechte an den hochgeladenen Texten und Bildern
+					besitze und die Verantwortung für die Inhalte übernehme. Ich räume dorfpartys.com das
+					Recht ein, diese Inhalte zu nutzen, zu vervielfältigen, zu verbreiten und öffentlich
+					zugänglich zu machen - auch zu Werbezwecken. Die Angaben sind nach bestem Wissen korrekt,
+					ich bin berechtigt, sie zu veröffentlichen, und es handelt sich um eine legale, zulässige
+					und öffentliche Veranstaltung. dorfpartys.com behält sich vor, Inhalte zu entfernen, die
+					gegen unsere Richtlinien oder Rechte Dritter verstoßen (siehe
+					<a class="text-primary hover:underline" href={resolve('/nutzungsbedingungen')}
+						>Nutzungsbedingungen</a
+					>).
+				</p>
+				{#if form?.fieldErrors?.rightsConfirmed}
+					<p class="field-error mt-1">{form.fieldErrors.rightsConfirmed[0]}</p>
 				{/if}
-			</Button>
+			</div>
+
+			<div class="mt-4">
+				<Button type="submit" disabled={submitStatus === 'submitting' || !formValid}>
+					{#if submitStatus === 'submitting'}
+						<span class="submit-spinner" aria-hidden="true"></span>
+						Wird gesendet...
+					{:else if submitStatus === 'success'}
+						<span aria-hidden="true">✓</span>
+						Eingereicht
+					{:else if submitStatus === 'error'}
+						<span aria-hidden="true">✗</span>
+						Erneut versuchen
+					{:else}
+						Kostenlos eintragen
+					{/if}
+				</Button>
+			</div>
 		{:else if data.isLoggedIn}
 			<p class="mt-4 text-[0.85rem] text-muted">
 				Du kannst Events einreichen, sobald du eingeloggt bist.

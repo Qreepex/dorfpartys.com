@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Breadcrumbs, VerifiedBadge } from '$lib/components/index.js';
+	import { Breadcrumbs, LegalDisclaimer, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildEventUrl } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
@@ -257,6 +257,8 @@
 				</form>
 			{/if}
 		{/if}
+
+		<LegalDisclaimer />
 	</article>
 
 	<!-- Sidebar -->
