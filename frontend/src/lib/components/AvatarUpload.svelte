@@ -119,10 +119,21 @@
 		{/if}
 
 		<div>
+			<!--
+				Bewusst KEIN `name`-Attribut: dieses Feld liegt innerhalb des
+				umgebenden `<form action="?/updateProfile">` (profil/+page.svelte).
+				Mit `name` würde eine (native oder JS-)Übermittlung des Hauptformulars
+				den rohen Original-File aus diesem Input mit einsammeln, falls sie vor
+				Abschluss von `handleFileSelect` passiert (Race Condition, bevor
+				`input.value` im `finally`-Block geleert ist) - analog zum Bug bei
+				ImageUpload.svelte (Event-Fotos), siehe Kommentar dort. Das eigentliche
+				Bild läuft ausschließlich über die separate `?/uploadAvatar`-Action
+				(fetch mit dem optimierten Blob) + das versteckte `avatarS3Key`-Feld -
+				der rohe File-Input muss dafür nicht Teil des Hauptformulars sein.
+			-->
 			<input
 				id={name}
 				type="file"
-				{name}
 				accept="image/jpeg,image/png"
 				onchange={handleFileSelect}
 				{disabled}

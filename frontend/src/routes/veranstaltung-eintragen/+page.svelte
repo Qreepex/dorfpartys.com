@@ -119,6 +119,15 @@
 	let partyArtId = $state(editingEvent?.partyArtId ?? '');
 	let addressDescription = $state(editingEvent?.addressDescription ?? '');
 	let uploadedPhotoS3Key = $state<string | null>(null);
+	// Wird von ImageUpload gemeldet, solange ein ausgewähltes Foto noch
+	// client-seitig optimiert/hochgeladen wird - sperrt "Absenden" (siehe
+	// Button unten), damit ein Klick nicht mitten im Upload passiert. Der
+	// rohe Original-File verlässt zwar seit dem Fix in ImageUpload.svelte
+	// (kein `name`-Attribut auf dem File-Input) ohnehin nie mehr das
+	// Hauptformular, aber ohne diese Sperre würde ein zu frühes Absenden
+	// weiterhin einfach zu einem Event OHNE das gewählte Foto führen
+	// (photoS3Key steht ja erst nach Abschluss des Uploads fest).
+	let photoUploadBusy = $state(false);
 	// Bestehendes Foto beim Bearbeiten (max. 1, siehe MAX_EVENT_PHOTOS) - wird
 	// serverseitig automatisch beibehalten, solange weder ein neues Foto
 	// hochgeladen noch "Foto entfernen" angehakt wird (+page.server.ts).
@@ -540,6 +549,7 @@
 						uploadedPhotoS3Key = s3Key;
 						removeExistingPhoto = false;
 					}}
+					onBusyChange={(busy) => (photoUploadBusy = busy)}
 				/>
 			</div>
 
@@ -928,7 +938,10 @@
 			</div>
 
 			<div class="mt-4">
-				<Button type="submit" disabled={submitStatus === 'submitting' || !formValid}>
+				<Button
+					type="submit"
+					disabled={submitStatus === 'submitting' || !formValid || photoUploadBusy}
+				>
 					{#if submitStatus === 'submitting'}
 						<span class="submit-spinner" aria-hidden="true"></span>
 						Wird gesendet...

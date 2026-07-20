@@ -7,10 +7,23 @@
 		label?: string;
 		name: string;
 		onUploadComplete?: (s3Key: string) => void;
+		/**
+		 * Meldet, ob gerade optimiert/hochgeladen wird - das umgebende Formular
+		 * (veranstaltung-eintragen/+page.svelte) sperrt damit den Haupt-"Absenden"-
+		 * Button, solange kein `photoS3Key` feststeht. Verhindert, dass ein Klick
+		 * mitten im Upload zu einem Event ohne das eigentlich gewählte Foto führt.
+		 */
+		onBusyChange?: (busy: boolean) => void;
 		disabled?: boolean;
 	}
 
-	let { label = 'Foto hochladen', name, onUploadComplete, disabled = false }: Props = $props();
+	let {
+		label = 'Foto hochladen',
+		name,
+		onUploadComplete,
+		onBusyChange,
+		disabled = false
+	}: Props = $props();
 
 	let isLoading = $state(false);
 	let isOptimizing = $state(false);
@@ -25,6 +38,7 @@
 
 		error = null;
 		isOptimizing = true;
+		onBusyChange?.(true);
 
 		try {
 			// Client-side optimization (type check + resize + compress for UX)
@@ -86,6 +100,7 @@
 			isLoading = false;
 			isOptimizing = false;
 			input.value = '';
+			onBusyChange?.(false);
 		}
 	}
 
@@ -101,10 +116,25 @@
 
 	{#if !uploadedS3Key}
 		<div class="rounded-lg border-2 border-dashed border-border p-6 text-center">
+			<!--
+				Bewusst KEIN `name`-Attribut: dieses Feld liegt innerhalb des
+				umgebenden `<form action="?/submit">` (veranstaltung-eintragen/+page.svelte).
+				Mit `name` würde `new FormData(formEl)` beim (JS-gesteuerten) Absenden
+				des Hauptformulars den *rohen, unkomprimierten* Original-File aus
+				diesem Input mit einsammeln, sobald der Nutzer "Absenden" klickt,
+				bevor `handleFileSelect` fertig optimiert/hochgeladen und `input.value`
+				im `finally`-Block geleert hat (Race Condition) - das erzeugte genau
+				den gemeldeten Bug: ein Request-Body mehrere MB groß trotz
+				client-seitigem Resize/Komprimieren, weil das Original (nicht der
+				optimierte Blob) im Hauptformular mitgeschickt wurde. Das eigentliche
+				Foto läuft ausschließlich über die separate `?/uploadPhoto`-Action
+				oben (fetch mit dem optimierten Blob) + das versteckte `photoS3Key`-
+				Feld im Hauptformular - der rohe File-Input muss dafür nicht (und darf
+				nicht) Teil des Hauptformulars sein.
+			-->
 			<input
 				id={name}
 				type="file"
-				{name}
 				accept="image/jpeg,image/png"
 				onchange={handleFileSelect}
 				{disabled}
