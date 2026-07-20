@@ -27,12 +27,16 @@
 								<span class="status {event.status}">{event.status}</span>
 							</div>
 							<p class="event-date">
-								{new Date(event.startDate).toLocaleDateString('de-DE', {
-									weekday: 'short',
-									day: '2-digit',
-									month: 'short',
-									year: 'numeric'
-								})}
+								{#if event.startDate}
+									{new Date(event.startDate).toLocaleDateString('de-DE', {
+										weekday: 'short',
+										day: '2-digit',
+										month: 'short',
+										year: 'numeric'
+									})}
+								{:else}
+									Termin folgt
+								{/if}
 							</p>
 							<p class="event-location">
 								{event.bundeslandName}, {event.kreisName}

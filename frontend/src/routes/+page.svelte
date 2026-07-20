@@ -27,7 +27,8 @@
 
 	const homeHref = resolve('/');
 	const allCountriesHref = resolve('/?alle');
-	const veranstaltungEintragenHref = resolve('/veranstaltung-eintragen');
+	// `#formular` scrollt beim Ankommen direkt zum Formular (Teil C.3).
+	const veranstaltungEintragenHref = `${resolve('/veranstaltung-eintragen')}#formular`;
 	const faqHref = resolve('/faq');
 
 	function handleSearch(event: SubmitEvent) {

@@ -63,13 +63,33 @@ export const savedEventsRouter = router({
         and(eq(savedEvent.userId, ctx.user.id), eq(event.status, "approved")),
       );
 
+    // Effektives Enddatum analog resolver/event-date-filters.ts: endDate falls
+    // gesetzt, sonst startDate als Fallback. `null` (kein startDate, "dateless"
+    // Event, AGENTS.md 5) zählt als "kommend", nie als "vergangen".
+    function effectiveEndMs(r: (typeof rows)[number]): number | null {
+      const fallback = r.endDate ?? r.startDate;
+      return fallback ? new Date(fallback).getTime() : null;
+    }
+    // Dateless Events haben kein startDate zum Sortieren - hinten anstellen
+    // (Infinity), statt bei Date(null) versehentlich auf 1970 zu landen.
+    function startMs(r: (typeof rows)[number], fallbackForPast = false): number {
+      if (r.startDate) return +new Date(r.startDate);
+      return fallbackForPast ? 0 : Infinity;
+    }
+
     const now = Date.now();
     const upcoming = rows
-      .filter((r) => new Date(r.endDate).getTime() >= now)
-      .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate));
+      .filter((r) => {
+        const end = effectiveEndMs(r);
+        return end === null || end >= now;
+      })
+      .sort((a, b) => startMs(a) - startMs(b));
     const past = rows
-      .filter((r) => new Date(r.endDate).getTime() < now)
-      .sort((a, b) => +new Date(b.startDate) - +new Date(a.startDate));
+      .filter((r) => {
+        const end = effectiveEndMs(r);
+        return end !== null && end < now;
+      })
+      .sort((a, b) => startMs(b, true) - startMs(a, true));
 
     return { upcoming, past };
   }),

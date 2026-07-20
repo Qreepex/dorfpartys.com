@@ -41,7 +41,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const eventId = String(formData.get('eventId') ?? '');
 		if (eventId) {
-			redirect(302, `/veranstaltung-eintragen?id=${eventId}`);
+			redirect(302, `/veranstaltung-eintragen?id=${eventId}#formular`);
 		}
 	}
 };

@@ -206,7 +206,9 @@ function sanitizeEventInput(input: Record<string, any>) {
     ...input,
     title: sanitizeText(input.title),
     description: input.description ? sanitizeText(input.description) : null,
-    addressDescription: sanitizeText(input.addressDescription),
+    addressDescription: input.addressDescription
+      ? sanitizeText(input.addressDescription)
+      : null,
     organizerName: input.organizerName
       ? sanitizeText(input.organizerName)
       : input.organizerName,
@@ -314,8 +316,8 @@ export const eventsRouter = router({
           organizerVerified: organizer.organizerVerified,
           organizerConfirmed: organizer.organizerConfirmed,
           description: sanitized.description,
-          startDate: new Date(input.startDate),
-          endDate: new Date(input.endDate),
+          startDate: input.startDate ? new Date(input.startDate) : null,
+          endDate: input.endDate ? new Date(input.endDate) : null,
           bundeslandId: input.bundeslandId,
           kreisId: input.kreisId,
           addressDescription: sanitized.addressDescription,
@@ -390,8 +392,8 @@ export const eventsRouter = router({
         .set({
           title: sanitized.title,
           description: sanitized.description,
-          startDate: new Date(input.startDate),
-          endDate: new Date(input.endDate),
+          startDate: input.startDate ? new Date(input.startDate) : null,
+          endDate: input.endDate ? new Date(input.endDate) : null,
           bundeslandId: input.bundeslandId,
           kreisId: input.kreisId,
           addressDescription: sanitized.addressDescription,
@@ -585,8 +587,8 @@ export const eventsRouter = router({
 
       return {
         ...row,
-        startDate: row.startDate.toISOString(),
-        endDate: row.endDate.toISOString(),
+        startDate: row.startDate ? row.startDate.toISOString() : null,
+        endDate: row.endDate ? row.endDate.toISOString() : null,
         photos: photos.map((p) => ({
           ...p,
           url: buildPublicStorageUrl(p.s3Key),
@@ -777,7 +779,15 @@ export const eventsRouter = router({
         .where(
           and(
             eq(event.status, "approved"),
-            sql`${event.endDate} >= now()`,
+            // Dateless Events (startDate = null, AGENTS.md 5 "Quantität über
+            // Qualität") werden hier bewusst ausgeschlossen - diese Lineup-Sektion
+            // ist explizit "nächste Termine, chronologisch sortiert", ein Event
+            // ohne Datum lässt sich nicht sinnvoll einsortieren (siehe die eigene
+            // "Ohne festen Termin"-Sektion auf den Filter-Seiten stattdessen,
+            // frontend [country]/[...segments]). Fehlt nur endDate, gilt das Event
+            // trotzdem als "vorbei", sobald startDate in der Vergangenheit liegt
+            // (COALESCE-Fallback, identisch zur Logik in resolver/event-date-filters.ts).
+            sql`${event.startDate} IS NOT NULL AND COALESCE(${event.endDate}, ${event.startDate}) >= now()`,
             input.country
               ? eq(bundeslandTable.country, input.country)
               : undefined,
@@ -788,8 +798,9 @@ export const eventsRouter = router({
 
       return rows.map((row) => ({
         ...row,
-        startDate: row.startDate.toISOString(),
-        endDate: row.endDate.toISOString(),
+        // startDate ist durch die WHERE-Bedingung oben garantiert nicht null.
+        startDate: row.startDate!.toISOString(),
+        endDate: row.endDate ? row.endDate.toISOString() : null,
         eventUrl: row.slug ? buildEventUrl(row.country, row.slug) : null,
       }));
     }),

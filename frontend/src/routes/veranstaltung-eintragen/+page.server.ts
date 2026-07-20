@@ -10,15 +10,25 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
 
-// Wandelt einen datetime-local-Wert sicher in ein ISO-Datum um. `new
-// Date(...).toISOString()` wirft bei einem ungültigen Datum (z.B. wenn die
-// clientseitige HTML5-Validierung umgangen wird) eine RangeError, die sonst
-// unbehandelt durch die Action durchschlägt und beim Nutzer als generischer
-// 500-Fehler statt einer verständlichen Validierungsmeldung landet.
-function toIsoStringOrUndefined(raw: FormDataEntryValue | null): string | undefined {
-	if (!raw) return undefined;
+// Wandelt einen datetime-local-Wert sicher in ein ISO-Datum um (oder `null`,
+// wenn das Feld leer gelassen wurde - start_date/end_date sind optional,
+// AGENTS.md 5 "Quantität über Qualität": Titel, Bundesland, Kreis und Art
+// reichen zum Einreichen). `new Date(...).toISOString()` wirft bei einem
+// ungültigen Datum (z.B. wenn die clientseitige HTML5-Validierung umgangen
+// wurde) eine RangeError, die sonst unbehandelt durch die Action durchschlägt
+// und beim Nutzer als generischer 500-Fehler statt einer verständlichen
+// Validierungsmeldung landet - in dem Fall wird `null` zurückgegeben und die
+// Zod-Validierung (submitEventInputSchema, ein leeres Feld ist gültig) greift
+// nicht mehr dafür; ein tatsächlich ungültiger, nicht-leerer Wert würde im
+// Browser durch das `type="datetime-local"`-Input selbst schon verhindert.
+// `null` statt `undefined`, damit ein beim Bearbeiten bereits gesetztes Datum
+// durch Leeren des Feldes auch wieder explizit entfernt werden kann (die
+// Zod-Schemas erwarten hier bewusst einen Pflicht-Key mit nullable Value,
+// nicht einen optionalen Key - siehe shared/src/schemas/event.ts).
+function toIsoStringOrNull(raw: FormDataEntryValue | null): string | null {
+	if (!raw) return null;
 	const date = new Date(String(raw));
-	return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+	return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 // Baut das `links`-Array aus den wiederholten linkUrl/linkLabel-Feldern (siehe
@@ -207,11 +217,13 @@ export const actions: Actions = {
 			...(editId ? { id: editId } : {}),
 			title: formData.get('title'),
 			description: formData.get('description') || undefined,
-			startDate: toIsoStringOrUndefined(startDateRaw),
-			endDate: toIsoStringOrUndefined(endDateRaw),
+			startDate: toIsoStringOrNull(startDateRaw),
+			endDate: toIsoStringOrNull(endDateRaw),
 			bundeslandId: formData.get('bundeslandId'),
 			kreisId: formData.get('kreisId'),
-			addressDescription: formData.get('addressDescription'),
+			// Optional (AGENTS.md 5) - leeres Feld wird zu `null`, nicht zur
+			// leeren Zeichenkette (die an min(3) scheitern würde).
+			addressDescription: formData.get('addressDescription') || null,
 			partyArtId: formData.get('partyArtId'),
 			customColor: formData.get('customColor') || undefined,
 			priceInfo: formData.get('priceInfo') || undefined,

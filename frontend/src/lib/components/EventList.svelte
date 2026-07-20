@@ -6,7 +6,9 @@
 	interface DisplayEvent {
 		slug: string | null;
 		title: string;
-		startDate: string;
+		// Optional (AGENTS.md 5, "Quantität über Qualität") - dateless Events
+		// zeigen statt Tag/Monat ein "TBA"-Badge, siehe day()/monthAbbr() unten.
+		startDate: string | null;
 		customColor: string;
 		bundeslandName: string;
 		kreisName: string;
@@ -50,11 +52,11 @@
 		'DEZ'
 	];
 
-	function day(iso: string) {
-		return new Date(iso).getDate().toString().padStart(2, '0');
+	function day(iso: string | null) {
+		return iso ? new Date(iso).getDate().toString().padStart(2, '0') : '–';
 	}
-	function monthAbbr(iso: string) {
-		return MONTH_ABBR[new Date(iso).getMonth()];
+	function monthAbbr(iso: string | null) {
+		return iso ? MONTH_ABBR[new Date(iso).getMonth()] : 'TBA';
 	}
 </script>
 

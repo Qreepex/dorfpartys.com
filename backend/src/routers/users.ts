@@ -321,13 +321,32 @@ export const usersRouter = router({
           ),
       ]);
 
+      // Effektives Enddatum + dateless-Handling analog
+      // resolver/event-date-filters.ts und routers/saved-events.ts: endDate
+      // falls gesetzt, sonst startDate als Fallback; kein startDate ("dateless",
+      // AGENTS.md 5) zählt immer als "kommend".
+      function effectiveEndMs(e: (typeof events)[number]): number | null {
+        const fallback = e.endDate ?? e.startDate;
+        return fallback ? new Date(fallback).getTime() : null;
+      }
+      function startMs(e: (typeof events)[number], fallbackForPast = false): number {
+        if (e.startDate) return +new Date(e.startDate);
+        return fallbackForPast ? 0 : Infinity;
+      }
+
       const now = Date.now();
       const upcoming = events
-        .filter((e) => new Date(e.endDate).getTime() >= now)
-        .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate));
+        .filter((e) => {
+          const end = effectiveEndMs(e);
+          return end === null || end >= now;
+        })
+        .sort((a, b) => startMs(a) - startMs(b));
       const past = events
-        .filter((e) => new Date(e.endDate).getTime() < now)
-        .sort((a, b) => +new Date(b.startDate) - +new Date(a.startDate));
+        .filter((e) => {
+          const end = effectiveEndMs(e);
+          return end !== null && end < now;
+        })
+        .sort((a, b) => startMs(b, true) - startMs(a, true));
 
       return {
         profile: {

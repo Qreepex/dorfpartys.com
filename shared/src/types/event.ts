@@ -6,11 +6,14 @@ export interface Event {
 	title: string;
 	organizerUserId: string;
 	description: string | null;
-	startDate: string;
-	endDate: string;
+	// Optional (AGENTS.md 5, "Quantität über Qualität"): nur title/bundesland/
+	// kreis/party_art sind Pflicht - startDate kann fehlen (Termin folgt) oder
+	// ein Datum ohne Uhrzeit sein, endDate ist unabhängig davon optional.
+	startDate: string | null;
+	endDate: string | null;
 	bundeslandId: string;
 	kreisId: string;
-	addressDescription: string;
+	addressDescription: string | null;
 	partyArtId: string;
 	status: EventStatus;
 	customColor: string;

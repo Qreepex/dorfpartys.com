@@ -33,11 +33,19 @@ export const submitEventInputSchema = z
 		// geschützt sein, Einreicher sollen nicht zum Kopieren fremder Texte
 		// gezwungen werden. Wenn angegeben, weiterhin eine sinnvolle Mindestlänge.
 		description: z.string().trim().min(10).max(5000).optional(),
-		startDate: z.string().datetime({ offset: true }),
-		endDate: z.string().datetime({ offset: true }),
+		// Optional (Produktvorgabe "Quantität über Qualität" - einzige Pflichtfelder
+		// sind title/bundeslandId/kreisId/partyArtId, siehe AGENTS.md 5). Ein reiner
+		// nullable Timestamp reicht aus: "kein Datum" -> null, "Datum ohne Uhrzeit" ->
+		// wird vom Client als Mitternacht gesendet, keine eigene Zeit-Präzisions-
+		// Modellierung nötig. `null` statt `undefined`, damit ein bereits gesetztes
+		// Datum beim Bearbeiten auch wieder explizit entfernt werden kann (analog
+		// zum `links`-Array-Handling in +page.server.ts).
+		startDate: z.string().datetime({ offset: true }).nullable(),
+		endDate: z.string().datetime({ offset: true }).nullable(),
 		bundeslandId: z.string().uuid(),
 		kreisId: z.string().uuid(),
-		addressDescription: z.string().trim().min(3).max(300),
+		// Optional (siehe startDate-Kommentar oben).
+		addressDescription: z.string().trim().min(3).max(300).nullable(),
 		partyArtId: z.string().uuid(),
 		customColor: hexColorSchema.optional(),
 
@@ -55,10 +63,14 @@ export const submitEventInputSchema = z
 		photos: z.array(eventPhotoInputSchema).max(MAX_EVENT_PHOTOS).optional(),
 		links: z.array(eventLinkInputSchema).max(MAX_EVENT_LINKS).optional()
 	})
-	.refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
-		message: 'endDate darf nicht vor startDate liegen',
-		path: ['endDate']
-	})
+	.refine(
+		(data) =>
+			!data.startDate || !data.endDate || new Date(data.endDate) >= new Date(data.startDate),
+		{
+			message: 'endDate darf nicht vor startDate liegen',
+			path: ['endDate']
+		}
+	)
 	.refine((data) => data.organizerUserId || data.organizerName || true, {
 		message: 'Veranstalter erforderlich (Profil oder Name)',
 		path: ['organizerName']

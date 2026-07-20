@@ -190,15 +190,23 @@ export const event = pgTable("event", {
   // geschützt sein, Einreicher sollen nicht zum Kopieren fremder Texte
   // gezwungen werden.
   description: text("description"),
-  startDate: timestamp("start_date", { withTimezone: true }).notNull(),
-  endDate: timestamp("end_date", { withTimezone: true }).notNull(),
+  // Optional (Produktvorgabe "Quantität über Qualität", AGENTS.md 5): nur
+  // title/bundesland/kreis/party_art sind Pflicht. start_date kann fehlen
+  // (Termin noch nicht bekannt) oder ein Datum ohne Uhrzeit-Komponente sein
+  // (Mitternacht gespeichert) - eine eigene "Zeit unbekannt"-Modellierung wäre
+  // hier Overengineering, ein reiner nullable Timestamp reicht aus. end_date
+  // ist unabhängig davon ebenfalls optional.
+  startDate: timestamp("start_date", { withTimezone: true }),
+  endDate: timestamp("end_date", { withTimezone: true }),
   bundeslandId: uuid("bundesland_id")
     .notNull()
     .references(() => bundesland.id),
   kreisId: uuid("kreis_id")
     .notNull()
     .references(() => kreis.id),
-  addressDescription: text("address_description").notNull(),
+  // Optional (siehe startDate-Kommentar oben) - Freitext-Adresse ist eine
+  // "Qualitäts"-Angabe, kein Muss für die Einreichung.
+  addressDescription: text("address_description"),
   partyArtId: uuid("party_art_id")
     .notNull()
     .references(() => partyArt.id),

@@ -3,9 +3,16 @@ import { SITE_URL } from "@dorfpartys/shared";
 export interface EventJsonLdInput {
   title: string;
   description?: string | null;
-  startDate: Date;
-  endDate: Date;
-  addressDescription: string;
+  // Beide optional (AGENTS.md 5/2: "Quantität über Qualität", startDate/endDate
+  // sind keine Pflichtfelder mehr). Google verlangt für gültiges Event-Markup
+  // ein `startDate` - fehlt es, geben wir bewusst KEIN Event-JSON-LD aus (siehe
+  // buildEventJsonLd unten), statt ein unvollständiges/potenziell als Fehler in
+  // der Search Console auftauchendes Objekt zu senden. `endDate` allein ist nur
+  // "recommended", nicht "required" - ist nur sie null, wird lediglich die
+  // `endDate`-Property weggelassen, der Rest bleibt gültig.
+  startDate: Date | null;
+  endDate: Date | null;
+  addressDescription: string | null;
   organizerName: string;
   organizerUrl?: string | null;
   priceInfo?: string | null;
@@ -13,21 +20,30 @@ export interface EventJsonLdInput {
   photoUrls: string[];
 }
 
-/** schema.org/Event JSON-LD für die Event-Detailseite (AGENTS.md Abschnitt 6). */
+/**
+ * schema.org/Event JSON-LD für die Event-Detailseite (AGENTS.md Abschnitt 6).
+ * Gibt `null` zurück, wenn kein `startDate` vorliegt - ein Event ohne Datum ist
+ * laut Googles strukturierten Daten-Richtlinien kein gültiges Event-Objekt
+ * (`startDate` ist "required"), ein trotzdem ausgeliefertes JSON-LD würde in der
+ * Search Console als Fehler auftauchen statt nur als fehlendes Rich-Result -
+ * daher lieber ganz weglassen als ein ungültiges Objekt senden (Aufrufer muss
+ * das `null` behandeln, siehe events.ts `getBySlug`).
+ */
 export function buildEventJsonLd(input: EventJsonLdInput) {
+  if (!input.startDate) return null;
   return {
     "@context": "https://schema.org",
     "@type": "Event",
     name: input.title,
     ...(input.description ? { description: input.description } : {}),
     startDate: input.startDate.toISOString(),
-    endDate: input.endDate.toISOString(),
+    ...(input.endDate ? { endDate: input.endDate.toISOString() } : {}),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
     location: {
       "@type": "Place",
-      name: input.addressDescription,
-      address: input.addressDescription,
+      name: input.addressDescription ?? undefined,
+      address: input.addressDescription ?? undefined,
     },
     organizer: {
       "@type": "Organization",

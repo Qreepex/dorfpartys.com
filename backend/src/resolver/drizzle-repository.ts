@@ -8,6 +8,11 @@ import {
   kreis,
   partyArt,
 } from "../db/schema.js";
+import {
+  hasOccurredWithin12MonthsOrDateless,
+  isArchivedWithin12Months,
+  isUpcomingOrDateless,
+} from "./event-date-filters.js";
 import type {
   EventFilterIds,
   NavigationItem,
@@ -18,8 +23,9 @@ function whereConditions(country: Country, filters: EventFilterIds) {
   const conditions = [
     eq(bundesland.country, country),
     eq(event.status, "approved"),
-    // "aktuelles/kommendes Event" (AGENTS.md 1.6): noch nicht vollständig vergangen.
-    sql`${event.endDate} >= now()`,
+    // "aktuelles/kommendes Event" (AGENTS.md 1.6): noch nicht vollständig
+    // vergangen ODER dateless (kein start_date, gilt als "kommend" - Teil B).
+    isUpcomingOrDateless,
   ];
   if (filters.bundeslandId)
     conditions.push(eq(event.bundeslandId, filters.bundeslandId));
@@ -36,10 +42,9 @@ function whereConditionsPast12Months(
   const conditions = [
     eq(bundesland.country, country),
     eq(event.status, "approved"),
-    // Archiv: letzte 12 Monate (noch nicht älter als ein Jahr)
-    sql`${event.endDate} >= now() - interval '12 months'`,
-    // Aber nicht zukünftig (bereits vorbei)
-    sql`${event.endDate} < now()`,
+    // Archiv: letzte 12 Monate, hat ein start_date und ist bereits vorbei
+    // (dateless Events landen nie im Archiv, siehe event-date-filters.ts).
+    isArchivedWithin12Months,
   ];
   if (filters.bundeslandId)
     conditions.push(eq(event.bundeslandId, filters.bundeslandId));
@@ -124,14 +129,18 @@ export function createDrizzleTaxonomyRepository(
           and(eq(eventPhoto.eventId, event.id), eq(eventPhoto.position, 1)),
         )
         .where(whereConditions(country, filters))
-        .orderBy(event.startDate)
+        // Dateless Events (start_date = null) landen ans Ende - die eigentliche
+        // Einsortierung in eine eigene "Ohne festen Termin"-Sektion passiert im
+        // Frontend ([country]/[...segments]/+page.svelte), die Reihenfolge hier
+        // ist daher nur für nicht-dateless Events relevant.
+        .orderBy(sql`${event.startDate} asc nulls last`)
         .limit(limit);
 
       return rows.map((row) => ({
         slug: row.slug,
         title: row.title,
-        startDate: row.startDate.toISOString(),
-        endDate: row.endDate.toISOString(),
+        startDate: row.startDate ? row.startDate.toISOString() : null,
+        endDate: row.endDate ? row.endDate.toISOString() : null,
         bundeslandId: row.bundeslandId,
         bundeslandName: row.bundeslandName,
         kreisId: row.kreisId,
@@ -178,8 +187,10 @@ export function createDrizzleTaxonomyRepository(
       return rows.map((row) => ({
         slug: row.slug,
         title: row.title,
-        startDate: row.startDate.toISOString(),
-        endDate: row.endDate.toISOString(),
+        // whereConditionsPast12Months (isArchivedWithin12Months) garantiert
+        // startDate !== null für Zeilen in diesem Bucket.
+        startDate: row.startDate!.toISOString(),
+        endDate: row.endDate ? row.endDate.toISOString() : null,
         bundeslandId: row.bundeslandId,
         bundeslandName: row.bundeslandName,
         kreisId: row.kreisId,
@@ -216,8 +227,9 @@ export function createDrizzleTaxonomyRepository(
             and(
               eq(event.status, "approved"),
               eq(event.bundeslandId, bundesland_item.id),
-              // future + 12-Monats-Archiv (deckungsgleich mit resolve.ts hasAnyEvents)
-              sql`${event.endDate} >= now() - interval '12 months'`,
+              // future + 12-Monats-Archiv, inkl. dateless Events (deckungsgleich
+              // mit resolve.ts hasAnyEvents, siehe event-date-filters.ts)
+              hasOccurredWithin12MonthsOrDateless,
               filters?.partyArtId
                 ? eq(event.partyArtId, filters.partyArtId)
                 : undefined,
@@ -265,8 +277,9 @@ export function createDrizzleTaxonomyRepository(
               eq(event.status, "approved"),
               eq(event.bundeslandId, bundeslandId),
               eq(event.kreisId, kreis_item.id),
-              // future + 12-Monats-Archiv (deckungsgleich mit resolve.ts hasAnyEvents)
-              sql`${event.endDate} >= now() - interval '12 months'`,
+              // future + 12-Monats-Archiv, inkl. dateless Events (deckungsgleich
+              // mit resolve.ts hasAnyEvents, siehe event-date-filters.ts)
+              hasOccurredWithin12MonthsOrDateless,
               filters?.partyArtId
                 ? eq(event.partyArtId, filters.partyArtId)
                 : undefined,
@@ -312,8 +325,9 @@ export function createDrizzleTaxonomyRepository(
               eq(bundesland.country, country),
               eq(event.status, "approved"),
               eq(event.partyArtId, art.id),
-              // future + 12-Monats-Archiv (deckungsgleich mit resolve.ts hasAnyEvents)
-              sql`${event.endDate} >= now() - interval '12 months'`,
+              // future + 12-Monats-Archiv, inkl. dateless Events (deckungsgleich
+              // mit resolve.ts hasAnyEvents, siehe event-date-filters.ts)
+              hasOccurredWithin12MonthsOrDateless,
               filters.bundeslandId
                 ? eq(event.bundeslandId, filters.bundeslandId)
                 : undefined,

@@ -38,7 +38,25 @@ class FakeTaxonomyRepository implements TaxonomyRepository {
   }
 
   async listApprovedEvents(): Promise<EventListItem[]> {
-    return [];
+    // Pre-existing Fixture-Lücke (unabhängig vom "Quantität über Qualität"
+    // Feature): `countApprovedEvents` meldete `eventCount`, `listApprovedEvents`
+    // aber immer `[]` - dadurch war `total` in resolve.ts stets 0, selbst wenn
+    // der Count-Mock >0 zurückgab. Für die "future Events > 0"-Erwartung muss
+    // die Länge zum konfigurierten `eventCount` passen.
+    return Array.from({ length: this.eventCount }, (_, i) => ({
+      slug: `fake-event-${i}`,
+      title: "Fake Event",
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString(),
+      bundeslandId: "bl-sh",
+      bundeslandName: "Schleswig-Holstein",
+      kreisId: "kr-oh",
+      kreisName: "Ostholstein",
+      partyArtId: "pa-schuetzen",
+      partyArtName: "Schützenfeste",
+      customColor: "#ff6b35",
+      coverPhotoS3Key: null,
+    }));
   }
 
   async listApprovedEventsPast12Months(): Promise<EventListItem[]> {

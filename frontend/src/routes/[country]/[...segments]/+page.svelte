@@ -23,20 +23,33 @@
 	// Gruppiere Events nach Monat (+ Jahr, sobald abweichend vom aktuellen Jahr) + Archiv-Status
 	// für semantische H2/H3-Überschriften. Jahr wird angehängt sobald ein Event nicht im
 	// aktuellen Kalenderjahr liegt (nicht nur bei tatsächlicher Kollision), siehe monthGroup().
+	//
+	// Dateless Events (startDate = null, AGENTS.md 5 "Quantität über Qualität"):
+	// können nicht nach Monat gruppiert werden, landen daher in einer eigenen
+	// `dateless`-Liste statt in future/archive - `new Date(null)` würde sonst
+	// fälschlich auf den 1.1.1970 (also "archiviert") fallen. Der Backend-Resolver
+	// zählt sie bereits zu futureCount (nie archiviert, backend/src/resolver),
+	// hier geht es nur um die Platzierung in der Seite selbst.
 	type MonthBucket = { slug: string; label: string; events: NonNullable<typeof result>['results'] };
 
 	const eventsByMonth = $derived.by(() => {
 		if (!result)
 			return {
 				future: [] as MonthBucket[],
-				archive: [] as MonthBucket[]
+				archive: [] as MonthBucket[],
+				dateless: [] as NonNullable<typeof result>['results']
 			};
 
 		const now = new Date();
 		const futureGroups = new Map<string, MonthBucket>();
 		const archiveGroups = new Map<string, MonthBucket>();
+		const dateless: NonNullable<typeof result>['results'] = [];
 
 		for (const event of result.results) {
+			if (!event.startDate) {
+				dateless.push(event);
+				continue;
+			}
 			const startDate = new Date(event.startDate);
 			const isArchive = startDate < now;
 			const { slug, label } = monthGroup(startDate, now);
@@ -52,7 +65,8 @@
 
 		return {
 			future: [...futureGroups.values()],
-			archive: [...archiveGroups.values()]
+			archive: [...archiveGroups.values()],
+			dateless
 		};
 	});
 
@@ -72,6 +86,9 @@
 			if (seen.has(bucket.slug)) continue;
 			badges.push({ slug: bucket.slug, label: bucket.label, href: `#archiv-${bucket.slug}` });
 			seen.add(bucket.slug);
+		}
+		if (eventsByMonth.dateless.length > 0) {
+			badges.push({ slug: 'ohne-termin', label: 'Ohne Termin', href: '#ohne-termin' });
 		}
 		return badges;
 	});
@@ -243,6 +260,22 @@
 				{/each}
 			</section>
 
+			<!--
+				Dateless Events ("Termin noch nicht bekannt"): bewusst zwischen den
+				terminierten kommenden Events und dem Archiv platziert - so bleiben
+				Events mit bekanntem Datum ganz oben (am nützlichsten für Besucher:innen,
+				die konkret planen wollen), aber Einträge ohne Termin sind trotzdem
+				prominent sichtbar und nicht im Archiv "versteckt" (Produktvorgabe
+				"Quantität über Qualität", AGENTS.md 5 - jede Einreichung soll sichtbar
+				bleiben, auch unvollständige).
+			-->
+			{#if eventsByMonth.dateless.length > 0}
+				<section class="mb-12" aria-label="Veranstaltungen ohne festen Termin">
+					<h2 id="ohne-termin" class="mb-4 text-xl font-semibold">Termin noch nicht bekannt</h2>
+					<EventList events={[...eventsByMonth.dateless]} country={result.filters.country} />
+				</section>
+			{/if}
+
 			<!-- Archive Section -->
 			{#if eventsByMonth.archive.length > 0}
 				<section class="mt-16 border-t pt-8" aria-label="Archivierte Veranstaltungen">
@@ -261,7 +294,7 @@
 			{#if result.results.length === 0}
 				<p class="mt-6 text-muted">
 					Kennst du eine Party in der Umgebung?
-					<a class="text-primary" href={resolve('/veranstaltung-eintragen')}
+					<a class="text-primary" href={`${resolve('/veranstaltung-eintragen')}#formular`}
 						>Trag sie kostenlos ein</a
 					>
 					- du bist als Erste:r auf dieser Seite gelistet.

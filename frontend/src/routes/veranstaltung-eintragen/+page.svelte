@@ -21,6 +21,14 @@
 
 	let form = $state(initialForm);
 	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
+	// Großes, kaum zu übersehendes Feedback-Banner nach dem Absenden (Teil E) -
+	// separat von den bestehenden kleinen Inline-Meldungen weiter unten, die
+	// zusätzlich bestehen bleiben (u.a. wegen des No-JS-Fallbacks: ohne
+	// JavaScript läuft die Action als normaler Form-POST, das Banner unten wird
+	// dann per SSR aus `form` gerendert). `feedbackDismissed` wird bei jedem
+	// neuen Absenden zurückgesetzt, damit ein zuvor weggeklicktes Banner beim
+	// nächsten Versuch wieder erscheint.
+	let feedbackDismissed = $state(false);
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -36,6 +44,7 @@
 
 		const formEl = event.currentTarget as HTMLFormElement;
 		submitStatus = 'submitting';
+		feedbackDismissed = false;
 
 		try {
 			const response = await fetch(formEl.action, {
@@ -60,8 +69,12 @@
 		}
 	}
 
+	// `#formular` landet nach dem Login (und ggf. Onboarding, siehe /willkommen)
+	// direkt wieder am Formular statt am Seitenanfang (Teil D der
+	// Submission-Flow-Vereinfachung) - der Fragment-Teil wird vom
+	// `redirect()`-Aufruf in auth/callback/+server.ts unverändert durchgereicht.
 	const loginHref = $derived(
-		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`
+		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search + '#formular')}`
 	);
 
 	// Bearbeiten-Modus: /veranstaltung-eintragen?id=... (Link aus
@@ -73,7 +86,7 @@
 	const isEditing = !!editingEvent;
 
 	// Wandelt ein ISO-Datum in den lokalen `datetime-local`-Wert um (Gegenstück
-	// zu toIsoStringOrUndefined im Load) - `.toISOString()` allein wäre UTC und
+	// zu toIsoStringOrNull im Load) - `.toISOString()` allein wäre UTC und
 	// würde beim erneuten Öffnen des Formulars eine falsche Uhrzeit anzeigen.
 	function toDatetimeLocalValue(iso: string): string {
 		const date = new Date(iso);
@@ -83,8 +96,12 @@
 
 	let title = $state(editingEvent?.title ?? '');
 	let description = $state(editingEvent?.description ?? '');
-	let startDate = $state(editingEvent ? toDatetimeLocalValue(editingEvent.startDate) : '');
-	let endDate = $state(editingEvent ? toDatetimeLocalValue(editingEvent.endDate) : '');
+	// startDate/endDate sind optional (AGENTS.md 5, "Quantität über Qualität") -
+	// beim Bearbeiten eines Events ohne Termin bleibt das Feld leer.
+	let startDate = $state(
+		editingEvent?.startDate ? toDatetimeLocalValue(editingEvent.startDate) : ''
+	);
+	let endDate = $state(editingEvent?.endDate ? toDatetimeLocalValue(editingEvent.endDate) : '');
 	let bundeslandId = $state(editingEvent?.bundeslandId ?? '');
 	let kreisId = $state(editingEvent?.kreisId ?? '');
 	let partyArtId = $state(editingEvent?.partyArtId ?? '');
@@ -220,14 +237,11 @@
 
 	const canonical = `${SITE_URL}/veranstaltung-eintragen`;
 
+	// Nur Titel, Bundesland, Kreis und Art sind Pflicht (AGENTS.md 5, "Quantität
+	// über Qualität") - Datum/Uhrzeit und Adresse sind bewusst NICHT Teil dieser
+	// Prüfung, siehe die (optional)-Beschriftung bei den jeweiligen Feldern unten.
 	const requiredFieldsFilled = $derived(
-		title.trim().length >= 3 &&
-			!!startDate &&
-			!!endDate &&
-			!!bundeslandId &&
-			!!kreisId &&
-			!!partyArtId &&
-			addressDescription.trim().length >= 3
+		title.trim().length >= 3 && !!bundeslandId && !!kreisId && !!partyArtId
 	);
 	const organizerValid = $derived(
 		!data.isLoggedIn ||
@@ -239,6 +253,38 @@
 	);
 	const canSubmit = $derived(data.isLoggedIn);
 	const formValid = $derived(requiredFieldsFilled && organizerValid && rightsConfirmed);
+
+	// Großes Feedback-Banner (Teil E): erfolgreiche Einreichung ODER
+	// Validierungs-/Server-Fehler sollen unübersehbar sein, nicht nur die
+	// kleine Inline-Meldung. `null` = kein Banner sichtbar.
+	const feedbackKind = $derived.by((): 'success' | 'error' | null => {
+		if (feedbackDismissed) return null;
+		if (submitStatus === 'success' || form?.success) return 'success';
+		if (submitStatus === 'error' || form?.error) return 'error';
+		return null;
+	});
+	const feedbackMessage = $derived(
+		feedbackKind === 'success'
+			? isEditing
+				? 'Deine Änderungen wurden gespeichert.'
+				: 'Danke! Dein Event wurde zur redaktionellen Prüfung eingereicht und ist in Kürze sichtbar.'
+			: (form?.error ?? 'Bitte überprüfe deine Eingaben - Details stehen bei den betroffenen Feldern.')
+	);
+
+	function dismissFeedback() {
+		feedbackDismissed = true;
+	}
+
+	// Erfolg verschwindet nach ein paar Sekunden von selbst, ein Fehler bleibt
+	// stehen, bis die Person ihn aktiv schließt - sie muss die weiter unten
+	// verlinkten Feldfehler erst noch beheben können (Teil E.1).
+	$effect(() => {
+		if (feedbackKind !== 'success') return;
+		const timer = setTimeout(() => {
+			feedbackDismissed = true;
+		}, 5000);
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <svelte:head>
@@ -267,6 +313,35 @@
 	/>
 	<meta property="og:url" content={canonical} />
 </svelte:head>
+
+{#if feedbackKind}
+	<!--
+		Teil E: großes, kaum zu übersehendes Feedback nach dem Absenden - fixiert
+		über der ganzen Seitenbreite statt einer kleinen Inline-Meldung. Erfolg
+		verschwindet automatisch (siehe $effect oben), ein Fehler bleibt stehen,
+		bis er aktiv geschlossen wird, da die Person erst die weiter unten
+		verlinkten Feldfehler beheben muss.
+	-->
+	<div
+		class="feedback-banner"
+		class:feedback-success={feedbackKind === 'success'}
+		class:feedback-error={feedbackKind === 'error'}
+		role="alert"
+	>
+		<div class="mx-auto flex max-w-[90ch] items-center gap-4 px-5 py-5">
+			<span class="text-2xl" aria-hidden="true">{feedbackKind === 'success' ? '✓' : '✗'}</span>
+			<p class="flex-1 text-[1.05rem] font-semibold">{feedbackMessage}</p>
+			<button
+				type="button"
+				class="feedback-close"
+				onclick={dismissFeedback}
+				aria-label="Meldung schließen"
+			>
+				×
+			</button>
+		</div>
+	</div>
+{/if}
 
 <main class="mx-auto max-w-[90ch]">
 	{#if isEditing}
@@ -330,6 +405,32 @@
 		</ul>
 	{/if}
 
+	{#if !data.isLoggedIn}
+		<!--
+			Teil D: von Anfang an unmissverständlich klar - nicht nur eine kleine
+			Notiz oder ein deaktiviertes Formular. Das Formular selbst bleibt
+			trotzdem sichtbar/crawlbar darunter (SEO-Landingpage, siehe Kommentar im
+			Load in +page.server.ts), nur das Absenden ist gesperrt.
+		-->
+		<div
+			class="mb-10 border-2 border-primary bg-bg-alt p-6 sm:p-8"
+			role="region"
+			aria-label="Login erforderlich"
+		>
+			<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
+				Login erforderlich
+			</p>
+			<h2 class="mt-0 mb-2 text-xl leading-tight sm:text-2xl">
+				Melde dich an, um deine Veranstaltung einzutragen
+			</h2>
+			<p class="mb-5 max-w-[60ch] text-muted">
+				Das Ausfüllen kostet dich nichts und geht ohne neues Passwort - per Discord, Google oder
+				Facebook. Du kannst dir das Formular unten schon vorher ansehen.
+			</p>
+			<Button href={loginHref}>Jetzt einloggen</Button>
+		</div>
+	{/if}
+
 	{#if submitStatus === 'success' || form?.success}
 		<p class="mb-6 flex items-center gap-2 border border-primary bg-bg-alt p-4 text-text">
 			<span class="text-primary" aria-hidden="true">✓</span>
@@ -345,7 +446,7 @@
 		</p>
 	{/if}
 
-	<form method="POST" action="?/submit" onsubmit={handleSubmit}>
+	<form id="formular" method="POST" action="?/submit" onsubmit={handleSubmit}>
 		<FormGrid>
 			{#if isEditing}
 				<input type="hidden" name="id" value={editingEvent?.id} />
@@ -418,27 +519,28 @@
 			</div>
 
 			<div class="field">
-				<label class="field-label" for="startDate">Start *</label>
+				<label class="field-label" for="startDate">Start (optional)</label>
 				<input
 					class="field-control"
 					id="startDate"
 					type="datetime-local"
 					name="startDate"
-					required
 					bind:value={startDate}
 				/>
+				<p class="mt-1 text-xs text-muted">
+					Termin steht noch nicht fest? Einfach leer lassen und später ergänzen.
+				</p>
 				{#if form?.fieldErrors?.startDate}
 					<p class="field-error">{form.fieldErrors.startDate[0]}</p>
 				{/if}
 			</div>
 			<div class="field">
-				<label class="field-label" for="endDate">Ende *</label>
+				<label class="field-label" for="endDate">Ende (optional)</label>
 				<input
 					class="field-control"
 					id="endDate"
 					type="datetime-local"
 					name="endDate"
-					required
 					bind:value={endDate}
 				/>
 				{#if form?.fieldErrors?.endDate}
@@ -479,9 +581,8 @@
 			/>
 
 			<TextInput
-				label="Adresse (Freitext)"
+				label="Adresse (Freitext, optional)"
 				name="addressDescription"
-				required
 				minlength={3}
 				maxlength={300}
 				placeholder="z.B. Dorfplatz, 23845 Steinhorst"
@@ -489,47 +590,66 @@
 				error={form?.fieldErrors?.addressDescription?.[0]}
 			/>
 
-			<div class="field">
-				<label class="field-label" for="customColor">Farbe der Event-Seite</label>
-				<input
-					class="h-11 w-20 border border-border bg-transparent"
-					id="customColor"
-					type="color"
-					name="customColor"
-					bind:value={customColor}
-				/>
-				{#if form?.fieldErrors?.customColor}
-					<p class="field-error">{form.fieldErrors.customColor[0]}</p>
-				{/if}
-			</div>
+			<!--
+				Teil C.1: Farbe/Preis/Mindestalter/Muttizettel/Open-Air sind rein
+				"Qualitäts"-Angaben ohne Einfluss auf Auffindbarkeit - hinter einem
+				standardmäßig eingeklappten <details> versteckt, damit das Formular auf
+				den ersten Blick kürzer und weniger einschüchternd wirkt (Produktvorgabe
+				"Quantität über Qualität"). Organizer-Auswahl, Fotos und Links bleiben
+				bewusst außerhalb, die waren nicht Teil dieser Vorgabe.
+			-->
+			<details class="options-details sm:col-span-full">
+				<summary class="options-summary">Weitere Optionen (optional)</summary>
+				<div class="mt-4">
+					<FormGrid>
+						<div class="field">
+							<label class="field-label" for="customColor">Farbe der Event-Seite</label>
+							<input
+								class="h-11 w-20 border border-border bg-transparent"
+								id="customColor"
+								type="color"
+								name="customColor"
+								bind:value={customColor}
+							/>
+							{#if form?.fieldErrors?.customColor}
+								<p class="field-error">{form.fieldErrors.customColor[0]}</p>
+							{/if}
+						</div>
 
-			<TextInput
-				label="Preis (optional)"
-				name="priceInfo"
-				maxlength={200}
-				placeholder="z.B. 5€ VVK / 8€ AK"
-				bind:value={priceInfo}
-				error={form?.fieldErrors?.priceInfo?.[0]}
-			/>
+						<TextInput
+							label="Preis (optional)"
+							name="priceInfo"
+							maxlength={200}
+							placeholder="z.B. 5€ VVK / 8€ AK"
+							bind:value={priceInfo}
+							error={form?.fieldErrors?.priceInfo?.[0]}
+						/>
 
-			<div class="field">
-				<label class="field-label" for="minAge">Mindestalter (optional)</label>
-				<input
-					class="field-control"
-					id="minAge"
-					type="number"
-					name="minAge"
-					min="0"
-					max="99"
-					bind:value={minAge}
-				/>
-				{#if form?.fieldErrors?.minAge}
-					<p class="field-error">{form.fieldErrors.minAge[0]}</p>
-				{/if}
-			</div>
+						<div class="field">
+							<label class="field-label" for="minAge">Mindestalter (optional)</label>
+							<input
+								class="field-control"
+								id="minAge"
+								type="number"
+								name="minAge"
+								min="0"
+								max="99"
+								bind:value={minAge}
+							/>
+							{#if form?.fieldErrors?.minAge}
+								<p class="field-error">{form.fieldErrors.minAge[0]}</p>
+							{/if}
+						</div>
 
-			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" bind:checked={allowsMuttizettel} />
-			<Toggle label="Open Air" name="isOutdoor" bind:checked={isOutdoor} />
+						<Toggle
+							label="Muttizettel erforderlich"
+							name="allowsMuttizettel"
+							bind:checked={allowsMuttizettel}
+						/>
+						<Toggle label="Open Air" name="isOutdoor" bind:checked={isOutdoor} />
+					</FormGrid>
+				</div>
+			</details>
 
 			<div class="border-t border-border pt-4 sm:col-span-full">
 				<h2 class="field-label mb-2">Links (optional)</h2>
@@ -785,5 +905,87 @@
 		to {
 			transform: rotate(360deg);
 		}
+	}
+
+	/* Teil E: großes, fixiertes Feedback-Banner - bewusst dieselben Farbtokens
+	   wie die restlige App (--color-primary/--color-secondary, siehe
+	   form-field.css .field-error und die Button-Varianten), nur deutlich
+	   größer/prominenter als die bestehenden kleinen Inline-Meldungen. */
+	.feedback-banner {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 100;
+		box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+		animation: feedback-slide-in 0.2s ease-out;
+	}
+
+	.feedback-banner.feedback-success {
+		background: var(--color-primary);
+		color: var(--color-ink);
+	}
+
+	.feedback-banner.feedback-error {
+		background: var(--color-secondary);
+		color: var(--color-ink);
+	}
+
+	.feedback-close {
+		flex: 0 0 auto;
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: 1px solid currentColor;
+		border-radius: 2px;
+		color: inherit;
+		font-size: 1.3rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.feedback-close:hover {
+		background: rgba(0, 0, 0, 0.1);
+	}
+
+	@keyframes feedback-slide-in {
+		from {
+			transform: translateY(-100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	/* Teil C.1: "Weitere Optionen" - eingeklappt weniger einschüchternd als das
+	   volle Formular auf einen Schlag. */
+	.options-details {
+		border: 1px solid var(--color-border);
+		padding: 14px 16px;
+	}
+
+	.options-summary {
+		cursor: pointer;
+		font-family: 'Inter', system-ui, sans-serif;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--color-text);
+		list-style: none;
+	}
+
+	.options-summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.options-summary::before {
+		content: '+ ';
+		color: var(--color-primary);
+	}
+
+	.options-details[open] .options-summary::before {
+		content: '– ';
 	}
 </style>

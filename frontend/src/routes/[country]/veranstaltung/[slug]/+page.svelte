@@ -20,8 +20,11 @@
 		!!data.currentUserId && data.currentUserId === event.organizerUserId
 	);
 	const canClaim = $derived(!event.organizerVerified && !isOrganizer);
+	// `?id=` (nicht `?eventId=`) - siehe frontend/src/routes/veranstaltung-eintragen/+page.server.ts
+	// (`url.searchParams.get('id')`), analog zum Link aus /meine-veranstaltungen.
+	// `#formular` scrollt direkt zum Formular (Teil C.3 der Submission-Flow-Vereinfachung).
 	const editHref = $derived(
-		`${resolve('/veranstaltung-eintragen')}?eventId=${encodeURIComponent(event.id)}`
+		`${resolve('/veranstaltung-eintragen')}?id=${encodeURIComponent(event.id)}#formular`
 	);
 	const loginHref = $derived(
 		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
@@ -77,15 +80,25 @@
 			href: resolve('/[country]/veranstaltung/[slug]', { country, slug: event.slug ?? '' })
 		}
 	]);
+	// Sowohl startDate als auch addressDescription sind optional (AGENTS.md 5,
+	// "Quantität über Qualität") - die Meta-Description baut sich daher aus den
+	// tatsächlich vorhandenen Teilen zusammen, statt ein Datum/eine Adresse
+	// anzunehmen, die es vielleicht gar nicht gibt.
 	const metaDescription = $derived(
-		`${event.title} - ${new Date(event.startDate).toLocaleDateString('de-DE', {
-			day: '2-digit',
-			month: 'long',
-			year: 'numeric'
-		})} in ${event.addressDescription}.` +
-			(event.description
-				? ` ${event.description.slice(0, 130)}${event.description.length > 130 ? '…' : ''}`
-				: '')
+		[
+			event.startDate
+				? `${event.title} - ${new Date(event.startDate).toLocaleDateString('de-DE', {
+						day: '2-digit',
+						month: 'long',
+						year: 'numeric'
+					})}${event.addressDescription ? ` in ${event.addressDescription}.` : '.'}`
+				: `${event.title}${event.addressDescription ? ` in ${event.addressDescription}.` : '.'}`,
+			event.description
+				? `${event.description.slice(0, 130)}${event.description.length > 130 ? '…' : ''}`
+				: ''
+		]
+			.filter(Boolean)
+			.join(' ')
 	);
 	const ogImage = $derived(event.photos[0]?.url);
 	// HTML-<title> ergänzt Kreis + Bundesland (z.B. "... in Ostholstein,
@@ -113,8 +126,13 @@
 	{:else}
 		<meta name="twitter:card" content="summary" />
 	{/if}
-	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-	{@html jsonLdScriptTag(event.jsonLd)}
+	{#if event.jsonLd}
+		<!-- event.jsonLd ist null, wenn startDate fehlt (backend/src/seo/json-ld.ts) -
+			ein Event ohne Datum ist laut Googles Richtlinien kein gültiges
+			schema.org/Event, daher wird in dem Fall gar kein Event-JSON-LD ausgeliefert. -->
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html jsonLdScriptTag(event.jsonLd)}
+	{/if}
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(event.breadcrumbJsonLd)}
 </svelte:head>
@@ -272,25 +290,31 @@
 				<div>
 					<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Wann</dt>
 					<dd class="mt-0.5 font-semibold">
-						{new Date(event.startDate).toLocaleString('de-DE', {
-							weekday: 'long',
-							day: '2-digit',
-							month: 'long',
-							year: 'numeric',
-							hour: '2-digit',
-							minute: '2-digit'
-						})}
-						– {new Date(event.endDate).toLocaleString('de-DE', {
-							day: '2-digit',
-							month: 'long',
-							hour: '2-digit',
-							minute: '2-digit'
-						})}
+						{#if event.startDate}
+							{new Date(event.startDate).toLocaleString('de-DE', {
+								weekday: 'long',
+								day: '2-digit',
+								month: 'long',
+								year: 'numeric',
+								hour: '2-digit',
+								minute: '2-digit'
+							})}
+							{#if event.endDate}
+								{'–'} {new Date(event.endDate).toLocaleString('de-DE', {
+									day: '2-digit',
+									month: 'long',
+									hour: '2-digit',
+									minute: '2-digit'
+								})}
+							{/if}
+						{:else}
+							Termin folgt
+						{/if}
 					</dd>
 				</div>
 				<div>
 					<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Wo</dt>
-					<dd class="mt-0.5 font-semibold">{event.addressDescription}</dd>
+					<dd class="mt-0.5 font-semibold">{event.addressDescription ?? 'Adresse folgt'}</dd>
 				</div>
 				{#if event.priceInfo}
 					<div>

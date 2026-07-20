@@ -5,9 +5,15 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	function formatRange(startInput: string | Date, endInput: string | Date) {
+	// startDate/endDate sind optional (AGENTS.md 5, "Quantität über Qualität") -
+	// Moderator:innen sollen trotzdem eine plausible Aussage sehen statt eines
+	// "Invalid Date"-Strings.
+	function formatRange(
+		startInput: string | Date | null,
+		endInput: string | Date | null
+	) {
+		if (!startInput) return 'Termin folgt';
 		const start = new Date(startInput);
-		const end = new Date(endInput);
 		const startStr = start.toLocaleString('de-DE', {
 			weekday: 'short',
 			day: '2-digit',
@@ -16,6 +22,8 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
+		if (!endInput) return startStr;
+		const end = new Date(endInput);
 		const sameDay = start.toDateString() === end.toDateString();
 		const endStr = end.toLocaleString('de-DE', {
 			...(sameDay ? {} : { day: '2-digit', month: '2-digit', year: 'numeric' }),

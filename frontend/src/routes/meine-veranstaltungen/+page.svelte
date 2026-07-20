@@ -31,7 +31,8 @@
 <main class="mx-auto max-w-[90ch]">
 	<div class="header-row">
 		<h1>Meine Veranstaltungen</h1>
-		<Button href={resolve('/veranstaltung-eintragen')}>Neue Veranstaltung erstellen</Button>
+		<Button href={`${resolve('/veranstaltung-eintragen')}#formular`}>Neue Veranstaltung erstellen</Button
+		>
 	</div>
 
 	{#if data.events.length === 0}
@@ -49,12 +50,16 @@
 							>
 						</div>
 						<p class="event-date">
-							{new Date(event.startDate).toLocaleDateString('de-DE', {
-								weekday: 'short',
-								day: '2-digit',
-								month: 'short',
-								year: 'numeric'
-							})}
+							{#if event.startDate}
+								{new Date(event.startDate).toLocaleDateString('de-DE', {
+									weekday: 'short',
+									day: '2-digit',
+									month: 'short',
+									year: 'numeric'
+								})}
+							{:else}
+								Termin folgt
+							{/if}
 						</p>
 						<p class="event-location">
 							{event.bundeslandName ?? 'Unbekanntes Bundesland'}, {event.kreisName ??
@@ -67,7 +72,7 @@
 						{/if}
 						<a
 							class="action-link"
-							href={resolve(`/veranstaltung-eintragen?id=${encodeURIComponent(event.id)}`)}
+							href={`${resolve(`/veranstaltung-eintragen?id=${encodeURIComponent(event.id)}`)}#formular`}
 						>
 							Bearbeiten
 						</a>

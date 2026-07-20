@@ -4,7 +4,7 @@ import {
   type CanonicalFilterSlugs,
   type Country,
 } from "@dorfpartys/shared";
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import {
   bundesland,
@@ -13,6 +13,10 @@ import {
   partyArt,
   userProfile,
 } from "../db/schema.js";
+import {
+  hasOccurredWithin12MonthsOrDateless,
+  isUpcomingOrDateless,
+} from "../resolver/event-date-filters.js";
 
 export async function getEventSitemapEntries(db: Database) {
   const rows = await db
@@ -23,7 +27,10 @@ export async function getEventSitemapEntries(db: Database) {
     })
     .from(event)
     .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
-    .where(and(eq(event.status, "approved"), sql`${event.endDate} >= now()`));
+    // future ODER dateless (Teil B: ein Event ohne Termin gilt als "kommend",
+    // siehe event-date-filters.ts) - inkludiert in der Event-Sitemap, sobald
+    // approved, unabhängig davon ob schon ein Datum gepflegt wurde.
+    .where(and(eq(event.status, "approved"), isUpcomingOrDateless));
 
   return rows
     .filter(
@@ -71,8 +78,9 @@ async function getIndexableFilterSets(
       and(
         eq(bundesland.country, country),
         eq(event.status, "approved"),
-        // deckungsgleich mit resolve.ts hasAnyEvents (future + 12-Monats-Archiv)
-        sql`${event.endDate} >= now() - interval '12 months'`,
+        // deckungsgleich mit resolve.ts hasAnyEvents (future + 12-Monats-Archiv,
+        // inkl. dateless Events - siehe event-date-filters.ts)
+        hasOccurredWithin12MonthsOrDateless,
         bundeslandSlug ? eq(bundesland.slug, bundeslandSlug) : undefined,
       ),
     )
