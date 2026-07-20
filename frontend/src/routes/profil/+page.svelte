@@ -150,6 +150,14 @@
 				Nur mit öffentlichem Profil bist du unter deiner Veranstalter-Seite auffindbar - und nur
 				dann kannst du Veranstaltungen eintragen. Standardmäßig ist dein Profil privat.
 			</p>
+			{#if form?.profileError}
+				<p class="mt-2 max-w-[55ch] text-sm text-red-600">
+					{form.profileError}
+					<a class="text-primary underline" href={resolve('/meine-veranstaltungen')}
+						>Zu meinen Veranstaltungen</a
+					>
+				</p>
+			{/if}
 		</div>
 
 		<Button type="submit">Speichern</Button>

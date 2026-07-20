@@ -38,7 +38,13 @@ export const actions: Actions = {
 			});
 		}
 
-		await locals.trpc.users.updateMyProfile.mutate(parsed.data);
+		try {
+			await locals.trpc.users.updateMyProfile.mutate(parsed.data);
+		} catch (error: any) {
+			return fail(400, {
+				profileError: error?.message || 'Profil konnte nicht gespeichert werden.'
+			});
+		}
 		return { success: true };
 	},
 

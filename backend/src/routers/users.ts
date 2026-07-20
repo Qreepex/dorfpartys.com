@@ -4,7 +4,7 @@ import {
   type UpdateProfileInput,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike, isNull } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
@@ -346,6 +346,34 @@ export const usersRouter = router({
     .input(updateProfileInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { links, ...profileFields } = input;
+
+      // Privat-Stellen erst erlauben, wenn dem Profil keine eigenen
+      // Veranstaltungen mehr zugeordnet sind - sonst verschwindet die
+      // öffentliche Veranstalter-Seite (AGENTS.md Abschnitt 3), obwohl der
+      // Veranstalter-Name auf den Event-Seiten weiterhin referenziert wird.
+      // draft/in_review/approved zählen alle noch als "seine" Veranstaltungen,
+      // nur rejected blockiert nicht.
+      if (profileFields.isPublic === false) {
+        const blockingEvents = await ctx.db
+          .select({ id: event.id })
+          .from(event)
+          .where(
+            and(
+              eq(event.organizerUserId, ctx.user.id),
+              inArray(event.status, ["draft", "in_review", "approved"]),
+            ),
+          )
+          .limit(1);
+
+        if (blockingEvents.length > 0) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message:
+              "Dein Profil kann nicht privat gestellt werden, solange dir noch Veranstaltungen zugeordnet sind. Lösche zuerst deine Veranstaltungen unter 'Meine Veranstaltungen'.",
+          });
+        }
+      }
+
       await upsertProfile(ctx.db, ctx.user.id, profileFields);
 
       if (links) {
