@@ -2,11 +2,17 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/Button.svelte';
-	import { EventList, FaqList } from '$lib/components/index.js';
+	import { DropdownSelect, EventList, FaqList } from '$lib/components/index.js';
 	import { FAQ_ENTRIES } from '$lib/content/faq.js';
 	import { buildFaqJsonLd, jsonLdScriptTag } from '$lib/seo.js';
 	import { countryStore } from '$lib/stores.js';
-	import { SITE_URL, buildFilterUrl, type Country } from '@dorfpartys/shared';
+	import {
+		COUNTRIES,
+		SITE_URL,
+		buildCountryRootUrl,
+		buildFilterUrl,
+		type Country
+	} from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
@@ -48,6 +54,24 @@
 	const bundeslaender = $derived(
 		bundeslaenderForCountry.sort((a, b) => a.name.localeCompare(b.name))
 	);
+
+	// Optionen für die Hero-Suchfelder - wiederverwendet dieselben Dropdown-Komponenten
+	// wie das Einreichungsformular (frontend/src/routes/veranstaltung-eintragen), statt
+	// eigener <select>-Markup.
+	const bundeslandOptions = $derived(
+		bundeslaender.map((bl) => ({ value: bl.slug, label: bl.name }))
+	);
+	const partyArtOptions = $derived(
+		data.partyArten.map((art) => ({ value: art.slug, label: art.name }))
+	);
+
+	// Direkter Einstieg in die Länder-Root-Seiten (AGENTS.md 1.1) - fehlte bisher komplett,
+	// einziger Weg zu /de/, /at/, /ch/ war zuvor implizit über einen gesetzten Filter.
+	const countryEntries = COUNTRIES.map((c) => ({
+		code: c,
+		label: COUNTRY_LABELS[c],
+		href: buildCountryRootUrl(c)
+	}));
 
 	const websiteJsonLd = {
 		'@context': 'https://schema.org',
@@ -116,45 +140,42 @@
 			Veranstaltung eintragen.
 		</p>
 
-		<form class="flex flex-wrap border border-border bg-bg-alt" onsubmit={handleSearch}>
-			<div class="flex-1 basis-35 border-r border-border p-3.5">
-				<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="bundesland">
-					Bundesland
-				</label>
-				<select
-					class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
-					id="bundesland"
-					bind:value={bundeslandSlug}
-				>
-					<option value="">Alle</option>
-					{#each bundeslaenderForCountry as bl (bl.id)}
-						<option value={bl.slug}>{bl.name}</option>
-					{/each}
-				</select>
-			</div>
-			<div class="flex-1 basis-35 border-r border-border p-3.5">
-				<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="art"
-					>Art</label
-				>
-				<select
-					class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
-					id="art"
-					bind:value={artSlug}
-				>
-					<option value="">Alle</option>
-					{#each data.partyArten as art (art.id)}
-						<option value={art.slug}>{art.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<button
-				type="submit"
-				class="min-h-11 w-full flex-1 basis-full cursor-pointer border-none bg-primary p-4 font-bold text-ink sm:basis-auto sm:px-7"
-			>
-				Suchen
-			</button>
+		<form
+			class="grid gap-4 border border-border bg-bg-alt p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:gap-3 sm:p-5"
+			onsubmit={handleSearch}
+		>
+			<DropdownSelect
+				label="Bundesland"
+				id="hero-bundesland"
+				options={bundeslandOptions}
+				bind:value={bundeslandSlug}
+				placeholder="Alle"
+			/>
+			<DropdownSelect
+				label="Art"
+				id="hero-art"
+				options={partyArtOptions}
+				bind:value={artSlug}
+				placeholder="Alle"
+			/>
+			<Button type="submit" fullWidth>Suchen</Button>
 		</form>
+	</section>
+
+	<section class="mt-2">
+		<h2 class="mb-1">Direkt ins Land springen</h2>
+
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+			{#each countryEntries as entry (entry.code)}
+				<a
+					href={entry.href}
+					class="flex min-h-11 items-center justify-between gap-3 border border-border bg-bg-alt px-5 py-4 text-text no-underline transition-colors hover:border-primary hover:text-primary"
+				>
+					<span class="font-display text-lg font-bold">{entry.label}</span>
+					<span class="text-[0.85rem] text-muted">Alle Partys ansehen →</span>
+				</a>
+			{/each}
+		</div>
 	</section>
 
 	<svg
@@ -248,7 +269,15 @@
 	</section>
 
 	<section class="mt-16">
-		<h2>Regionen in {COUNTRY_LABELS[country]}</h2>
+		<div class="flex flex-wrap items-baseline justify-between gap-3">
+			<h2>Regionen in {COUNTRY_LABELS[country]}</h2>
+			<a
+				class="text-[0.85rem] text-primary no-underline hover:underline"
+				href={buildCountryRootUrl(country)}
+			>
+				Ganz {COUNTRY_LABELS[country]} ohne Filter ansehen
+			</a>
+		</div>
 		<p class="text-lg text-muted">
 			Alle Dorfpartys in einem Bundesland - auch wenn dort noch kein Termin eingetragen ist, lohnt
 			sich ein späterer Blick.
