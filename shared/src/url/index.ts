@@ -1,5 +1,7 @@
 import type { Country } from '../constants/index.js';
 
+export * from './link-type.js';
+
 export interface CanonicalFilterSlugs {
 	bundeslandSlug?: string | null;
 	kreisSlug?: string | null;

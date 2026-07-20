@@ -13,7 +13,7 @@
 		Toggle,
 		VerifiedBadge
 	} from '$lib/components/index.js';
-	import { SITE_URL } from '@dorfpartys/shared';
+	import { MAX_EVENT_LINKS, SITE_URL } from '@dorfpartys/shared';
 	import type { ActionResult } from '@sveltejs/kit';
 	import type { ActionData, PageData } from './$types.js';
 
@@ -73,6 +73,23 @@
 	let partyArtId = $state('');
 	let addressDescription = $state('');
 	let uploadedPhotoS3Key = $state<string | null>(null);
+
+	// Links (TikTok/Instagram/Facebook/Website, max. MAX_EVENT_LINKS - AGENTS.md
+	// Abschnitt 2 & 5). Reihenfolge der Liste = position beim Speichern. Der
+	// Linktyp/Icon wird nicht hier gewählt, sondern serverseitig + auf der
+	// Event-Seite rein aus der URL-Domain hergeleitet (siehe
+	// @dorfpartys/shared detectEventLinkType), daher hier nur URL + optionales Label.
+	type LinkDraft = { url: string; label: string };
+	let links = $state<LinkDraft[]>([]);
+
+	function addLink() {
+		if (links.length >= MAX_EVENT_LINKS) return;
+		links.push({ url: '', label: '' });
+	}
+
+	function removeLink(index: number) {
+		links.splice(index, 1);
+	}
 
 	// Organizer selection state
 	let organizerMode = $state<'myself' | 'profile' | 'freetext'>('myself');
@@ -400,6 +417,55 @@
 
 			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" />
 			<Toggle label="Open Air" name="isOutdoor" />
+
+			<div class="border-t border-border pt-4 sm:col-span-full">
+				<h2 class="field-label mb-2">Links (optional)</h2>
+				<p class="mb-3 text-xs text-muted">
+					TikTok, Instagram, Facebook oder Website - max. {MAX_EVENT_LINKS} Links, werden in dieser
+					Reihenfolge auf der Event-Seite angezeigt.
+				</p>
+				{#each links as link, index (index)}
+					<div class="mb-3 flex flex-col gap-2 border border-border p-3 sm:flex-row sm:items-start">
+						<div class="flex-1">
+							<TextInput
+								label="URL"
+								name="linkUrl"
+								type="url"
+								placeholder="https://www.instagram.com/dein-account"
+								bind:value={link.url}
+							/>
+						</div>
+						<div class="flex-1">
+							<TextInput
+								label="Label (optional)"
+								name="linkLabel"
+								maxlength={60}
+								placeholder="z.B. Instagram"
+								bind:value={link.label}
+							/>
+						</div>
+						<button
+							type="button"
+							class="min-h-11 shrink-0 border border-border bg-transparent px-4 font-body text-[0.85rem] font-semibold text-text hover:border-primary hover:text-primary sm:mt-6"
+							onclick={() => removeLink(index)}
+						>
+							Entfernen
+						</button>
+					</div>
+				{/each}
+				{#if links.length < MAX_EVENT_LINKS}
+					<button
+						type="button"
+						class="min-h-11 border border-border bg-transparent px-4 font-body text-[0.85rem] font-semibold text-text hover:border-primary hover:text-primary"
+						onclick={addLink}
+					>
+						+ Link hinzufügen
+					</button>
+				{/if}
+				{#if form?.fieldErrors?.links}
+					<p class="field-error mt-2">{form.fieldErrors.links[0]}</p>
+				{/if}
+			</div>
 
 			{#if data.isLoggedIn}
 				<div class="border-t border-border pt-4 sm:col-span-full">

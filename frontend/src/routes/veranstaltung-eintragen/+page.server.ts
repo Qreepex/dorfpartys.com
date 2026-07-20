@@ -1,4 +1,4 @@
-import { COUNTRIES, submitEventInputSchema } from '@dorfpartys/shared';
+import { COUNTRIES, defaultEventLinkLabel, submitEventInputSchema } from '@dorfpartys/shared';
 import { fail, redirect } from '@sveltejs/kit';
 import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
@@ -12,6 +12,29 @@ function toIsoStringOrUndefined(raw: FormDataEntryValue | null): string | undefi
 	if (!raw) return undefined;
 	const date = new Date(String(raw));
 	return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+// Baut das `links`-Array aus den wiederholten linkUrl/linkLabel-Feldern (siehe
+// +page.svelte - jede Link-Zeile trägt denselben `name`, FormData sammelt sie
+// per getAll() in DOM-Reihenfolge, die zugleich die spätere `position` ist).
+// Zeilen ohne URL werden verworfen; fehlt das Label, wird es serverseitig aus
+// dem per Domain erkannten Linktyp hergeleitet (TikTok/Instagram/Facebook/Website).
+function buildLinksFromFormData(
+	formData: FormData,
+): Array<{ url: string; label: string; position: 1 | 2 | 3 }> | undefined {
+	const urls = formData.getAll('linkUrl').map((v) => String(v).trim());
+	const labels = formData.getAll('linkLabel').map((v) => String(v).trim());
+
+	const links = urls
+		.map((url, i) => ({ url, label: labels[i] ?? '' }))
+		.filter((l) => l.url.length > 0)
+		.map((l, i) => ({
+			url: l.url,
+			label: l.label.length > 0 ? l.label : defaultEventLinkLabel(l.url),
+			position: (i + 1) as 1 | 2 | 3,
+		}));
+
+	return links.length > 0 ? links : undefined;
 }
 
 // Liest Zod-Feldfehler aus einem tRPC-Fehler aus, sofern das Backend sie via
@@ -130,7 +153,11 @@ export const actions: Actions = {
 			isOutdoor: formData.get('isOutdoor') === 'on',
 			...(organizerUserId ? { organizerUserId: String(organizerUserId) } : {}),
 			...(organizerName ? { organizerName: String(organizerName) } : {}),
-			...(photoS3Key ? { photos: [{ s3Key: String(photoS3Key), position: 1 }] } : {})
+			...(photoS3Key ? { photos: [{ s3Key: String(photoS3Key), position: 1 }] } : {}),
+			...(() => {
+				const links = buildLinksFromFormData(formData);
+				return links ? { links } : {};
+			})()
 		};
 
 		const parsed = submitEventInputSchema.safeParse(raw);

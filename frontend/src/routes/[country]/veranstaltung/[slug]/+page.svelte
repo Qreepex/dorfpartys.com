@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { Breadcrumbs, LegalDisclaimer, VerifiedBadge } from '$lib/components/index.js';
+	import { Breadcrumbs, LegalDisclaimer, LinkTypeIcon, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
-	import { SITE_URL, buildEventUrl } from '@dorfpartys/shared';
+	import { SITE_URL, buildEventUrl, detectEventLinkType } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -186,10 +186,13 @@
 					<li>
 						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, vom Veranstalter gepflegte URL, kein interner Route -->
 						<a
-							class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
+							class="inline-flex items-center gap-2 border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
 							href={link.url}
 							target="_blank"
-							rel="noopener noreferrer ugc">{link.label}</a
+							rel="noopener noreferrer ugc"
+						>
+							<LinkTypeIcon type={detectEventLinkType(link.url)} />
+							{link.label}</a
 						>
 					</li>
 				{/each}
