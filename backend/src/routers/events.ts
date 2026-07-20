@@ -402,8 +402,12 @@ export const eventsRouter = router({
           minAge: input.minAge ?? null,
           allowsMuttizettel: input.allowsMuttizettel ?? false,
           isOutdoor: input.isOutdoor ?? false,
-          tags: sanitized.tags ?? [],
-          customFields: input.customFields ?? {},
+          // Anders als bei `create`: das Bearbeiten-Formular hat (noch) keine
+          // Tags-/Custom-Fields-UI, sendet diese Felder also nie mit. Ohne
+          // Fallback auf die bestehenden Werte würde jedes Speichern über das
+          // Formular sie stillschweigend auf []/{} zurücksetzen.
+          tags: sanitized.tags ?? existing.tags,
+          customFields: input.customFields ?? existing.customFields,
           updatedAt: new Date(),
         })
         .where(eq(event.id, input.id));
@@ -426,8 +430,16 @@ export const eventsRouter = router({
         .from(event)
         .where(eq(event.id, input.id));
       if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
-      if (existing.createdBy !== ctx.user.id)
+      // Gleiche Eigentums-Regel wie `update` (AGENTS.md 5.4): nach einem
+      // genehmigten Claim darf auch der neue Veranstalter ein zuvor
+      // abgelehntes Event erneut zur Prüfung einreichen, nicht nur die
+      // ursprünglich einreichende Person.
+      if (
+        existing.createdBy !== ctx.user.id &&
+        existing.organizerUserId !== ctx.user.id
+      ) {
         throw new TRPCError({ code: "FORBIDDEN" });
+      }
       if (existing.status !== "draft" && existing.status !== "rejected") {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -524,7 +536,7 @@ export const eventsRouter = router({
       return { id: input.id };
     }),
 
-  // Lädt ein Event für die Bearbeitung über /veranstaltung-eintragen?eventId=
+  // Lädt ein Event für die Bearbeitung über /veranstaltung-eintragen?id=
   // (AGENTS.md TODO "Veranstaltung bearbeiten"). Zugriff wie bei `update`: die
   // einreichende Person oder der aktuell hinterlegte Veranstalter.
   getForEdit: protectedProcedure
@@ -544,11 +556,25 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const photos = await ctx.db
-        .select()
-        .from(eventPhoto)
-        .where(eq(eventPhoto.eventId, row.id))
-        .orderBy(eventPhoto.position);
+      const [photos, links, organizerProfile] = await Promise.all([
+        ctx.db
+          .select()
+          .from(eventPhoto)
+          .where(eq(eventPhoto.eventId, row.id))
+          .orderBy(eventPhoto.position),
+        ctx.db
+          .select()
+          .from(eventLink)
+          .where(eq(eventLink.eventId, row.id))
+          .orderBy(eventLink.position),
+        row.organizerUserId
+          ? ctx.db
+              .select({ displayName: userProfile.displayName })
+              .from(userProfile)
+              .where(eq(userProfile.userId, row.organizerUserId))
+              .then((rows) => rows[0] ?? null)
+          : Promise.resolve(null),
+      ]);
 
       return {
         ...row,
@@ -558,6 +584,10 @@ export const eventsRouter = router({
           ...p,
           url: buildPublicStorageUrl(p.s3Key),
         })),
+        links,
+        // Für die Vorbefüllung des "Anderes öffentliches Profil"-Suchfelds im
+        // Bearbeiten-Formular (frontend/src/routes/veranstaltung-eintragen).
+        organizerDisplayName: organizerProfile?.displayName ?? null,
       };
     }),
 

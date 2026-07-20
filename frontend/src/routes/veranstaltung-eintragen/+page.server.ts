@@ -1,5 +1,12 @@
-import { COUNTRIES, defaultEventLinkLabel, submitEventInputSchema } from '@dorfpartys/shared';
-import { fail, redirect } from '@sveltejs/kit';
+import {
+	COUNTRIES,
+	defaultEventLinkLabel,
+	submitEventInputSchema,
+	updateEventInputSchema,
+	type SubmitEventInput,
+	type UpdateEventInput
+} from '@dorfpartys/shared';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
 
@@ -19,8 +26,17 @@ function toIsoStringOrUndefined(raw: FormDataEntryValue | null): string | undefi
 // per getAll() in DOM-Reihenfolge, die zugleich die spätere `position` ist).
 // Zeilen ohne URL werden verworfen; fehlt das Label, wird es serverseitig aus
 // dem per Domain erkannten Linktyp hergeleitet (TikTok/Instagram/Facebook/Website).
+// `forceExplicit` (true beim Bearbeiten): Links sind normale, sichtbar
+// vorausgefüllte Formularfelder (anders als das Foto, das eine gesonderte
+// Upload-Aktion braucht) - das Formular soll also 1:1 wiedergeben, was aktuell
+// in der UI steht, inkl. "alle Links gelöscht" (leeres Array statt `undefined`,
+// das beim Bearbeiten sonst als "nicht anfassen" interpretiert würde, siehe
+// `replacePhotosAndLinks` im Backend). Beim Neuanlegen bleibt `undefined`
+// korrekt, weil dort "keine Links angegeben" gleichbedeutend mit "keine Links
+// speichern" ist.
 function buildLinksFromFormData(
 	formData: FormData,
+	forceExplicit = false,
 ): Array<{ url: string; label: string; position: 1 | 2 | 3 }> | undefined {
 	const urls = formData.getAll('linkUrl').map((v) => String(v).trim());
 	const labels = formData.getAll('linkLabel').map((v) => String(v).trim());
@@ -34,7 +50,8 @@ function buildLinksFromFormData(
 			position: (i + 1) as 1 | 2 | 3,
 		}));
 
-	return links.length > 0 ? links : undefined;
+	if (links.length > 0) return links;
+	return forceExplicit ? [] : undefined;
 }
 
 // Liest Zod-Feldfehler aus einem tRPC-Fehler aus, sofern das Backend sie via
@@ -53,7 +70,9 @@ function extractServerFieldErrors(err: unknown): Record<string, string[]> | unde
 // Landingpage fürs Eintragen ("Veranstaltung kostenlos eintragen") und muss
 // für Suchmaschinen-Crawler ohne Login sichtbar/indexierbar bleiben. Login ist
 // erst für den eigentlichen Submit (Formular-Action) nötig, siehe unten.
-export const load: PageServerLoad = async ({ locals }) => {
+// Bearbeiten-Modus (?id=...) ist die Ausnahme: die Seite lädt dann fremde
+// Nutzerdaten und braucht daher ein Login-Gate, siehe unten.
+export const load: PageServerLoad = async ({ locals, url }) => {
 	let isLoggedIn = false;
 	let isProfilePublic = false;
 	let currentUserId = '';
@@ -65,6 +84,32 @@ export const load: PageServerLoad = async ({ locals }) => {
 		isProfilePublic = profile?.isPublic ?? false;
 	} catch {
 		// nicht eingeloggt - Formular bleibt sichtbar, aber ohne Submit-Möglichkeit
+	}
+
+	// Bearbeiten einer bestehenden Veranstaltung: /veranstaltung-eintragen?id=...
+	// (Link aus /meine-veranstaltungen). `events.getForEdit` ist selbst schon
+	// eigentums-geprüft (einreichende Person oder aktueller Veranstalter), hier
+	// zusätzlich das Login-Gate + saubere 404/403-Antworten statt eines
+	// generischen tRPC-Fehlers.
+	const editId = url.searchParams.get('id');
+	let editingEvent: Awaited<ReturnType<typeof locals.trpc.events.getForEdit.query>> | null = null;
+	if (editId) {
+		if (!isLoggedIn) {
+			redirect(
+				302,
+				`/auth/login?redirectTo=${encodeURIComponent(`${url.pathname}${url.search}`)}`
+			);
+		}
+		try {
+			editingEvent = await locals.trpc.events.getForEdit.query({ id: editId });
+		} catch (err) {
+			const code =
+				err instanceof TRPCClientError ? (err.data as { code?: string } | null)?.code : undefined;
+			if (code === 'FORBIDDEN') {
+				error(403, 'Du kannst nur eigene Veranstaltungen bearbeiten.');
+			}
+			error(404, 'Veranstaltung nicht gefunden');
+		}
 	}
 
 	const partyArten = await locals.trpc.taxonomy.partyArten.query();
@@ -81,7 +126,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 	);
 
-	return { partyArten, bundeslaenderByCountry, isLoggedIn, isProfilePublic, currentUserId };
+	return {
+		partyArten,
+		bundeslaenderByCountry,
+		isLoggedIn,
+		isProfilePublic,
+		currentUserId,
+		editingEvent
+	};
 };
 
 export const actions: Actions = {
@@ -124,6 +176,17 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 
+		// Bearbeiten-Modus: das Formular postet weiterhin auf `?/submit`, trägt
+		// beim Bearbeiten aber ein verstecktes `id`-Feld (siehe +page.svelte).
+		// `originalStatus` kommt ebenfalls versteckt mit, um nach dem Speichern
+		// zu entscheiden, ob das Event erneut zur Prüfung eingereicht werden muss
+		// (siehe unten) - `events.update` selbst kennt den Ausgangsstatus schon
+		// serverseitig, aber nicht "soll jetzt explizit resubmitted werden".
+		const editIdRaw = formData.get('id');
+		const editId = editIdRaw ? String(editIdRaw) : null;
+		const originalStatus = formData.get('originalStatus');
+		const removeExistingPhoto = formData.get('removeExistingPhoto') === 'on';
+
 		const startDateRaw = formData.get('startDate');
 		const endDateRaw = formData.get('endDate');
 		const minAgeRaw = formData.get('minAge');
@@ -135,9 +198,13 @@ export const actions: Actions = {
 		// Angaben, siehe AGENTS.md 5 / frontend Checkbox). Checkboxen werden nur als "on"
 		// übermittelt, wenn angehakt - clientseitiges `required` kann umgangen werden, daher
 		// zusätzlich hier geprüft, nicht Teil von submitEventInputSchema (wird nicht persistiert).
+		// Beim Bearbeiten bewusst weiterhin Pflicht (siehe frontend/src/routes/veranstaltung-eintragen/+page.svelte) -
+		// eine separate "Checkbox beim Bearbeiten überspringen"-Sonderregel würde die
+		// Rechte-Logik an zwei Stellen pflegen.
 		const rightsConfirmed = formData.get('rightsConfirmed') === 'on';
 
 		const raw = {
+			...(editId ? { id: editId } : {}),
 			title: formData.get('title'),
 			description: formData.get('description') || undefined,
 			startDate: toIsoStringOrUndefined(startDateRaw),
@@ -153,14 +220,22 @@ export const actions: Actions = {
 			isOutdoor: formData.get('isOutdoor') === 'on',
 			...(organizerUserId ? { organizerUserId: String(organizerUserId) } : {}),
 			...(organizerName ? { organizerName: String(organizerName) } : {}),
-			...(photoS3Key ? { photos: [{ s3Key: String(photoS3Key), position: 1 }] } : {}),
+			...(photoS3Key
+				? { photos: [{ s3Key: String(photoS3Key), position: 1 as const }] }
+				: editId && removeExistingPhoto
+					? { photos: [] }
+					: {}),
 			...(() => {
-				const links = buildLinksFromFormData(formData);
-				return links ? { links } : {};
+				// Beim Bearbeiten immer explizit (auch leeres Array = "alle Links
+				// entfernt"), beim Neuanlegen wie bisher `undefined` bei 0 Links.
+				const links = buildLinksFromFormData(formData, !!editId);
+				return links !== undefined ? { links } : {};
 			})()
 		};
 
-		const parsed = submitEventInputSchema.safeParse(raw);
+		const parsed = editId
+			? updateEventInputSchema.safeParse(raw)
+			: submitEventInputSchema.safeParse(raw);
 		if (!parsed.success || !rightsConfirmed) {
 			const fieldErrors: Record<string, string[]> = parsed.success
 				? {}
@@ -177,7 +252,19 @@ export const actions: Actions = {
 		}
 
 		try {
-			const created = await locals.trpc.events.create.mutate(parsed.data);
+			if (editId) {
+				await locals.trpc.events.update.mutate(parsed.data as UpdateEventInput);
+				// `events.update` setzt ein bereits freigeschaltetes Event serverseitig
+				// automatisch auf "in_review" zurück (backend/src/routers/events.ts).
+				// Für draft/rejected passiert das nicht automatisch - hier wird das
+				// Bearbeiten-Formular genauso wie das Erstellen-Formular behandelt:
+				// Speichern = "zur Prüfung einreichen", nicht nur ein stiller Save.
+				if (originalStatus === 'draft' || originalStatus === 'rejected') {
+					await locals.trpc.events.submitForReview.mutate({ id: editId });
+				}
+				return { success: true };
+			}
+			const created = await locals.trpc.events.create.mutate(parsed.data as SubmitEventInput);
 			await locals.trpc.events.submitForReview.mutate({ id: created.id });
 		} catch (err) {
 			// events.create wirft FORBIDDEN, wenn das Profil nicht öffentlich ist

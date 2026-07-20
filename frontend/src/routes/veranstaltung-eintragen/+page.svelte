@@ -61,18 +61,40 @@
 	}
 
 	const loginHref = $derived(
-		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
+		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search)}`
 	);
 
-	let title = $state('');
-	let description = $state('');
-	let startDate = $state('');
-	let endDate = $state('');
-	let bundeslandId = $state('');
-	let kreisId = $state('');
-	let partyArtId = $state('');
-	let addressDescription = $state('');
+	// Bearbeiten-Modus: /veranstaltung-eintragen?id=... (Link aus
+	// /meine-veranstaltungen). `data.editingEvent` ist bereits eigentums-geprüft
+	// im Load (+page.server.ts). Alle Felder unten werden daraus vorbefüllt -
+	// derselbe Formular-Markup wie beim Neuanlegen, siehe TODO.md "Das
+	// Bearbeiten von Veranstaltungen ist noch nicht möglich...".
+	const editingEvent = data.editingEvent;
+	const isEditing = !!editingEvent;
+
+	// Wandelt ein ISO-Datum in den lokalen `datetime-local`-Wert um (Gegenstück
+	// zu toIsoStringOrUndefined im Load) - `.toISOString()` allein wäre UTC und
+	// würde beim erneuten Öffnen des Formulars eine falsche Uhrzeit anzeigen.
+	function toDatetimeLocalValue(iso: string): string {
+		const date = new Date(iso);
+		const offsetMs = date.getTimezoneOffset() * 60_000;
+		return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+	}
+
+	let title = $state(editingEvent?.title ?? '');
+	let description = $state(editingEvent?.description ?? '');
+	let startDate = $state(editingEvent ? toDatetimeLocalValue(editingEvent.startDate) : '');
+	let endDate = $state(editingEvent ? toDatetimeLocalValue(editingEvent.endDate) : '');
+	let bundeslandId = $state(editingEvent?.bundeslandId ?? '');
+	let kreisId = $state(editingEvent?.kreisId ?? '');
+	let partyArtId = $state(editingEvent?.partyArtId ?? '');
+	let addressDescription = $state(editingEvent?.addressDescription ?? '');
 	let uploadedPhotoS3Key = $state<string | null>(null);
+	// Bestehendes Foto beim Bearbeiten (max. 1, siehe MAX_EVENT_PHOTOS) - wird
+	// serverseitig automatisch beibehalten, solange weder ein neues Foto
+	// hochgeladen noch "Foto entfernen" angehakt wird (+page.server.ts).
+	const existingPhoto = editingEvent?.photos?.[0] ?? null;
+	let removeExistingPhoto = $state(false);
 
 	// Links (TikTok/Instagram/Facebook/Website, max. MAX_EVENT_LINKS - AGENTS.md
 	// Abschnitt 2 & 5). Reihenfolge der Liste = position beim Speichern. Der
@@ -80,7 +102,9 @@
 	// Event-Seite rein aus der URL-Domain hergeleitet (siehe
 	// @dorfpartys/shared detectEventLinkType), daher hier nur URL + optionales Label.
 	type LinkDraft = { url: string; label: string };
-	let links = $state<LinkDraft[]>([]);
+	let links = $state<LinkDraft[]>(
+		editingEvent?.links?.map((l) => ({ url: l.url, label: l.label })) ?? []
+	);
 
 	function addLink() {
 		if (links.length >= MAX_EVENT_LINKS) return;
@@ -91,10 +115,34 @@
 		links.splice(index, 1);
 	}
 
-	// Organizer selection state
-	let organizerMode = $state<'myself' | 'profile' | 'freetext'>('myself');
-	let organizerUserId = $state('');
-	let organizerName = $state('');
+	// Weitere optionale Felder - beim Bearbeiten aus editingEvent vorbefüllt.
+	let priceInfo = $state(editingEvent?.priceInfo ?? '');
+	// Svelte koppelt `bind:value` auf einem `type="number"`-Input automatisch als
+	// Number (nicht String) - siehe <input type="number" bind:value={minAge}> unten.
+	let minAge = $state<number | undefined>(editingEvent?.minAge ?? undefined);
+	let allowsMuttizettel = $state(editingEvent?.allowsMuttizettel ?? false);
+	let isOutdoor = $state(editingEvent?.isOutdoor ?? false);
+	let customColor = $state(editingEvent?.customColor ?? '#ff6b35');
+
+	// Organizer selection state - beim Bearbeiten aus editingEvent hergeleitet:
+	// "myself" wenn der aktuelle Nutzer schon der hinterlegte Veranstalter ist,
+	// sonst "profile" (fremdes/Ghost-Profil, Anzeigename kommt vom Backend via
+	// `organizerDisplayName`, siehe events.getForEdit) oder "freetext".
+	let organizerMode = $state<'myself' | 'profile' | 'freetext'>(
+		editingEvent
+			? editingEvent.organizerUserId === data.currentUserId
+				? 'myself'
+				: editingEvent.organizerUserId
+					? 'profile'
+					: 'freetext'
+			: 'myself'
+	);
+	let organizerUserId = $state(
+		editingEvent && editingEvent.organizerUserId !== data.currentUserId
+			? (editingEvent.organizerUserId ?? '')
+			: ''
+	);
+	let organizerName = $state(editingEvent?.organizerName ?? '');
 
 	// Live-Suche für "Anderes öffentliches Profil" (AGENTS.md 5.3) - findet
 	// echte öffentliche Profile und Ghost-Accounts (nicht registrierte
@@ -108,12 +156,14 @@
 	let organizerSearchQuery = $state('');
 	let organizerSearchResults = $state<OrganizerSearchResult[]>([]);
 	let organizerSearchLoading = $state(false);
-	let organizerSelectedLabel = $state('');
+	let organizerSelectedLabel = $state(
+		organizerMode === 'profile' ? (editingEvent?.organizerDisplayName ?? 'Unbenannt') : ''
+	);
 	let organizerError = $state('');
 
 	// Rechte-/Verantwortungsbestätigung (Pflicht-Checkbox vor Submit, siehe AGENTS.md 5 -
-	// Einreichungsformular). Wird serverseitig ebenfalls geprüft, da das `required`-Attribut
-	// clientseitig umgangen werden kann.
+	// Einreichungsformular). Beim Bearbeiten bewusst nicht vorausgefüllt/übersprungen -
+	// wird bei jeder Einreichung erneut bestätigt, siehe Kommentar bei der Checkbox unten.
 	let rightsConfirmed = $state(false);
 
 	$effect(() => {
@@ -192,13 +242,23 @@
 </script>
 
 <svelte:head>
-	<title>Veranstaltung kostenlos eintragen | dorfpartys.com</title>
+	<title
+		>{isEditing
+			? 'Veranstaltung bearbeiten'
+			: 'Veranstaltung kostenlos eintragen'} | dorfpartys.com</title
+	>
 	<meta
 		name="description"
 		content="Trag dein Schützenfest, deine Zeltfete, Scheunenfete oder dein Dorffest kostenlos ein - in wenigen Minuten online, DACH-weit sichtbar, für immer werbefrei."
 	/>
-	<meta name="robots" content="index,follow" />
-	<link rel="canonical" href={canonical} />
+	{#if isEditing}
+		<!-- Bearbeiten einer konkreten, eigenen Veranstaltung ist personenbezogen
+		     (analog /profil, /partyliste, AGENTS.md 5a) - kein SEO-Wert, keine Indexierung. -->
+		<meta name="robots" content="noindex,nofollow" />
+	{:else}
+		<meta name="robots" content="index,follow" />
+		<link rel="canonical" href={canonical} />
+	{/if}
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="Veranstaltung kostenlos eintragen - dorfpartys.com" />
 	<meta
@@ -209,56 +269,73 @@
 </svelte:head>
 
 <main class="mx-auto max-w-[90ch]">
-	<header>
-		<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
-			Kostenlos · Werbefrei · In 5 Minuten
-		</p>
-		<h1 class="leading-[1.05]">
-			Trag deine Party ein -<br />
-			<span class="bg-primary px-1 text-ink">gefunden von der ganzen Gegend</span>
-		</h1>
-		<p class="mt-4 max-w-[60ch] text-lg text-muted">
-			Egal ob Schützenfest, Zeltfete, Scheunenfete, Stoppelfete oder Dorffest: dorfpartys.com ist
-			die größte kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform, die für
-			genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht, findet dich
-			hier.
-		</p>
-	</header>
+	{#if isEditing}
+		<header>
+			<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
+				Veranstaltung bearbeiten
+			</p>
+			<h1 class="leading-[1.05]">
+				{editingEvent?.title}
+			</h1>
+			<p class="mt-4 max-w-[60ch] text-lg text-muted">
+				Ändere die Angaben deiner Veranstaltung. War sie bereits freigeschaltet, wird sie durch das
+				Speichern erneut zur redaktionellen Prüfung eingereicht.
+			</p>
+		</header>
+	{:else}
+		<header>
+			<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
+				Kostenlos · Werbefrei · In 5 Minuten
+			</p>
+			<h1 class="leading-[1.05]">
+				Trag deine Party ein -<br />
+				<span class="bg-primary px-1 text-ink">gefunden von der ganzen Gegend</span>
+			</h1>
+			<p class="mt-4 max-w-[60ch] text-lg text-muted">
+				Egal ob Schützenfest, Zeltfete, Scheunenfete, Stoppelfete oder Dorffest: dorfpartys.com ist
+				die größte kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform, die für
+				genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht, findet dich
+				hier.
+			</p>
+		</header>
 
-	<ul class="my-10 grid gap-4 sm:grid-cols-2">
-		<li class="border-t border-border py-4">
-			<p class="font-display text-lg font-semibold">Für immer kostenlos</p>
-			<p class="mt-1 text-muted">
-				Kein Abo, keine Promotion-Gebühr, keine versteckten Kosten - auch nicht später.
-			</p>
-		</li>
-		<li class="border-t border-border py-4">
-			<p class="font-display text-lg font-semibold">Mehr Reichweite als Social Media</p>
-			<p class="mt-1 text-muted">
-				Dein Event bekommt eine eigene, dauerhaft auffindbare Seite statt im Instagram-Feed nach
-				drei Tagen zu verschwinden.
-			</p>
-		</li>
-		<li class="border-t border-border py-4">
-			<p class="font-display text-lg font-semibold">Für Google & KI-Suche optimiert</p>
-			<p class="mt-1 text-muted">
-				Jede Region, Party-Art und jeder Monat hat eine eigene Seite - dein Event taucht dort auf,
-				wo Menschen danach fragen.
-			</p>
-		</li>
-		<li class="border-t border-border py-4 sm:border-b">
-			<p class="font-display text-lg font-semibold">Eigene Veranstalter-Seite</p>
-			<p class="mt-1 text-muted">
-				Alle deine Veranstaltungen, Profil und Links gebündelt an einem Ort - ideal für Vereine mit
-				wiederkehrenden Festen.
-			</p>
-		</li>
-	</ul>
+		<ul class="my-10 grid gap-4 sm:grid-cols-2">
+			<li class="border-t border-border py-4">
+				<p class="font-display text-lg font-semibold">Für immer kostenlos</p>
+				<p class="mt-1 text-muted">
+					Kein Abo, keine Promotion-Gebühr, keine versteckten Kosten - auch nicht später.
+				</p>
+			</li>
+			<li class="border-t border-border py-4">
+				<p class="font-display text-lg font-semibold">Mehr Reichweite als Social Media</p>
+				<p class="mt-1 text-muted">
+					Dein Event bekommt eine eigene, dauerhaft auffindbare Seite statt im Instagram-Feed nach
+					drei Tagen zu verschwinden.
+				</p>
+			</li>
+			<li class="border-t border-border py-4">
+				<p class="font-display text-lg font-semibold">Für Google & KI-Suche optimiert</p>
+				<p class="mt-1 text-muted">
+					Jede Region, Party-Art und jeder Monat hat eine eigene Seite - dein Event taucht dort auf,
+					wo Menschen danach fragen.
+				</p>
+			</li>
+			<li class="border-t border-border py-4 sm:border-b">
+				<p class="font-display text-lg font-semibold">Eigene Veranstalter-Seite</p>
+				<p class="mt-1 text-muted">
+					Alle deine Veranstaltungen, Profil und Links gebündelt an einem Ort - ideal für Vereine mit
+					wiederkehrenden Festen.
+				</p>
+			</li>
+		</ul>
+	{/if}
 
 	{#if submitStatus === 'success' || form?.success}
 		<p class="mb-6 flex items-center gap-2 border border-primary bg-bg-alt p-4 text-text">
 			<span class="text-primary" aria-hidden="true">✓</span>
-			Danke! Dein Event wurde zur redaktionellen Prüfung eingereicht und ist in Kürze sichtbar.
+			{isEditing
+				? 'Deine Änderungen wurden gespeichert.'
+				: 'Danke! Dein Event wurde zur redaktionellen Prüfung eingereicht und ist in Kürze sichtbar.'}
 		</p>
 	{/if}
 	{#if form?.error}
@@ -270,12 +347,39 @@
 
 	<form method="POST" action="?/submit" onsubmit={handleSubmit}>
 		<FormGrid>
+			{#if isEditing}
+				<input type="hidden" name="id" value={editingEvent?.id} />
+				<input type="hidden" name="originalStatus" value={editingEvent?.status} />
+			{/if}
+
+			{#if existingPhoto && !removeExistingPhoto && !uploadedPhotoS3Key}
+				<div class="sm:col-span-full">
+					<span class="field-label">Aktuelles Foto</span>
+					<div class="mt-2 max-w-xs">
+						<img
+							src={existingPhoto.url}
+							alt="Aktuelles Foto der Veranstaltung"
+							class="h-auto w-full rounded border border-border object-cover"
+						/>
+					</div>
+					<label class="mt-2 flex items-center gap-2 text-sm text-muted">
+						<input type="checkbox" name="removeExistingPhoto" bind:checked={removeExistingPhoto} />
+						Foto entfernen
+					</label>
+					<p class="mt-1 text-xs text-muted">
+						Um das Foto zu ersetzen, lade unten einfach ein neues hoch - das alte wird dann
+						automatisch ersetzt.
+					</p>
+				</div>
+			{/if}
+
 			<div class="sm:col-span-full">
 				<ImageUpload
 					name="photo"
-					label="Foto (optional)"
+					label={existingPhoto ? 'Foto ersetzen (optional)' : 'Foto (optional)'}
 					onUploadComplete={(s3Key) => {
 						uploadedPhotoS3Key = s3Key;
+						removeExistingPhoto = false;
 					}}
 				/>
 			</div>
@@ -392,7 +496,7 @@
 					id="customColor"
 					type="color"
 					name="customColor"
-					value="#ff6b35"
+					bind:value={customColor}
 				/>
 				{#if form?.fieldErrors?.customColor}
 					<p class="field-error">{form.fieldErrors.customColor[0]}</p>
@@ -404,19 +508,28 @@
 				name="priceInfo"
 				maxlength={200}
 				placeholder="z.B. 5€ VVK / 8€ AK"
+				bind:value={priceInfo}
 				error={form?.fieldErrors?.priceInfo?.[0]}
 			/>
 
 			<div class="field">
 				<label class="field-label" for="minAge">Mindestalter (optional)</label>
-				<input class="field-control" id="minAge" type="number" name="minAge" min="0" max="99" />
+				<input
+					class="field-control"
+					id="minAge"
+					type="number"
+					name="minAge"
+					min="0"
+					max="99"
+					bind:value={minAge}
+				/>
 				{#if form?.fieldErrors?.minAge}
 					<p class="field-error">{form.fieldErrors.minAge[0]}</p>
 				{/if}
 			</div>
 
-			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" />
-			<Toggle label="Open Air" name="isOutdoor" />
+			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" bind:checked={allowsMuttizettel} />
+			<Toggle label="Open Air" name="isOutdoor" bind:checked={isOutdoor} />
 
 			<div class="border-t border-border pt-4 sm:col-span-full">
 				<h2 class="field-label mb-2">Links (optional)</h2>
@@ -632,10 +745,12 @@
 						Wird gesendet...
 					{:else if submitStatus === 'success'}
 						<span aria-hidden="true">✓</span>
-						Eingereicht
+						{isEditing ? 'Gespeichert' : 'Eingereicht'}
 					{:else if submitStatus === 'error'}
 						<span aria-hidden="true">✗</span>
 						Erneut versuchen
+					{:else if isEditing}
+						Änderungen speichern
 					{:else}
 						Kostenlos eintragen
 					{/if}
