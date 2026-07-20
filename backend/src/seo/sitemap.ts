@@ -39,22 +39,32 @@ export async function getEventSitemapEntries(db: Database) {
 
 /**
  * Ermittelt in EINER gruppierten Query (kein N+1 über die Kreis-/Art-Taxonomie),
- * welche Kreise bzw. Kreis+Art-Kombinationen "indexable" sind - dieselbe
- * Bedingung wie resolve.ts' `hasAnyEvents` (future + 12-Monats-Archiv), siehe
- * AGENTS.md 1.6. Union von "future" (endDate >= now()) und "past 12 months"
- * (endDate >= now() - 12 Monate UND < now()) ist äquivalent zu
- * `endDate >= now() - interval '12 months'` allein.
+ * welche Kreise, Arten bzw. Kreis+Art-/Bundesland+Art-Kombinationen
+ * "indexable" sind - dieselbe Bedingung wie resolve.ts' `hasAnyEvents`
+ * (future + 12-Monats-Archiv), siehe AGENTS.md 1.6. Union von "future"
+ * (endDate >= now()) und "past 12 months" (endDate >= now() - 12 Monate UND
+ * < now()) ist äquivalent zu `endDate >= now() - interval '12 months'` allein.
+ *
+ * Deckt alle Kombinationen ab, die laut resolve.ts' Formel
+ * `hasAnyEvents || (!kreisId && !partyArtId)` NICHT unconditionally
+ * indexierbar sind (also alles außer Country-/Bundesland-only): Kreis-only
+ * (kommt kanonisch nicht vor, da Kreis immer Bundesland impliziert),
+ * BL+Kreis, Art-only, BL+Art, BL+Kreis+Art.
  *
  * Optional auf ein Bundesland eingeschränkt, damit der Level3-Aufruf (der pro
  * Bundesland läuft) nicht jedes Mal das gesamte Land scannen muss.
  */
-async function getIndexableKreisSets(
+async function getIndexableFilterSets(
   db: Database,
   country: Country,
   bundeslandSlug?: string,
 ) {
   const rows = await db
-    .select({ kreisId: event.kreisId, partyArtId: event.partyArtId })
+    .select({
+      bundeslandId: event.bundeslandId,
+      kreisId: event.kreisId,
+      partyArtId: event.partyArtId,
+    })
     .from(event)
     .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
     .where(
@@ -66,15 +76,24 @@ async function getIndexableKreisSets(
         bundeslandSlug ? eq(bundesland.slug, bundeslandSlug) : undefined,
       ),
     )
-    .groupBy(event.kreisId, event.partyArtId);
+    .groupBy(event.bundeslandId, event.kreisId, event.partyArtId);
 
   const kreisIdsWithEvents = new Set<string>();
   const kreisArtPairsWithEvents = new Set<string>();
+  const artIdsWithEvents = new Set<string>();
+  const bundeslandArtPairsWithEvents = new Set<string>();
   for (const row of rows) {
     kreisIdsWithEvents.add(row.kreisId);
     kreisArtPairsWithEvents.add(`${row.kreisId}:${row.partyArtId}`);
+    artIdsWithEvents.add(row.partyArtId);
+    bundeslandArtPairsWithEvents.add(`${row.bundeslandId}:${row.partyArtId}`);
   }
-  return { kreisIdsWithEvents, kreisArtPairsWithEvents };
+  return {
+    kreisIdsWithEvents,
+    kreisArtPairsWithEvents,
+    artIdsWithEvents,
+    bundeslandArtPairsWithEvents,
+  };
 }
 
 /**
@@ -100,7 +119,7 @@ export async function getOrteSitemapEntries(db: Database, country: Country) {
     .from(bundesland)
     .where(eq(bundesland.country, country));
 
-  const { kreisIdsWithEvents } = await getIndexableKreisSets(db, country);
+  const { kreisIdsWithEvents } = await getIndexableFilterSets(db, country);
 
   const seen = new Set<string>();
   const entries: Array<{ loc: string }> = [];
@@ -128,24 +147,26 @@ export async function getOrteSitemapEntries(db: Database, country: Country) {
 }
 
 /**
- * Alle aktiven Party-Arten - nicht nur solche mit aktuellen Events.
- *
- * Hinweis (bestehendes Verhalten, unverändert von diesem Task): Das weicht
- * strenggenommen von resolve.ts' `indexable`-Formel ab, die nur die Country-/
- * Bundesland-Ebene bedingungslos indexierbar macht - eine Art-only-Seite ohne
- * Events wäre laut robots-meta eigentlich noindex. Der Product-Owner-Auftrag
- * für diesen Task betraf explizit nur Kreise; Art-only/BL+Art bewusst
- * unangetastet gelassen, siehe Report.
+ * Alle aktiven Party-Arten, die mindestens 1 Event (future oder 12-Monats-
+ * Archiv) im jeweiligen Land haben - Art-only ist laut resolve.ts'
+ * `indexable`-Formel (`hasAnyEvents || (!kreisId && !partyArtId)`) NICHT
+ * bedingungslos indexierbar (nur Country-/Bundesland-Ebene ist das), siehe
+ * AGENTS.md 1.6. Arten ohne Events würden sonst als noindex,follow-URLs in
+ * der Sitemap landen.
  */
 export async function getArtenSitemapEntries(db: Database, country: Country) {
   const rows = await db
-    .select({ artSlug: partyArt.slug })
+    .select({ id: partyArt.id, artSlug: partyArt.slug })
     .from(partyArt)
     .where(eq(partyArt.active, true));
 
-  return rows.map((row) => ({
-    loc: buildFilterUrl(country, { artSlug: row.artSlug }),
-  }));
+  const { artIdsWithEvents } = await getIndexableFilterSets(db, country);
+
+  return rows
+    .filter((row) => artIdsWithEvents.has(row.id))
+    .map((row) => ({
+      loc: buildFilterUrl(country, { artSlug: row.artSlug }),
+    }));
 }
 
 /**
@@ -220,6 +241,10 @@ export async function getBundeslandSlugsForSitemapIndex(
 /**
  * Single Filter Sitemap: nur Bundesland oder nur Art
  * (keine Monat-URLs mehr)
+ *
+ * Bundesland-only ist laut resolve.ts' `indexable`-Formel immer indexierbar
+ * (unconditional). Art-only braucht dagegen >=1 Event (future oder
+ * 12-Monats-Archiv), siehe AGENTS.md 1.6 und getArtenSitemapEntries.
  */
 export async function getFilterCombinationsLevel1SitemapEntries(
   db: Database,
@@ -229,6 +254,7 @@ export async function getFilterCombinationsLevel1SitemapEntries(
     db,
     country,
   );
+  const { artIdsWithEvents } = await getIndexableFilterSets(db, country);
 
   const entries: Array<{ loc: string }> = [];
   const seen = new Set<string>();
@@ -242,6 +268,7 @@ export async function getFilterCombinationsLevel1SitemapEntries(
   }
 
   for (const art of arten) {
+    if (!artIdsWithEvents.has(art.id)) continue;
     const url = buildFilterUrl(country, { artSlug: art.slug });
     if (!seen.has(url)) {
       seen.add(url);
@@ -257,8 +284,10 @@ export async function getFilterCombinationsLevel1SitemapEntries(
  * (kein Art+Monat, kein BL+Monat mehr)
  *
  * BL+Kreis-Kombinationen werden nur aufgenommen, wenn der Kreis indexierbar
- * ist (>=1 Event, siehe getIndexableKreisSets); BL+Art bleibt unverändert
- * immer enthalten (Bundesland-Ebene ist laut AGENTS.md 1.6 immer indexierbar).
+ * ist (>=1 Event, siehe getIndexableFilterSets); BL+Art analog nur, wenn die
+ * BL+Art-Kombination >=1 Event hat - beide sind laut resolve.ts'
+ * `indexable`-Formel NICHT unconditionally indexierbar (nur Country-/
+ * Bundesland-Ebene ist das), siehe AGENTS.md 1.6.
  */
 export async function getFilterCombinationsLevel2SitemapEntries(
   db: Database,
@@ -266,7 +295,8 @@ export async function getFilterCombinationsLevel2SitemapEntries(
 ) {
   const { bundeslaenderResult, kreiseByBundeslandSlug, arten } =
     await getAllFilterCombinations(db, country);
-  const { kreisIdsWithEvents } = await getIndexableKreisSets(db, country);
+  const { kreisIdsWithEvents, bundeslandArtPairsWithEvents } =
+    await getIndexableFilterSets(db, country);
 
   const entries: Array<{ loc: string }> = [];
   const seen = new Set<string>();
@@ -288,6 +318,7 @@ export async function getFilterCombinationsLevel2SitemapEntries(
 
   for (const bl of bundeslaenderResult) {
     for (const art of arten) {
+      if (!bundeslandArtPairsWithEvents.has(`${bl.id}:${art.id}`)) continue;
       const url = buildFilterUrl(country, {
         bundeslandSlug: bl.slug,
         artSlug: art.slug,
@@ -326,7 +357,7 @@ export async function getFilterCombinationsLevel3SitemapEntries(
 
   // Auf dieses Bundesland eingeschränkt (level3 wird ohnehin pro Bundesland
   // aufgerufen), damit nicht bei jedem Bundesland-Batch das ganze Land gescannt wird.
-  const { kreisArtPairsWithEvents } = await getIndexableKreisSets(
+  const { kreisArtPairsWithEvents } = await getIndexableFilterSets(
     db,
     country,
     bundeslandSlug,
