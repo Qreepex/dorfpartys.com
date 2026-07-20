@@ -70,8 +70,9 @@
 				error={form?.fieldErrors?.displayName?.[0]}
 			/>
 			<p class="text-[0.85rem] text-muted">
-				Das ist dein öffentlicher Name als Veranstalter:in - sichtbar auf jeder Party, die du
-				einträgst, und auf deiner eigenen Veranstalter-Seite.
+				Das ist dein Name als Veranstalter:in - sichtbar auf jeder Party, die du einträgst. Deine
+				eigene Veranstalter-Seite kannst du danach unter „Mein Profil" mit „Profil öffentlich
+				sichtbar" freischalten.
 			</p>
 		</fieldset>
 
@@ -114,7 +115,9 @@
 				{/if}
 			</dl>
 			<p class="text-[0.85rem] text-muted">
-				Damit bist du startklar. Du kannst dein Profil jederzeit unter „Mein Profil" anpassen.
+				Damit bist du startklar. Dein Profil ist zunächst privat - stelle es unter „Mein Profil"
+				öffentlich, um deine eigene Veranstalter-Seite freizuschalten und Veranstaltungen
+				einzutragen.
 			</p>
 		</fieldset>
 
