@@ -156,17 +156,24 @@
 	{/if}
 </svelte:head>
 
-<Breadcrumbs items={breadcrumbs} />
-
 {#if result}
-	<div class="grid grid-cols-1 gap-6 md:grid-cols-[1fr_min(90ch,100%)_1fr] md:items-start">
+	<main class="grid grid-cols-1 gap-6 md:grid-cols-[1fr_min(90ch,100%)_1fr] md:items-start">
+		<!--
+			Breadcrumbs live in main's column but are shifted left by exactly the sidebar's
+			fixed width + gap, and widened by the same amount, so they span from the sidebar's
+			left edge to main's right edge without ever affecting the sidebar's own width.
+		-->
+		<div class="md:col-start-2 md:row-start-1 md:-ml-70 md:w-[calc(100%+17.5rem)]">
+			<Breadcrumbs items={breadcrumbs} />
+		</div>
+
 		<!-- Navigation Tree Sidebar -->
-		<div class="md:justify-self-end">
+		<div class="md:col-start-1 md:row-start-2 md:w-64 md:justify-self-end">
 			<NavTree {result} />
 		</div>
 
 		<!-- Main Content -->
-		<main class="md:col-start-2">
+		<article class="md:col-start-2 md:row-start-2">
 			<header class="mb-8">
 				<h1>{result.seo.h1}</h1>
 				<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
@@ -244,6 +251,6 @@
 					- du bist als Erste:r auf dieser Seite gelistet.
 				</p>
 			{/if}
-		</main>
-	</div>
+		</article>
+	</main>
 {/if}

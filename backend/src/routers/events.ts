@@ -2,6 +2,7 @@ import {
   COUNTRIES,
   buildCountryRootUrl,
   buildEventUrl,
+  buildFilterUrl,
   buildOrganizerUrl,
   reviewEventInputSchema,
   submitEventInputSchema,
@@ -405,7 +406,7 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      const [photos, links, organizerProfileList, [partyArtRow], isSaved] =
+      const [photos, links, organizerProfileList, [taxonomyRow], isSaved] =
         await Promise.all([
           ctx.db
             .select()
@@ -428,8 +429,20 @@ export const eventsRouter = router({
                 .where(eq(userProfile.userId, row.organizerUserId))
             : Promise.resolve([]),
           ctx.db
-            .select({ name: partyArt.name })
+            .select({
+              bundeslandSlug: bundeslandTable.slug,
+              bundeslandName: bundeslandTable.name,
+              kreisSlug: kreis.slug,
+              kreisName: kreis.name,
+              partyArtSlug: partyArt.slug,
+              partyArtName: partyArt.name,
+            })
             .from(partyArt)
+            .innerJoin(
+              bundeslandTable,
+              eq(bundeslandTable.id, row.bundeslandId),
+            )
+            .innerJoin(kreis, eq(kreis.id, row.kreisId))
             .where(eq(partyArt.id, row.partyArtId)),
           ctx.user
             ? ctx.db
@@ -479,6 +492,31 @@ export const eventsRouter = router({
           name: input.country.toUpperCase(),
           url: buildCountryRootUrl(input.country),
         },
+        ...(taxonomyRow
+          ? [
+              {
+                name: taxonomyRow.bundeslandName,
+                url: buildFilterUrl(input.country, {
+                  bundeslandSlug: taxonomyRow.bundeslandSlug,
+                }),
+              },
+              {
+                name: taxonomyRow.kreisName,
+                url: buildFilterUrl(input.country, {
+                  bundeslandSlug: taxonomyRow.bundeslandSlug,
+                  kreisSlug: taxonomyRow.kreisSlug,
+                }),
+              },
+              {
+                name: taxonomyRow.partyArtName,
+                url: buildFilterUrl(input.country, {
+                  bundeslandSlug: taxonomyRow.bundeslandSlug,
+                  kreisSlug: taxonomyRow.kreisSlug,
+                  artSlug: taxonomyRow.partyArtSlug,
+                }),
+              },
+            ]
+          : []),
         { name: row.title, url: eventUrl },
       ]);
 
@@ -489,7 +527,12 @@ export const eventsRouter = router({
         organizerName,
         organizerSlug: organizerProfile?.slug ?? null,
         organizerVerified,
-        partyArtName: partyArtRow?.name ?? "",
+        partyArtName: taxonomyRow?.partyArtName ?? "",
+        bundeslandSlug: taxonomyRow?.bundeslandSlug ?? null,
+        bundeslandName: taxonomyRow?.bundeslandName ?? null,
+        kreisSlug: taxonomyRow?.kreisSlug ?? null,
+        kreisName: taxonomyRow?.kreisName ?? null,
+        partyArtSlug: taxonomyRow?.partyArtSlug ?? null,
         isSaved,
         jsonLd,
         breadcrumbJsonLd,

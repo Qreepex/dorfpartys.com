@@ -24,7 +24,7 @@
 	{@html jsonLdScriptTag(faqJsonLd)}
 </svelte:head>
 
-<article>
+<main class="mx-auto max-w-[90ch]">
 	<header>
 		<h1>Häufig gestellte Fragen</h1>
 		<p class="text-lg text-muted">
@@ -44,4 +44,4 @@
 			>trag direkt deine Veranstaltung ein</a
 		>.
 	</p>
-</article>
+</main>

@@ -48,7 +48,7 @@
 	{@html jsonLdScriptTag(jsonLd)}
 </svelte:head>
 
-<article>
+<main class="mx-auto max-w-[90ch]">
 	<header class="mb-2 flex items-center gap-4">
 		{#if profile.avatarUrl}
 			<img
@@ -127,4 +127,4 @@
 			<EventList events={past} country={past[0].country} />
 		</section>
 	{/if}
-</article>
+</main>

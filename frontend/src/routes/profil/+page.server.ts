@@ -1,6 +1,6 @@
-import { fail } from '@sveltejs/kit';
-import { updateProfileInputSchema } from '@dorfpartys/shared';
 import { requireUser } from '$lib/server/require-auth.js';
+import { updateProfileInputSchema } from '@dorfpartys/shared';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url }) => {

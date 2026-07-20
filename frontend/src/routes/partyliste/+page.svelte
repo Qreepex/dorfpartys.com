@@ -11,86 +11,76 @@
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
-<h1>Meine Partyliste</h1>
+<main class="mx-auto max-w-[90ch]">
+	<h1>Meine Partyliste</h1>
 
-{#if data.myEvents.length > 0}
-	<section class="my-events">
-		<h2>Meine Veranstaltungen</h2>
-		<p class="lead">Veranstaltungen, die du eingereicht hast.</p>
-		<div class="event-list">
-			{#each data.myEvents as event (event.id)}
-				<div class="event-card">
-					<div class="event-info">
-						<div class="event-header">
-							<h3>{event.title}</h3>
-							<span class="status {event.status}">{event.status}</span>
+	{#if data.myEvents.length > 0}
+		<section class="my-events">
+			<h2>Meine Veranstaltungen</h2>
+			<p class="lead">Veranstaltungen, die du eingereicht hast.</p>
+			<div class="event-list">
+				{#each data.myEvents as event (event.id)}
+					<div class="event-card">
+						<div class="event-info">
+							<div class="event-header">
+								<h3>{event.title}</h3>
+								<span class="status {event.status}">{event.status}</span>
+							</div>
+							<p class="event-date">
+								{new Date(event.startDate).toLocaleDateString('de-DE', {
+									weekday: 'short',
+									day: '2-digit',
+									month: 'short',
+									year: 'numeric'
+								})}
+							</p>
+							<p class="event-location">
+								{event.bundeslandName}, {event.kreisName}
+							</p>
 						</div>
-						<p class="event-date">
-							{new Date(event.startDate).toLocaleDateString('de-DE', {
-								weekday: 'short',
-								day: '2-digit',
-								month: 'short',
-								year: 'numeric'
-							})}
-						</p>
-						<p class="event-location">
-							{event.bundeslandName}, {event.kreisName}
-						</p>
-					</div>
-					<div class="event-actions">
-						<form method="POST" action="?/edit" class="inline">
-							<input type="hidden" name="eventId" value={event.id} />
-							<button type="submit" class="action-button edit">Bearbeiten</button>
-						</form>
-						{#if event.status === 'draft' || event.status === 'rejected'}
-							<button
-								type="button"
-								class="action-button delete"
-								onclick={() => (deleteConfirm = event.id)}
-							>
-								Löschen
-							</button>
-							{#if deleteConfirm === event.id}
-								<div class="delete-confirm">
-									<p>Sicher?</p>
-									<form method="POST" action="?/delete" class="confirm-actions">
-										<input type="hidden" name="eventId" value={event.id} />
-										<button type="submit" class="confirm-btn delete">Ja, löschen</button>
-										<button
-											type="button"
-											class="confirm-btn cancel"
-											onclick={() => (deleteConfirm = null)}
-										>
-											Abbrechen
-										</button>
-									</form>
-								</div>
+						<div class="event-actions">
+							<form method="POST" action="?/edit" class="inline">
+								<input type="hidden" name="eventId" value={event.id} />
+								<button type="submit" class="action-button edit">Bearbeiten</button>
+							</form>
+							{#if event.status === 'draft' || event.status === 'rejected'}
+								<button
+									type="button"
+									class="action-button delete"
+									onclick={() => (deleteConfirm = event.id)}
+								>
+									Löschen
+								</button>
+								{#if deleteConfirm === event.id}
+									<div class="delete-confirm">
+										<p>Sicher?</p>
+										<form method="POST" action="?/delete" class="confirm-actions">
+											<input type="hidden" name="eventId" value={event.id} />
+											<button type="submit" class="confirm-btn delete">Ja, löschen</button>
+											<button
+												type="button"
+												class="confirm-btn cancel"
+												onclick={() => (deleteConfirm = null)}
+											>
+												Abbrechen
+											</button>
+										</form>
+									</div>
+								{/if}
 							{/if}
-						{/if}
+						</div>
 					</div>
-				</div>
-			{/each}
-		</div>
-	</section>
-{/if}
+				{/each}
+			</div>
+		</section>
+	{/if}
 
-<section>
-	<h2>Gemerkte Veranstaltungen</h2>
-	<p class="lead">Alle Veranstaltungen, die du dir gemerkt hast.</p>
+	<section>
+		<h2>Gemerkte Veranstaltungen</h2>
+		<p class="lead">Alle Veranstaltungen, die du dir gemerkt hast.</p>
 
-	<h3>Kommend</h3>
-	<EventList events={data.upcoming} country="de">
-		{#snippet itemExtra(item)}
-			<form method="POST" action="?/unsave">
-				<input type="hidden" name="eventId" value={item.eventId} />
-				<button type="submit" class="remove">Entfernen</button>
-			</form>
-		{/snippet}
-	</EventList>
-
-	{#if data.past.length > 0}
-		<h3>Vergangen</h3>
-		<EventList events={data.past} country="de">
+		<h3>Kommend</h3>
+		<EventList events={data.upcoming} country="de">
 			{#snippet itemExtra(item)}
 				<form method="POST" action="?/unsave">
 					<input type="hidden" name="eventId" value={item.eventId} />
@@ -98,8 +88,20 @@
 				</form>
 			{/snippet}
 		</EventList>
-	{/if}
-</section>
+
+		{#if data.past.length > 0}
+			<h3>Vergangen</h3>
+			<EventList events={data.past} country="de">
+				{#snippet itemExtra(item)}
+					<form method="POST" action="?/unsave">
+						<input type="hidden" name="eventId" value={item.eventId} />
+						<button type="submit" class="remove">Entfernen</button>
+					</form>
+				{/snippet}
+			</EventList>
+		{/if}
+	</section>
+</main>
 
 <style>
 	.lead {

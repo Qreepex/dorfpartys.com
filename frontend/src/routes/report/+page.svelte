@@ -53,10 +53,10 @@
 	);
 </script>
 
-<article class="max-w-2xl">
+<main class="mx-auto max-w-[90ch]">
 	<header class="mb-8">
 		<h1>Inhalte melden</h1>
-		<p class="mt-2 text-muted">
+		<p class="text-muted">
 			Wenn Sie Inhalte auf dorfpartys.com entdecken, die gegen unsere Nutzungsbedingungen verstoßen
 			oder rechtswidrig sind, können Sie diese hier melden. Wir werden Ihren Bericht überprüfen und
 			angemessen reagieren.
@@ -270,24 +270,9 @@
 			</FormGrid>
 		</form>
 	{/if}
-</article>
+</main>
 
 <style>
-	article {
-		margin: 3rem auto;
-		padding: 0 1rem;
-	}
-
-	h1 {
-		font-size: clamp(1.75rem, 5vw, 2.5rem);
-		line-height: 1.1;
-		font-weight: 600;
-	}
-
-	p {
-		line-height: 1.6;
-	}
-
 	textarea {
 		width: 100%;
 		padding: 0.75rem;

@@ -1,8 +1,8 @@
 import { requireModerator } from '$lib/server/require-auth.js';
-import type { PageServerLoad, Actions } from './$types.js';
+import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const user = await requireModerator(locals.trpc, url.pathname);
+	await requireModerator(locals.trpc, url.pathname);
 	const requests = await locals.trpc.adminVerification.listPending.query();
 	return { requests };
 };

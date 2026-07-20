@@ -29,7 +29,7 @@
 	<meta name="robots" content="noindex,nofollow" />
 </svelte:head>
 
-<div>
+<main class="mx-auto max-w-[90ch]">
 	<h1>Mein Profil</h1>
 
 	{#if form?.success}
@@ -203,4 +203,4 @@
 			{/each}
 		</ul>
 	{/if}
-</div>
+</main>
