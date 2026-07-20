@@ -5,7 +5,7 @@ export interface Event {
 	slug: string | null; // vergeben erst beim Approve (AGENTS.md 1.7/5)
 	title: string;
 	organizerUserId: string;
-	description: string;
+	description: string | null;
 	startDate: string;
 	endDate: string;
 	bundeslandId: string;

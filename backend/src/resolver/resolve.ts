@@ -91,8 +91,8 @@ export async function resolve(
     total,
     futureCount: futureResults.length,
     pastCount: pastResults.length,
-    // noindex für absolut leere Filter (0 zukünftig + 0 archiv), ansonsten index
-    indexable: hasAnyEvents,
+    // noindex für absolut leere Filter (0 zukünftig + 0 archiv), außer Country-/Bundesland-Ebene (immer indexierbar)
+    indexable: hasAnyEvents || (!classified.kreisId && !classified.partyArtId),
     ogImageUrl,
     // Navigation tree wird vom tRPC-Router enriched (siehe resolver.ts router)
     navigationTree: undefined,

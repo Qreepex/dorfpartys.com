@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-
 	interface Crumb {
 		name: string;
 		href: string;
@@ -19,9 +17,7 @@
 		{#if i === items.length - 1}
 			<span aria-current="page">{crumb.name}</span>
 		{:else}
-			<a class="text-muted no-underline hover:text-primary" href={resolve(crumb.href)}
-				>{crumb.name}</a
-			>
+			<a class="text-muted no-underline hover:text-primary" href={crumb.href}>{crumb.name}</a>
 		{/if}
 	{/each}
 </nav>

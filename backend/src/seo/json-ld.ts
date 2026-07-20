@@ -2,7 +2,7 @@ import { SITE_URL } from "@dorfpartys/shared";
 
 export interface EventJsonLdInput {
   title: string;
-  description: string;
+  description?: string | null;
   startDate: Date;
   endDate: Date;
   addressDescription: string;
@@ -19,7 +19,7 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
     "@context": "https://schema.org",
     "@type": "Event",
     name: input.title,
-    description: input.description,
+    ...(input.description ? { description: input.description } : {}),
     startDate: input.startDate.toISOString(),
     endDate: input.endDate.toISOString(),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",

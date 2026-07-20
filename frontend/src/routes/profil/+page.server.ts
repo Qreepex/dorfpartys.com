@@ -6,7 +6,8 @@ import type { Actions, PageServerLoad } from './$types.js';
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals.trpc, url.pathname);
 	const { profile, links } = await locals.trpc.users.getProfile.query({ userId: user.id });
-	return { profile, links };
+	const pendingNominations = await locals.trpc.users.pendingOrganizerNominations.query();
+	return { profile, links, pendingNominations };
 };
 
 export const actions: Actions = {
@@ -50,5 +51,33 @@ export const actions: Actions = {
 				verificationError: error?.message || 'Verifizierung konnte nicht angefordert werden.'
 			});
 		}
+	},
+
+	// Bestätigen/Ablehnen einer Organizer-Nominierung (AGENTS.md 5.3) - der
+	// nominierte Profil-Inhaber entscheidet selbst, alternativ ein Moderator.
+	confirmNomination: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = String(formData.get('id') ?? '');
+		try {
+			await locals.trpc.organizerNominations.confirm.mutate({ id });
+		} catch (error: any) {
+			return fail(400, {
+				nominationError: error?.message || 'Bestätigung fehlgeschlagen.'
+			});
+		}
+		return { nominationHandled: true };
+	},
+
+	rejectNomination: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = String(formData.get('id') ?? '');
+		try {
+			await locals.trpc.organizerNominations.reject.mutate({ id });
+		} catch (error: any) {
+			return fail(400, {
+				nominationError: error?.message || 'Ablehnen fehlgeschlagen.'
+			});
+		}
+		return { nominationHandled: true };
 	}
 };

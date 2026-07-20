@@ -1,14 +1,22 @@
 <script lang="ts">
-	import { EventList, VerifiedBadge } from '$lib/components/index.js';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { Button, EventList, VerifiedBadge } from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
 	import { SITE_URL, buildOrganizerUrl } from '@dorfpartys/shared';
-	import type { PageData } from './$types.js';
+	import type { ActionData, PageData } from './$types.js';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let profile = $derived(data.profile);
 	let links = $derived(data.links);
 	let upcoming = $derived(data.upcoming);
 	let past = $derived(data.past);
+
+	const loginHref = $derived(
+		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
+	);
+	let showClaimForm = $state(false);
+	let claimReason = $state('');
 
 	const displayName = $derived(profile.displayName ?? 'Veranstalter');
 	const canonical = $derived(`${SITE_URL}${buildOrganizerUrl(profile.slug ?? '')}`);
@@ -72,6 +80,57 @@
 
 	{#if profile.bio}
 		<p class="max-w-[60ch] leading-relaxed text-muted">{profile.bio}</p>
+	{/if}
+
+	{#if profile.isGhost}
+		<div class="mb-8 max-w-[50ch] border border-border p-4">
+			<p class="mb-2 font-semibold">Gehört dieses Profil zu dir?</p>
+			<p class="mb-3 text-sm text-muted">
+				Dieser Veranstalter wurde von jemand anderem angelegt und ist noch nicht registriert. Als
+				verifizierter Veranstalter kannst du das Profil beanspruchen - alle Veranstaltungen werden
+				dann auf deinen Account übertragen.
+			</p>
+
+			{#if form?.claimed || data.claimStatus === 'pending'}
+				<p class="text-sm text-text">
+					Deine Anfrage zur Übernahme dieses Profils wurde gesendet und wird geprüft.
+				</p>
+			{:else if !data.currentUserId}
+				<Button href={loginHref}>Einloggen, um dieses Profil zu beanspruchen</Button>
+			{:else if !data.ownVerified}
+				<p class="text-sm text-text">
+					Verifiziere zuerst deinen eigenen Account, um Profile beanspruchen zu können.
+					<a href={resolve('/profil')} class="text-primary hover:underline">Jetzt verifizieren →</a>
+				</p>
+			{:else if !showClaimForm}
+				<Button variant="secondary" onclick={() => (showClaimForm = true)}>
+					Profil beanspruchen
+				</Button>
+			{:else}
+				<form method="POST" action="?/claimAccount">
+					<input type="hidden" name="ghostUserId" value={profile.userId} />
+					<label class="field-label" for="claim-account-reason"
+						>Warum sollte dieses Profil dir gehören? (optional)</label
+					>
+					<textarea
+						id="claim-account-reason"
+						name="reason"
+						class="field-control mt-2 w-full"
+						rows="3"
+						maxlength="1000"
+						bind:value={claimReason}></textarea>
+					{#if form?.claimError}
+						<p class="mt-2 text-[0.85rem] text-secondary">{form.claimError}</p>
+					{/if}
+					<div class="mt-3 flex gap-2">
+						<Button type="submit">Anfrage senden</Button>
+						<Button type="button" variant="ghost" onclick={() => (showClaimForm = false)}
+							>Abbrechen</Button
+						>
+					</div>
+				</form>
+			{/if}
+		</div>
 	{/if}
 
 	{#if profile.websiteUrl || profile.instagramUrl || links.length > 0}

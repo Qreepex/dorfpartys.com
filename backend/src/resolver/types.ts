@@ -54,6 +54,10 @@ export interface TaxonomyRepository {
     limit?: number,
   ): Promise<EventListItem[]>;
   // Navigation tree: sub-categories with event counts
+  listBundeslaenderForCountry(
+    country: Country,
+    filters?: EventFilterIds,
+  ): Promise<NavigationItem[]>;
   listKreiseForBundesland(
     country: Country,
     bundeslandId: string,

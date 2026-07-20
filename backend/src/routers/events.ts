@@ -17,13 +17,18 @@ import {
   event,
   eventLink,
   eventPhoto,
+  organizerNomination,
+  savedEvent,
+  user,
+  userProfile,
   kreis,
   partyArt,
-  savedEvent,
-  userProfile,
 } from "../db/schema.js";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "../seo/index.js";
-import { generateUniqueEventSlug } from "../slug/index.js";
+import {
+  generateUniqueEventSlug,
+  generateUniqueOrganizerSlug,
+} from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { sanitizeInput, sanitizeText } from "../sanitization/index.js";
 import {
@@ -53,34 +58,136 @@ async function assertKreisBelongsToBundesland(
   }
 }
 
-/**
- * Validiert einen Veranstalter (User-ID) und gibt den verifizierten Status zurück.
- * Wirft einen Fehler, wenn der User nicht existiert oder kein öffentliches Profil hat.
- */
-async function validateOrganizerUser(
-  db: Database,
-  organizerUserId: string | null,
-): Promise<boolean> {
-  if (!organizerUserId) {
-    return false;
-  }
+type OrganizerResolution = {
+  organizerUserId: string;
+  organizerName: null;
+  organizerVerified: boolean;
+  organizerConfirmed: boolean;
+  pendingNomination: {
+    nominatedUserId: string;
+    nominatedDisplayNameSnapshot: string | null;
+  } | null;
+};
 
+async function loadOrganizerProfile(db: Database, organizerUserId: string) {
   const [row] = await db
     .select({
       isPublic: userProfile.isPublic,
       verifiedAt: userProfile.verifiedAt,
+      displayName: userProfile.displayName,
+      isGhost: user.isGhost,
     })
     .from(userProfile)
+    .innerJoin(user, eq(user.id, userProfile.userId))
     .where(eq(userProfile.userId, organizerUserId));
+  return row ?? null;
+}
 
-  if (!row?.isPublic) {
+/**
+ * Löst die Veranstalter-Auswahl beim Eintragen einer Veranstaltung auf
+ * (AGENTS.md 5.3): sich selbst, ein bestehendes Profil (echt oder Ghost) oder
+ * ein neuer Ghost-Account für einen bislang nicht registrierten Veranstalter.
+ * Bestehende, fremde Profile werden nur vorläufig zugewiesen - die endgültige
+ * Bestätigung passiert über organizer_nomination.
+ */
+async function resolveOrganizerAssignment(
+  db: Database,
+  currentUserId: string,
+  organizerUserId: string | null,
+  sanitizedOrganizerName: string | null,
+): Promise<OrganizerResolution> {
+  if (organizerUserId) {
+    const target = await loadOrganizerProfile(db, organizerUserId);
+    if (!target?.isPublic) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Der ausgewählte Veranstalter hat kein öffentliches Profil",
+      });
+    }
+
+    if (organizerUserId === currentUserId) {
+      return {
+        organizerUserId,
+        organizerName: null,
+        organizerVerified: !!target.verifiedAt,
+        organizerConfirmed: true,
+        pendingNomination: null,
+      };
+    }
+
+    if (target.isGhost) {
+      // Ghost-Accounts haben keinen Inhaber, der zustimmen müsste.
+      return {
+        organizerUserId,
+        organizerName: null,
+        organizerVerified: false,
+        organizerConfirmed: true,
+        pendingNomination: null,
+      };
+    }
+
+    // Fremdes, echtes Profil - muss vom Inhaber oder einem Moderator/Admin
+    // bestätigt werden (organizer_nomination), bevor es final ist.
+    return {
+      organizerUserId,
+      organizerName: null,
+      organizerVerified: false,
+      organizerConfirmed: false,
+      pendingNomination: {
+        nominatedUserId: organizerUserId,
+        nominatedDisplayNameSnapshot: target.displayName ?? null,
+      },
+    };
+  }
+
+  if (sanitizedOrganizerName) {
+    // Kein bestehendes Profil ausgewählt - neuen Ghost-Account anlegen
+    // (AGENTS.md 5: "quasi ein Ghost Account", claimbar über /veranstalter/{slug}/).
+    const [ghost] = await db
+      .insert(user)
+      .values({
+        authentikSubject: null,
+        email: null,
+        role: "user",
+        isGhost: true,
+        onboardingCompletedAt: new Date(),
+      })
+      .returning({ id: user.id });
+    const slug = await generateUniqueOrganizerSlug(
+      db,
+      sanitizedOrganizerName,
+      ghost.id,
+    );
+    await db.insert(userProfile).values({
+      userId: ghost.id,
+      slug,
+      isPublic: true,
+      displayName: sanitizedOrganizerName,
+    });
+    return {
+      organizerUserId: ghost.id,
+      organizerName: null,
+      organizerVerified: false,
+      organizerConfirmed: true,
+      pendingNomination: null,
+    };
+  }
+
+  // Kein Input - Fallback auf die einreichende Person selbst.
+  const self = await loadOrganizerProfile(db, currentUserId);
+  if (!self?.isPublic) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: "Der ausgewählte Veranstalter hat kein öffentliches Profil",
     });
   }
-
-  return !!row.verifiedAt;
+  return {
+    organizerUserId: currentUserId,
+    organizerName: null,
+    organizerVerified: !!self.verifiedAt,
+    organizerConfirmed: true,
+    pendingNomination: null,
+  };
 }
 
 /**
@@ -90,7 +197,7 @@ function sanitizeEventInput(input: Record<string, any>) {
   return {
     ...input,
     title: sanitizeText(input.title),
-    description: sanitizeText(input.description),
+    description: input.description ? sanitizeText(input.description) : null,
     addressDescription: sanitizeText(input.addressDescription),
     organizerName: input.organizerName
       ? sanitizeText(input.organizerName)
@@ -165,30 +272,12 @@ export const eventsRouter = router({
 
       const sanitized = sanitizeEventInput(input);
 
-      // Organizer-Validierung und Verifizierungsstatus
-      let organizerUserId: string | null = null;
-      let organizerName: string | null = null;
-      let organizerVerified = false;
-
-      if (input.organizerUserId) {
-        organizerUserId = input.organizerUserId;
-        organizerVerified = await validateOrganizerUser(
-          ctx.db,
-          organizerUserId,
-        );
-      } else if (input.organizerName) {
-        organizerName = sanitized.organizerName || null;
-        // Freitext-Veranstalter sind nie automatisch verifiziert
-        organizerVerified = false;
-      } else {
-        // Fallback auf den aktuellen Nutzer (wird beim Create vom Frontend normalerweise
-        // als organizerUserId übergeben, aber als Sicherheitsmaßnahme hier auch als Fallback)
-        organizerUserId = ctx.user.id;
-        organizerVerified = await validateOrganizerUser(
-          ctx.db,
-          organizerUserId,
-        );
-      }
+      const organizer = await resolveOrganizerAssignment(
+        ctx.db,
+        ctx.user.id,
+        input.organizerUserId ?? null,
+        sanitized.organizerName || null,
+      );
 
       const [row] = await ctx.db
         .insert(event)
@@ -197,9 +286,10 @@ export const eventsRouter = router({
           // Anlegen unter diesem Pfad hochgeladen wurden (AGENTS.md 7.1).
           ...(input.id ? { id: input.id } : {}),
           title: sanitized.title,
-          organizerUserId,
-          organizerName,
-          organizerVerified,
+          organizerUserId: organizer.organizerUserId,
+          organizerName: organizer.organizerName,
+          organizerVerified: organizer.organizerVerified,
+          organizerConfirmed: organizer.organizerConfirmed,
           description: sanitized.description,
           startDate: new Date(input.startDate),
           endDate: new Date(input.endDate),
@@ -218,6 +308,16 @@ export const eventsRouter = router({
           createdBy: ctx.user.id,
         })
         .returning({ id: event.id });
+
+      if (organizer.pendingNomination) {
+        await ctx.db.insert(organizerNomination).values({
+          eventId: row.id,
+          nominatedUserId: organizer.pendingNomination.nominatedUserId,
+          nominatedByUserId: ctx.user.id,
+          nominatedDisplayNameSnapshot:
+            organizer.pendingNomination.nominatedDisplayNameSnapshot,
+        });
+      }
 
       await replacePhotosAndLinks(
         ctx.db,
@@ -239,7 +339,12 @@ export const eventsRouter = router({
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      if (existing.createdBy !== ctx.user.id) {
+      // Bearbeiten dürfen sowohl die einreichende Person als auch der aktuell
+      // hinterlegte Veranstalter (z.B. nach einem genehmigten Claim, AGENTS.md 5.4).
+      if (
+        existing.createdBy !== ctx.user.id &&
+        existing.organizerUserId !== ctx.user.id
+      ) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -395,6 +500,43 @@ export const eventsRouter = router({
       return { id: input.id };
     }),
 
+  // Lädt ein Event für die Bearbeitung über /veranstaltung-eintragen?eventId=
+  // (AGENTS.md TODO "Veranstaltung bearbeiten"). Zugriff wie bei `update`: die
+  // einreichende Person oder der aktuell hinterlegte Veranstalter.
+  getForEdit: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const [row] = await ctx.db
+        .select()
+        .from(event)
+        .where(eq(event.id, input.id));
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      if (
+        row.createdBy !== ctx.user.id &&
+        row.organizerUserId !== ctx.user.id
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      const photos = await ctx.db
+        .select()
+        .from(eventPhoto)
+        .where(eq(eventPhoto.eventId, row.id))
+        .orderBy(eventPhoto.position);
+
+      return {
+        ...row,
+        startDate: row.startDate.toISOString(),
+        endDate: row.endDate.toISOString(),
+        photos: photos.map((p) => ({
+          ...p,
+          url: buildPublicStorageUrl(p.s3Key),
+        })),
+      };
+    }),
+
   getBySlug: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES), slug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
@@ -424,6 +566,7 @@ export const eventsRouter = router({
                   displayName: userProfile.displayName,
                   slug: userProfile.slug,
                   verifiedAt: userProfile.verifiedAt,
+                  avatarS3Key: userProfile.avatarS3Key,
                 })
                 .from(userProfile)
                 .where(eq(userProfile.userId, row.organizerUserId))
@@ -465,6 +608,9 @@ export const eventsRouter = router({
         organizerProfile?.displayName ?? row.organizerName ?? "Veranstalter";
       const organizerUrl = organizerProfile?.slug
         ? buildOrganizerUrl(organizerProfile.slug)
+        : null;
+      const organizerAvatarUrl = organizerProfile?.avatarS3Key
+        ? buildPublicStorageUrl(organizerProfile.avatarS3Key)
         : null;
       const organizerVerified = row.organizerVerified;
 
@@ -526,6 +672,7 @@ export const eventsRouter = router({
         links,
         organizerName,
         organizerSlug: organizerProfile?.slug ?? null,
+        organizerAvatarUrl,
         organizerVerified,
         partyArtName: taxonomyRow?.partyArtName ?? "",
         bundeslandSlug: taxonomyRow?.bundeslandSlug ?? null,

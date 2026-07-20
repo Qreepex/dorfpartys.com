@@ -59,6 +59,7 @@ export interface ResolveResult {
 	ogImageUrl?: string;
 	/** Navigation tree: available sub-categories with event counts */
 	navigationTree?: {
+		bundeslaender?: NavigationItem[];
 		kreise?: NavigationItem[];
 		partyArten?: NavigationItem[];
 	};

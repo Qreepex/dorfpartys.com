@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -91,14 +91,20 @@ export const slugRegistry = pgTable("slug_registry", {
 
 export const user = pgTable("user", {
   id: uuid("id").primaryKey().defaultRandom(),
-  authentikSubject: text("authentik_subject").notNull().unique(),
-  email: text("email").notNull().unique(),
+  // Ghost-Accounts (siehe unten, `isGhost`) haben keinen echten Authentik-Login
+  // und daher weder Subject noch E-Mail.
+  authentikSubject: text("authentik_subject").unique(),
+  email: text("email").unique(),
   role: userRoleEnum("role").notNull().default("user"),
   // null = Registrierungs-/Onboarding-Flow nach dem ersten Authentik-Login noch
   // nicht durchlaufen bzw. bewusst übersprungen (siehe auth/callback).
   onboardingCompletedAt: timestamp("onboarding_completed_at", {
     withTimezone: true,
   }),
+  // Platzhalter-Account für nicht registrierte Veranstalter (AGENTS.md 5.4/5):
+  // beim Eintragen einer Veranstaltung per Freitext-Name angelegt, kann später
+  // von einem verifizierten echten Account übernommen werden (account_claim).
+  isGhost: boolean("is_ghost").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -136,6 +142,10 @@ export const userProfile = pgTable(
     // Normalisierte Handles (lowercase, @-frei) für Uniqueness-Checks across Users
     verifiedInstagramHandle: text("verified_instagram_handle"),
     verifiedTiktokHandle: text("verified_tiktok_handle"),
+    // Gesetzt, wenn dieses (Ghost-)Profil per account_claim in ein anderes
+    // Profil übernommen wurde. Slug/Profil bleiben als dauerhafter 301-Redirect
+    // auf das Zielprofil erhalten (SEO-Werterhalt alter Links).
+    mergedIntoUserId: uuid("merged_into_user_id").references(() => user.id),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -172,7 +182,14 @@ export const event = pgTable("event", {
   organizerName: text("organizer_name"),
   // Gibt an, ob der aktuelle Veranstalter (User oder Name) verifiziert ist
   organizerVerified: boolean("organizer_verified").notNull().default(false),
-  description: text("description").notNull(),
+  // false solange eine Organizer-Nominierung für ein fremdes, reales Profil
+  // aussteht (AGENTS.md 5.3/organizer_nomination) - bei Selbst-Eintrag oder
+  // Ghost-Account-Organizer immer true (kein Inhaber, der zustimmen müsste).
+  organizerConfirmed: boolean("organizer_confirmed").notNull().default(true),
+  // Optional - Werbetexte für Veranstaltungen können urheberrechtlich
+  // geschützt sein, Einreicher sollen nicht zum Kopieren fremder Texte
+  // gezwungen werden.
+  description: text("description"),
   startDate: timestamp("start_date", { withTimezone: true }).notNull(),
   endDate: timestamp("end_date", { withTimezone: true }).notNull(),
   bundeslandId: uuid("bundesland_id")
@@ -261,10 +278,75 @@ export const eventClaim = pgTable(
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex("event_claim_event_pending_idx").on(
-      t.eventId,
-      t.claimedByUserId,
-    ),
+    // Partiell auf "pending", damit ein abgelehnter/genehmigter Claim keine
+    // erneute Anfrage vom selben User blockiert (AGENTS.md 5.4).
+    uniqueIndex("event_claim_event_pending_idx")
+      .on(t.eventId, t.claimedByUserId)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+);
+
+// Nominierung eines bestehenden, fremden Profils als Veranstalter beim
+// Eintragen einer Veranstaltung (AGENTS.md 5.3) - muss vom nominierten Profil
+// selbst oder von einem Moderator/Admin bestätigt werden, bevor das Event als
+// von diesem Veranstalter angezeigt wird (event.organizer_confirmed).
+export const organizerNomination = pgTable(
+  "organizer_nomination",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    nominatedUserId: uuid("nominated_user_id")
+      .notNull()
+      .references(() => user.id),
+    nominatedByUserId: uuid("nominated_by_user_id")
+      .notNull()
+      .references(() => user.id),
+    // Anzeigename des Nominierten zum Zeitpunkt der Nominierung - Fallback für
+    // event.organizer_name, falls die Nominierung abgelehnt wird.
+    nominatedDisplayNameSnapshot: text("nominated_display_name_snapshot"),
+    status: eventClaimStatusEnum("status").notNull().default("pending"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    reviewedBy: uuid("reviewed_by").references(() => user.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    // Ein Event hat höchstens eine offene Nominierung gleichzeitig.
+    uniqueIndex("organizer_nomination_event_pending_idx")
+      .on(t.eventId)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+);
+
+// Übernahme eines Ghost-Accounts (nicht registrierter Veranstalter, siehe
+// user.is_ghost) durch einen verifizierten, echten Veranstalter (AGENTS.md
+// 5/5.4 "Gehört das Profil zu dir?"). Nach Genehmigung werden alle Events des
+// Ghost-Accounts auf den übernehmenden Account umgehängt.
+export const accountClaim = pgTable(
+  "account_claim",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ghostUserId: uuid("ghost_user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    claimedByUserId: uuid("claimed_by_user_id")
+      .notNull()
+      .references(() => user.id),
+    status: eventClaimStatusEnum("status").notNull().default("pending"),
+    reason: text("reason"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    reviewedBy: uuid("reviewed_by").references(() => user.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("account_claim_ghost_pending_idx")
+      .on(t.ghostUserId, t.claimedByUserId)
+      .where(sql`${t.status} = 'pending'`),
   ],
 );
 
@@ -347,10 +429,23 @@ export const userRelations = relations(user, ({ one, many }) => ({
   eventClaimsReviewed: many(eventClaim, {
     relationName: "eventClaimsReviewed",
   }),
+  organizerNominationsReceived: many(organizerNomination, {
+    relationName: "organizerNominationsReceived",
+  }),
+  organizerNominationsInitiated: many(organizerNomination, {
+    relationName: "organizerNominationsInitiated",
+  }),
+  accountClaimsInitiated: many(accountClaim, {
+    relationName: "accountClaimsInitiated",
+  }),
 }));
 
 export const userProfileRelations = relations(userProfile, ({ one }) => ({
   user: one(user, { fields: [userProfile.userId], references: [user.id] }),
+  mergedIntoUser: one(user, {
+    fields: [userProfile.mergedIntoUserId],
+    references: [user.id],
+  }),
 }));
 
 export const userLinkRelations = relations(userLink, ({ one }) => ({
@@ -375,6 +470,7 @@ export const eventRelations = relations(event, ({ one, many }) => ({
   photos: many(eventPhoto),
   links: many(eventLink),
   claims: many(eventClaim),
+  organizerNominations: many(organizerNomination),
 }));
 
 export const eventPhotoRelations = relations(eventPhoto, ({ one }) => ({
@@ -396,6 +492,46 @@ export const eventClaimRelations = relations(eventClaim, ({ one }) => ({
     fields: [eventClaim.reviewedBy],
     references: [user.id],
     relationName: "eventClaimsReviewed",
+  }),
+}));
+
+export const organizerNominationRelations = relations(
+  organizerNomination,
+  ({ one }) => ({
+    event: one(event, {
+      fields: [organizerNomination.eventId],
+      references: [event.id],
+    }),
+    nominatedUser: one(user, {
+      fields: [organizerNomination.nominatedUserId],
+      references: [user.id],
+      relationName: "organizerNominationsReceived",
+    }),
+    nominatedByUser: one(user, {
+      fields: [organizerNomination.nominatedByUserId],
+      references: [user.id],
+      relationName: "organizerNominationsInitiated",
+    }),
+    reviewedByUser: one(user, {
+      fields: [organizerNomination.reviewedBy],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const accountClaimRelations = relations(accountClaim, ({ one }) => ({
+  ghostUser: one(user, {
+    fields: [accountClaim.ghostUserId],
+    references: [user.id],
+  }),
+  claimedBy: one(user, {
+    fields: [accountClaim.claimedByUserId],
+    references: [user.id],
+    relationName: "accountClaimsInitiated",
+  }),
+  reviewedByUser: one(user, {
+    fields: [accountClaim.reviewedBy],
+    references: [user.id],
   }),
 }));
 

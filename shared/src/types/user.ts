@@ -2,10 +2,14 @@ import type { UserRole, VerificationMethod } from '../constants/index.js';
 
 export interface User {
 	id: string;
-	authentikSubject: string;
+	/** null bei Ghost-Accounts (nicht registrierte Veranstalter, siehe isGhost). */
+	authentikSubject: string | null;
+	email: string | null;
 	role: UserRole;
 	/** null = Onboarding-Flow nach dem Login noch nicht abgeschlossen/übersprungen. */
 	onboardingCompletedAt: string | null;
+	/** Platzhalter-Account für einen nicht registrierten Veranstalter (AGENTS.md 5.4). */
+	isGhost: boolean;
 	createdAt: string;
 }
 

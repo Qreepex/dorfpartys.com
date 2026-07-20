@@ -36,6 +36,44 @@
 		<p class="mb-4 border border-primary bg-bg-alt p-4 text-text">Profil gespeichert.</p>
 	{/if}
 
+	{#if data.pendingNominations.length > 0}
+		<div class="mb-8 border-t border-border pt-6">
+			<h2 class="mb-3">Ausstehende Veranstalter-Zuordnungen</h2>
+			<p class="mb-4 text-sm text-muted">
+				Jemand hat dich beim Eintragen einer Veranstaltung als Veranstalter angegeben. Bestätige das
+				nur, wenn die Veranstaltung wirklich von dir ist.
+			</p>
+			{#if form?.nominationError}
+				<p class="mb-4 text-sm text-red-600">{form.nominationError}</p>
+			{/if}
+			<ul class="space-y-3">
+				{#each data.pendingNominations as nomination (nomination.id)}
+					<li class="flex flex-wrap items-center justify-between gap-3 border border-border p-4">
+						<a
+							href={resolve('/[country]/veranstaltung/[slug]', {
+								country: nomination.country,
+								slug: nomination.eventSlug ?? ''
+							})}
+							class="font-semibold text-primary no-underline hover:underline"
+						>
+							{nomination.eventTitle}
+						</a>
+						<div class="flex gap-2">
+							<form method="POST" action="?/confirmNomination" style="display:inline">
+								<input type="hidden" name="id" value={nomination.id} />
+								<Button type="submit" variant="secondary">Bestätigen</Button>
+							</form>
+							<form method="POST" action="?/rejectNomination" style="display:inline">
+								<input type="hidden" name="id" value={nomination.id} />
+								<Button type="submit" variant="secondary">Ablehnen</Button>
+							</form>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+
 	{#if organizerHref}
 		<p class="mb-6 text-muted">
 			Deine öffentliche Veranstalter-Seite:

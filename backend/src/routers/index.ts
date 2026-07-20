@@ -1,6 +1,9 @@
 import { router } from "../trpc/trpc.js";
+import { accountClaimsRouter } from "./account-claims.js";
 import { adminVerificationRouter } from "./admin-verification.js";
+import { eventClaimsRouter } from "./event-claims.js";
 import { eventsRouter } from "./events.js";
+import { organizerNominationsRouter } from "./organizer-nominations.js";
 import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
 import { savedEventsRouter } from "./saved-events.js";
@@ -13,6 +16,9 @@ import { usersRouter } from "./users.js";
 export const appRouter = router({
   resolver: resolverRouter,
   events: eventsRouter,
+  eventClaims: eventClaimsRouter,
+  organizerNominations: organizerNominationsRouter,
+  accountClaims: accountClaimsRouter,
   taxonomy: taxonomyRouter,
   users: usersRouter,
   uploads: uploadsRouter,

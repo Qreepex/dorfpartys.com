@@ -4,13 +4,14 @@ import {
   type UpdateProfileInput,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
   bundesland,
   event,
   kreis,
+  organizerNomination,
   partyArt,
   user,
   userLink,
@@ -165,6 +166,69 @@ export const usersRouter = router({
       return { profile: profileRow ?? null, links };
     }),
 
+  // Autofill-Suche für die Veranstalter-Auswahl beim Eintragen einer
+  // Veranstaltung (AGENTS.md 5.3) - findet echte öffentliche Profile und
+  // Ghost-Accounts, aber keine bereits übernommenen (mergedIntoUserId) Profile.
+  searchOrganizers: publicProcedure
+    .input(z.object({ query: z.string().trim().min(1).max(100) }))
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db
+        .select({
+          userId: userProfile.userId,
+          slug: userProfile.slug,
+          displayName: userProfile.displayName,
+          avatarS3Key: userProfile.avatarS3Key,
+          verifiedAt: userProfile.verifiedAt,
+          isGhost: user.isGhost,
+        })
+        .from(userProfile)
+        .innerJoin(user, eq(user.id, userProfile.userId))
+        .where(
+          and(
+            eq(userProfile.isPublic, true),
+            isNull(userProfile.mergedIntoUserId),
+            ilike(userProfile.displayName, `%${input.query}%`),
+          ),
+        )
+        .orderBy(desc(userProfile.verifiedAt))
+        .limit(10);
+
+      return rows.map((row) => ({
+        userId: row.userId,
+        slug: row.slug,
+        displayName: row.displayName,
+        avatarUrl: row.avatarS3Key
+          ? buildPublicStorageUrl(row.avatarS3Key)
+          : null,
+        verified: !!row.verifiedAt,
+        isGhost: row.isGhost,
+      }));
+    }),
+
+  // Offene Organizer-Nominierungen, bei denen der eingeloggte User selbst
+  // nominiert wurde - Anzeige/Bestätigung auf /profil (AGENTS.md 5.3).
+  pendingOrganizerNominations: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .select({
+        id: organizerNomination.id,
+        requestedAt: organizerNomination.requestedAt,
+        eventId: event.id,
+        eventTitle: event.title,
+        eventSlug: event.slug,
+        country: bundesland.country,
+      })
+      .from(organizerNomination)
+      .innerJoin(event, eq(organizerNomination.eventId, event.id))
+      .innerJoin(bundesland, eq(event.bundeslandId, bundesland.id))
+      .where(
+        and(
+          eq(organizerNomination.nominatedUserId, ctx.user.id),
+          eq(organizerNomination.status, "pending"),
+        ),
+      )
+      .orderBy(organizerNomination.requestedAt);
+  }),
+
   // Öffentliche Veranstalter-Seite //veranstalter/{slug}/ (AGENTS.md 3/8).
   getProfileBySlug: publicProcedure
     .input(z.object({ slug: z.string().min(1) }))
@@ -184,12 +248,29 @@ export const usersRouter = router({
           verifiedAt: userProfile.verifiedAt,
           verificationMethod: userProfile.verificationMethod,
           updatedAt: userProfile.updatedAt,
+          mergedIntoUserId: userProfile.mergedIntoUserId,
+          isGhost: user.isGhost,
         })
         .from(userProfile)
+        .innerJoin(user, eq(user.id, userProfile.userId))
         .where(eq(userProfile.slug, input.slug));
+      if (!profileRow) return null;
+
+      // Ghost-Profil wurde übernommen (AGENTS.md 5.4) - dauerhafter Redirect
+      // auf das neue Profil statt 404, erhält den SEO-Wert alter Links.
+      if (profileRow.mergedIntoUserId) {
+        const [target] = await ctx.db
+          .select({ slug: userProfile.slug })
+          .from(userProfile)
+          .where(eq(userProfile.userId, profileRow.mergedIntoUserId));
+        if (target?.slug) {
+          return { redirect: target.slug } as const;
+        }
+      }
+
       // Private Profile sind unter ihrer URL nicht erreichbar (AGENTS.md
       // Abschnitt 3) - wie "nicht gefunden" behandelt, kein Hinweis auf Existenz.
-      if (!profileRow || !profileRow.isPublic) return null;
+      if (!profileRow.isPublic) return null;
 
       const [links, events] = await Promise.all([
         ctx.db

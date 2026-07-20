@@ -29,7 +29,10 @@ export const submitEventInputSchema = z
 		// weiterhin über die separate `id` unten arbeitet.
 		id: z.string().uuid().optional(),
 		title: z.string().trim().min(3).max(140),
-		description: z.string().trim().min(10).max(5000),
+		// Optional - Werbetexte für Veranstaltungen können urheberrechtlich
+		// geschützt sein, Einreicher sollen nicht zum Kopieren fremder Texte
+		// gezwungen werden. Wenn angegeben, weiterhin eine sinnvolle Mindestlänge.
+		description: z.string().trim().min(10).max(5000).optional(),
 		startDate: z.string().datetime({ offset: true }),
 		endDate: z.string().datetime({ offset: true }),
 		bundeslandId: z.string().uuid(),

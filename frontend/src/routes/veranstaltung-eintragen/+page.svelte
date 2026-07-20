@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { applyAction, deserialize } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
@@ -9,25 +10,123 @@
 		FormGrid,
 		RadioGroup,
 		TextInput,
-		Toggle
+		Toggle,
+		VerifiedBadge
 	} from '$lib/components/index.js';
 	import { SITE_URL } from '@dorfpartys/shared';
+	import type { ActionResult } from '@sveltejs/kit';
 	import type { ActionData, PageData } from './$types.js';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
+
+	let form = $state(initialForm);
+	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
+
+	async function handleSubmit(event: SubmitEvent) {
+		event.preventDefault();
+
+		if (organizerMode === 'myself' && !data.isProfilePublic) {
+			return;
+		}
+		if (organizerMode === 'profile' && !organizerUserId) {
+			organizerError = 'Bitte wähle ein Profil aus der Ergebnisliste aus.';
+			return;
+		}
+		organizerError = '';
+
+		const formEl = event.currentTarget as HTMLFormElement;
+		submitStatus = 'submitting';
+
+		try {
+			const response = await fetch(formEl.action, {
+				method: 'POST',
+				body: new FormData(formEl)
+			});
+			const result: ActionResult = deserialize(await response.text());
+
+			if (result.type === 'success') {
+				submitStatus = 'success';
+				form = result.data as ActionData;
+			} else if (result.type === 'failure') {
+				submitStatus = 'error';
+				form = result.data as ActionData;
+			} else {
+				submitStatus = 'idle';
+			}
+
+			await applyAction(result);
+		} catch {
+			submitStatus = 'error';
+		}
+	}
 
 	const loginHref = $derived(
 		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
 	);
 
+	let title = $state('');
+	let description = $state('');
+	let startDate = $state('');
+	let endDate = $state('');
 	let bundeslandId = $state('');
 	let kreisId = $state('');
+	let partyArtId = $state('');
+	let addressDescription = $state('');
 	let uploadedPhotoS3Key = $state<string | null>(null);
 
 	// Organizer selection state
 	let organizerMode = $state<'myself' | 'profile' | 'freetext'>('myself');
 	let organizerUserId = $state('');
 	let organizerName = $state('');
+
+	// Live-Suche für "Anderes öffentliches Profil" (AGENTS.md 5.3) - findet
+	// echte öffentliche Profile und Ghost-Accounts (nicht registrierte
+	// Veranstalter, die bereits von jemand anderem angelegt wurden).
+	type OrganizerSearchResult = {
+		userId: string;
+		displayName: string | null;
+		verified: boolean;
+		isGhost: boolean;
+	};
+	let organizerSearchQuery = $state('');
+	let organizerSearchResults = $state<OrganizerSearchResult[]>([]);
+	let organizerSearchLoading = $state(false);
+	let organizerSelectedLabel = $state('');
+	let organizerError = $state('');
+
+	$effect(() => {
+		const query = organizerSearchQuery.trim();
+		if (organizerUserId || query.length < 1) {
+			organizerSearchResults = [];
+			return;
+		}
+		const timer = setTimeout(async () => {
+			organizerSearchLoading = true;
+			try {
+				const response = await fetch(
+					`/veranstaltung-eintragen/organizer-search?q=${encodeURIComponent(query)}`
+				);
+				const json = await response.json();
+				organizerSearchResults = json.results ?? [];
+			} finally {
+				organizerSearchLoading = false;
+			}
+		}, 250);
+		return () => clearTimeout(timer);
+	});
+
+	function selectOrganizer(result: OrganizerSearchResult) {
+		organizerUserId = result.userId;
+		organizerSelectedLabel = result.displayName ?? 'Unbenannt';
+		organizerSearchResults = [];
+		organizerError = '';
+	}
+
+	function clearOrganizerSelection() {
+		organizerUserId = '';
+		organizerSelectedLabel = '';
+		organizerSearchQuery = '';
+	}
 
 	const bundeslandOptions = $derived(
 		data.bundeslaenderByCountry.flatMap((group) =>
@@ -48,7 +147,26 @@
 	);
 
 	const canonical = `${SITE_URL}/veranstaltung-eintragen`;
+
+	const requiredFieldsFilled = $derived(
+		title.trim().length >= 3 &&
+			!!startDate &&
+			!!endDate &&
+			!!bundeslandId &&
+			!!kreisId &&
+			!!partyArtId &&
+			addressDescription.trim().length >= 3
+	);
+	const organizerValid = $derived(
+		!data.isLoggedIn ||
+			(organizerMode === 'myself'
+				? data.isProfilePublic
+				: organizerMode === 'profile'
+					? !!organizerUserId
+					: !!organizerName.trim())
+	);
 	const canSubmit = $derived(data.isLoggedIn);
+	const formValid = $derived(requiredFieldsFilled && organizerValid);
 </script>
 
 <svelte:head>
@@ -68,7 +186,7 @@
 	<meta property="og:url" content={canonical} />
 </svelte:head>
 
-<article>
+<main class="mx-auto max-w-[90ch]">
 	<header>
 		<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
 			Kostenlos · Werbefrei · In 5 Minuten
@@ -115,16 +233,20 @@
 		</li>
 	</ul>
 
-	{#if form?.success}
-		<p class="mb-6 border border-primary bg-bg-alt p-4 text-text">
+	{#if submitStatus === 'success' || form?.success}
+		<p class="mb-6 flex items-center gap-2 border border-primary bg-bg-alt p-4 text-text">
+			<span class="text-primary" aria-hidden="true">✓</span>
 			Danke! Dein Event wurde zur redaktionellen Prüfung eingereicht und ist in Kürze sichtbar.
 		</p>
 	{/if}
 	{#if form?.error}
-		<p class="mb-6 border border-secondary bg-bg-alt p-4 text-text">{form.error}</p>
+		<p class="mb-6 flex items-center gap-2 border border-secondary bg-bg-alt p-4 text-text">
+			<span class="text-secondary" aria-hidden="true">✗</span>
+			{form.error}
+		</p>
 	{/if}
 
-	<form method="POST">
+	<form method="POST" action="?/submit" onsubmit={handleSubmit}>
 		<FormGrid>
 			<div class="sm:col-span-full">
 				<ImageUpload
@@ -144,21 +266,26 @@
 					minlength={3}
 					maxlength={140}
 					placeholder="z.B. Schützenfest Steinhorst"
+					bind:value={title}
 					error={form?.fieldErrors?.title?.[0]}
 				/>
 			</div>
 
 			<div class="sm:col-span-full">
-				<label class="field-label" for="description">Beschreibung *</label>
+				<label class="field-label" for="description">Beschreibung (optional)</label>
 				<textarea
 					class="field-control"
 					id="description"
 					name="description"
-					required
 					minlength="10"
 					maxlength="5000"
 					rows="5"
-					placeholder="Was erwartet die Gäste? Musik, Festzelt, Programm, Anfahrt..."></textarea>
+					placeholder="Was erwartet die Gäste? Musik, Festzelt, Programm, Anfahrt..."
+					bind:value={description}></textarea>
+				<p class="mt-1 text-xs text-muted">
+					Freiwillig - achte darauf, keine fremden Werbetexte zu kopieren, diese können
+					urheberrechtlich geschützt sein.
+				</p>
 				{#if form?.fieldErrors?.description}
 					<p class="field-error">{form.fieldErrors.description[0]}</p>
 				{/if}
@@ -172,11 +299,19 @@
 					type="datetime-local"
 					name="startDate"
 					required
+					bind:value={startDate}
 				/>
 			</div>
 			<div class="field">
 				<label class="field-label" for="endDate">Ende *</label>
-				<input class="field-control" id="endDate" type="datetime-local" name="endDate" required />
+				<input
+					class="field-control"
+					id="endDate"
+					type="datetime-local"
+					name="endDate"
+					required
+					bind:value={endDate}
+				/>
 				{#if form?.fieldErrors?.endDate}
 					<p class="field-error">{form.fieldErrors.endDate[0]}</p>
 				{/if}
@@ -207,6 +342,7 @@
 				name="partyArtId"
 				required
 				options={partyArtOptions}
+				bind:value={partyArtId}
 				placeholder="Bitte wählen"
 			/>
 
@@ -217,6 +353,7 @@
 				minlength={3}
 				maxlength={300}
 				placeholder="z.B. Dorfplatz, 23845 Steinhorst"
+				bind:value={addressDescription}
 			/>
 
 			<div class="field">
@@ -276,7 +413,6 @@
 							});
 							return opts;
 						})()}
-						disabled={!data.isProfilePublic && organizerMode === 'myself'}
 					/>
 
 					{#if !data.isProfilePublic && organizerMode === 'myself'}
@@ -290,12 +426,60 @@
 
 					{#if organizerMode === 'profile'}
 						<div class="mt-3">
-							<TextInput
-								label="Veranstalter suchen"
-								name="organizerProfileSearch"
-								placeholder="Name eingeben..."
-								bind:value={organizerName}
-							/>
+							{#if organizerSelectedLabel}
+								<p class="flex items-center gap-2 text-sm text-text">
+									Ausgewählt: <strong>{organizerSelectedLabel}</strong>
+									<button
+										type="button"
+										class="text-primary underline"
+										onclick={clearOrganizerSelection}
+									>
+										Ändern
+									</button>
+								</p>
+							{:else}
+								<TextInput
+									label="Veranstalter suchen"
+									name="organizerProfileSearch"
+									placeholder="Name eingeben..."
+									bind:value={organizerSearchQuery}
+								/>
+								{#if organizerSearchLoading}
+									<p class="mt-2 text-sm text-muted">Suche…</p>
+								{:else if organizerSearchResults.length > 0}
+									<ul class="mt-2 divide-y divide-border border border-border">
+										{#each organizerSearchResults as result (result.userId)}
+											<li>
+												<button
+													type="button"
+													class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-bg-alt"
+													onclick={() => selectOrganizer(result)}
+												>
+													<span>{result.displayName ?? 'Unbenannt'}</span>
+													{#if result.verified}
+														<VerifiedBadge title="Verifiziert" />
+													{/if}
+													{#if result.isGhost}
+														<span class="text-xs text-muted">(nicht registriert)</span>
+													{/if}
+												</button>
+											</li>
+										{/each}
+									</ul>
+								{:else if organizerSearchQuery.trim().length > 0}
+									<p class="mt-2 text-sm text-muted">
+										Kein Treffer. Trag den Namen stattdessen unter "Freitext-Name" ein, um einen
+										neuen Veranstalter-Eintrag anzulegen.
+									</p>
+								{/if}
+								{#if organizerError}
+									<p class="field-error mt-2">{organizerError}</p>
+								{/if}
+								<p class="mt-2 text-xs text-muted">
+									Wählst du ein fremdes, bereits registriertes Profil, muss dessen Inhaber oder ein
+									Moderator die Zuordnung erst bestätigen, bevor sie sichtbar wird.
+								</p>
+							{/if}
 						</div>
 					{/if}
 
@@ -332,7 +516,20 @@
 		{/if}
 
 		{#if canSubmit}
-			<Button type="submit">Kostenlos eintragen</Button>
+			<Button type="submit" disabled={submitStatus === 'submitting' || !formValid}>
+				{#if submitStatus === 'submitting'}
+					<span class="submit-spinner" aria-hidden="true"></span>
+					Wird gesendet...
+				{:else if submitStatus === 'success'}
+					<span aria-hidden="true">✓</span>
+					Eingereicht
+				{:else if submitStatus === 'error'}
+					<span aria-hidden="true">✗</span>
+					Erneut versuchen
+				{:else}
+					Kostenlos eintragen
+				{/if}
+			</Button>
 		{:else if data.isLoggedIn}
 			<p class="mt-4 text-[0.85rem] text-muted">
 				Du kannst Events einreichen, sobald du eingeloggt bist.
@@ -346,4 +543,21 @@
 			</div>
 		{/if}
 	</form>
-</article>
+</main>
+
+<style>
+	.submit-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid currentColor;
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+</style>

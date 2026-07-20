@@ -191,6 +191,49 @@ export function createDrizzleTaxonomyRepository(
       }));
     },
 
+    async listBundeslaenderForCountry(
+      country: Country,
+      filters?: EventFilterIds,
+    ): Promise<NavigationItem[]> {
+      const bundeslandList = await db
+        .select({
+          id: bundesland.id,
+          slug: bundesland.slug,
+          name: bundesland.name,
+        })
+        .from(bundesland)
+        .where(eq(bundesland.country, country));
+
+      const result: NavigationItem[] = [];
+
+      for (const bundesland_item of bundeslandList) {
+        const [countResult] = await db
+          .select({
+            eventCount: count(event.id),
+          })
+          .from(event)
+          .where(
+            and(
+              eq(event.status, "approved"),
+              eq(event.bundeslandId, bundesland_item.id),
+              // future + 12-Monats-Archiv (deckungsgleich mit resolve.ts hasAnyEvents)
+              sql`${event.endDate} >= now() - interval '12 months'`,
+              filters?.partyArtId
+                ? eq(event.partyArtId, filters.partyArtId)
+                : undefined,
+            ),
+          );
+
+        result.push({
+          slug: bundesland_item.slug,
+          name: bundesland_item.name,
+          eventCount: countResult?.eventCount ?? 0,
+        });
+      }
+
+      return result;
+    },
+
     async listKreiseForBundesland(
       country: Country,
       bundeslandId: string,

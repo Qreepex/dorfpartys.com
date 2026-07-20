@@ -66,6 +66,17 @@ async function buildNavigationTree(
   const repo = createDrizzleTaxonomyRepository(db);
   const navigationTree: Record<string, unknown> = {};
 
+  // If at country root, show available Bundesländer (filtered by current artSlug if present)
+  if (!filters.bundeslandSlug && !filters.kreisSlug) {
+    const filterIds = filters.artSlug
+      ? { partyArtId: (await repo.findPartyArtBySlug(filters.artSlug))?.id }
+      : undefined;
+    navigationTree.bundeslaender = await repo.listBundeslaenderForCountry(
+      country,
+      filterIds,
+    );
+  }
+
   // If at Bundesland level, show available Kreise (filtered by current artSlug if present)
   if (filters.bundeslandSlug && !filters.kreisSlug) {
     const bundesland = await repo.findBundeslandBySlug(
@@ -84,8 +95,8 @@ async function buildNavigationTree(
     }
   }
 
-  // Show available Party-Arten at any level (filtered by current bundesland/kreis)
-  if (filters.bundeslandSlug || filters.kreisSlug) {
+  // Show available Party-Arten at any level (filtered by current bundesland/kreis, incl. country root)
+  {
     let bundeslandId: string | undefined;
     let kreisId: string | undefined;
 

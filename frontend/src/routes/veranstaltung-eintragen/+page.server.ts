@@ -68,7 +68,7 @@ export const actions: Actions = {
 			});
 		}
 	},
-	default: async ({ request, locals, url }) => {
+	submit: async ({ request, locals, url }) => {
 		try {
 			await locals.trpc.users.me.query();
 		} catch {
@@ -87,7 +87,7 @@ export const actions: Actions = {
 
 		const raw = {
 			title: formData.get('title'),
-			description: formData.get('description'),
+			description: formData.get('description') || undefined,
 			startDate: startDateRaw ? new Date(String(startDateRaw)).toISOString() : undefined,
 			endDate: endDateRaw ? new Date(String(endDateRaw)).toISOString() : undefined,
 			bundeslandId: formData.get('bundeslandId'),

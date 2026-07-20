@@ -36,9 +36,14 @@
 <div class="max-w-6xl">
 	<h1>Review-Dashboard</h1>
 
-	<nav class="mb-6 flex gap-3">
+	<nav class="mb-6 flex flex-wrap gap-3">
 		<a href={resolve('/review')} class="font-semibold text-primary">Events</a>
 		<a href={reviewHref} class="font-semibold text-primary">Verifizierung</a>
+		<a href={resolve('/review/claims')} class="font-semibold text-primary">Event-Claims</a>
+		<a href={resolve('/review/organizer-nominations')} class="font-semibold text-primary"
+			>Organizer-Bestätigungen</a
+		>
+		<a href={resolve('/review/account-claims')} class="font-semibold text-primary">Profil-Claims</a>
 	</nav>
 
 	<h2>Verifizierungsanfragen</h2>
@@ -68,7 +73,9 @@
 						<tr class="border-b border-border hover:bg-bg-alt">
 							<td class="px-4 py-3">
 								<a
-									href={resolve(`/veranstalter/${req.slug || req.displayName}`)}
+									href={resolve('/veranstalter/[slug]', {
+										slug: req.slug || req.displayName || ''
+									})}
 									class="text-primary no-underline hover:underline"
 								>
 									{req.displayName || 'Unnamed'}
@@ -89,13 +96,17 @@
 							</td>
 							<td class="px-4 py-3 font-mono font-bold tracking-widest">{req.verificationCode}</td>
 							<td class="px-4 py-3 text-xs text-muted">
-								{new Date(req.verificationRequestedAt).toLocaleDateString('de-DE', {
-									day: '2-digit',
-									month: '2-digit',
-									year: 'numeric',
-									hour: '2-digit',
-									minute: '2-digit'
-								})}
+								{#if req.verificationRequestedAt}
+									{new Date(req.verificationRequestedAt).toLocaleDateString('de-DE', {
+										day: '2-digit',
+										month: '2-digit',
+										year: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit'
+									})}
+								{:else}
+									–
+								{/if}
 							</td>
 							<td class="px-4 py-3 text-right">
 								<form

@@ -43,7 +43,7 @@
 
 <Navbar />
 
-<div class="px-5 py-10">
+<div class="min-h-[70vh] px-5 py-10">
 	{@render children()}
 </div>
 

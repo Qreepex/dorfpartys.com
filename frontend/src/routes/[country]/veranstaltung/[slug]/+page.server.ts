@@ -11,15 +11,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404);
 	}
 
+	let event;
 	try {
-		const event = await locals.trpc.events.getBySlug.query({
+		event = await locals.trpc.events.getBySlug.query({
 			country: params.country,
 			slug: params.slug
 		});
-		return { event, country: params.country };
 	} catch {
 		error(404, 'Event nicht gefunden');
 	}
+
+	let currentUserId: string | null = null;
+	let claimStatus: 'pending' | 'approved' | 'rejected' | null = null;
+	try {
+		const me = await locals.trpc.users.me.query();
+		currentUserId = me.id;
+		if (!event.organizerVerified && event.organizerUserId !== me.id) {
+			const result = await locals.trpc.eventClaims.myClaimStatus.query({ eventId: event.id });
+			claimStatus = result.status;
+		}
+	} catch {
+		// nicht eingeloggt - kein Claim-/Bearbeiten-Status verfügbar
+	}
+
+	return { event, country: params.country, currentUserId, claimStatus };
 };
 
 export const actions: Actions = {
@@ -47,5 +62,36 @@ export const actions: Actions = {
 		}
 
 		return { saveToggled: true };
+	},
+
+	// "Dieses Event verwalten" (AGENTS.md 5.4) - verifizierte Veranstalter
+	// fragen die Übernahme eines nicht-verifizierten Events an.
+	claimEvent: async ({ request, locals, url }) => {
+		const formData = await request.formData();
+		const eventId = String(formData.get('eventId') ?? '');
+		const reason = String(formData.get('reason') ?? '').trim();
+
+		try {
+			await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		if (!eventId) {
+			return fail(400, { claimError: 'Unbekanntes Event' });
+		}
+
+		try {
+			await locals.trpc.eventClaims.create.mutate({
+				eventId,
+				reason: reason || undefined
+			});
+		} catch (err) {
+			return fail(400, {
+				claimError: err instanceof Error ? err.message : 'Anfrage fehlgeschlagen'
+			});
+		}
+
+		return { claimed: true };
 	}
 };

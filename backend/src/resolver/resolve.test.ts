@@ -45,6 +45,13 @@ class FakeTaxonomyRepository implements TaxonomyRepository {
     return [];
   }
 
+  async listBundeslaenderForCountry(
+    _country: string,
+    _filters?: EventFilterIds,
+  ) {
+    return [];
+  }
+
   async listKreiseForBundesland(
     _country: string,
     _bundeslandId: string,
