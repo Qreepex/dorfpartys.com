@@ -8,6 +8,7 @@
 		Button,
 		DropdownSelect,
 		FormGrid,
+		Modal,
 		RadioGroup,
 		TextInput,
 		Toggle,
@@ -30,10 +31,21 @@
 	// nächsten Versuch wieder erscheint.
 	let feedbackDismissed = $state(false);
 
+	// Lokale, überschreibbare Kopie von `data.isProfilePublic` - wird sofort
+	// nach erfolgreichem "Profil öffentlich machen"-Modal (siehe unten) auf
+	// `true` gesetzt, ohne die Seite neu zu laden/zu invalidieren. Ein
+	// `invalidate()`/`goto()` würde zwar `data` aktualisieren, aber auch einen
+	// Re-Fetch der Load-Funktion auslösen und ist hier bewusst vermieden, damit
+	// keinerlei Risiko besteht, bereits eingegebene Formularfelder (Titel,
+	// Beschreibung, Datum, ...) zu verlieren - diese hängen alle an eigenem
+	// $state, nicht an `data`, aber ein Re-Render/Remount soll trotzdem
+	// ausgeschlossen sein.
+	let isProfilePublic = $state(data.isProfilePublic);
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 
-		if (organizerMode === 'myself' && !data.isProfilePublic) {
+		if (organizerMode === 'myself' && !isProfilePublic) {
 			return;
 		}
 		if (organizerMode === 'profile' && !organizerUserId) {
@@ -178,6 +190,53 @@
 	);
 	let organizerError = $state('');
 
+	// "Profil öffentlich machen"-Modal (Produktvorgabe: Wahl von "Ich selbst"
+	// als Veranstalter soll bei fehlendem öffentlichen Profil direkt hier lösbar
+	// sein, statt nur auf /profil zu verlinken und den ausgefüllten
+	// Formular-Fortschritt zu riskieren). Ruft die Action `?/makeProfilePublic`
+	// (+page.server.ts) per fetch auf - analog zu `handleSubmit`/ImageUpload
+	// oben, KEIN normaler Form-POST, damit die Seite nicht neu geladen wird.
+	let showPublicProfileModal = $state(false);
+	let publicProfileSubmitting = $state(false);
+	let publicProfileError = $state('');
+
+	function openPublicProfileModal() {
+		publicProfileError = '';
+		showPublicProfileModal = true;
+	}
+
+	function closePublicProfileModal() {
+		if (publicProfileSubmitting) return;
+		showPublicProfileModal = false;
+	}
+
+	async function confirmMakeProfilePublic() {
+		publicProfileSubmitting = true;
+		publicProfileError = '';
+		try {
+			const response = await fetch(`${page.url.pathname}?/makeProfilePublic`, {
+				method: 'POST',
+				body: new FormData()
+			});
+			const result: ActionResult = deserialize(await response.text());
+
+			if (result.type === 'success') {
+				isProfilePublic = true;
+				showPublicProfileModal = false;
+			} else if (result.type === 'failure') {
+				publicProfileError =
+					(result.data as { publicProfileError?: string } | undefined)?.publicProfileError ??
+					'Profil konnte nicht öffentlich gestellt werden.';
+			} else {
+				publicProfileError = 'Profil konnte nicht öffentlich gestellt werden.';
+			}
+		} catch {
+			publicProfileError = 'Profil konnte nicht öffentlich gestellt werden. Bitte versuch es erneut.';
+		} finally {
+			publicProfileSubmitting = false;
+		}
+	}
+
 	// Rechte-/Verantwortungsbestätigung (Pflicht-Checkbox vor Submit, siehe AGENTS.md 5 -
 	// Einreichungsformular). Beim Bearbeiten bewusst nicht vorausgefüllt/übersprungen -
 	// wird bei jeder Einreichung erneut bestätigt, siehe Kommentar bei der Checkbox unten.
@@ -246,7 +305,7 @@
 	const organizerValid = $derived(
 		!data.isLoggedIn ||
 			(organizerMode === 'myself'
-				? data.isProfilePublic
+				? isProfilePublic
 				: organizerMode === 'profile'
 					? !!organizerUserId
 					: !!organizerName.trim())
@@ -707,7 +766,7 @@
 						bind:value={organizerMode}
 						options={(() => {
 							const opts = [];
-							if (data.isProfilePublic) {
+							if (isProfilePublic) {
 								opts.push({
 									value: 'myself',
 									label: 'Ich selbst'
@@ -716,8 +775,7 @@
 								opts.push({
 									value: 'myself',
 									label: 'Ich selbst',
-									description:
-										'Profil muss öffentlich sein – aktiviere das in den Profileinstellungen'
+									description: 'Profil muss öffentlich sein – das kannst du direkt hier erledigen'
 								});
 							}
 							opts.push({
@@ -732,13 +790,25 @@
 						})()}
 					/>
 
-					{#if !data.isProfilePublic && organizerMode === 'myself'}
-						<p class="mt-3 rounded border border-secondary bg-bg-alt p-3 text-sm text-muted">
-							Um dich selbst als Veranstalter eintragen zu können, muss dein Profil öffentlich sein.
-							<a href={resolve('/profil')} class="text-primary hover:underline"
-								>Aktiviere das jetzt in deinen Profileinstellungen →</a
-							>
-						</p>
+					{#if !isProfilePublic && organizerMode === 'myself'}
+						<div class="mt-3 rounded border border-secondary bg-bg-alt p-3 text-sm text-muted">
+							<p class="mb-3">
+								Um dich selbst als Veranstalter eintragen zu können, muss dein Profil öffentlich
+								sein.
+							</p>
+							<Button type="button" variant="secondary" onclick={openPublicProfileModal}>
+								Profil jetzt öffentlich machen
+							</Button>
+							<p class="mt-2 text-xs">
+								Oder
+								<a
+									href={resolve('/profil')}
+									target="_blank"
+									rel="noopener"
+									class="text-primary hover:underline">alle Profildetails bearbeiten →</a
+								>
+							</p>
+						</div>
 					{/if}
 
 					{#if organizerMode === 'profile'}
@@ -889,6 +959,49 @@
 		{/if}
 	</form>
 </main>
+
+<Modal
+	open={showPublicProfileModal}
+	onClose={closePublicProfileModal}
+	labelledBy="public-profile-modal-title"
+>
+	<h2 id="public-profile-modal-title" class="mt-0 mb-3 text-xl">Profil öffentlich machen?</h2>
+	<p class="mb-3 text-sm text-muted">
+		Um dich selbst als Veranstalter eintragen zu können, muss dein Profil öffentlich sein. Das
+		bedeutet konkret:
+	</p>
+	<ul class="mb-4 list-disc space-y-1 pl-5 text-sm text-muted">
+		<li>
+			Dein Anzeigename, Profilbild und deine Bio sind für alle unter deiner Veranstalter-Seite
+			(<code>/veranstalter/…</code>) sichtbar.
+		</li>
+		<li>
+			Du wirst als Veranstalter auf diesem und künftigen Events angezeigt, die du unter deinem
+			eigenen Namen einträgst.
+		</li>
+	</ul>
+	{#if publicProfileError}
+		<p class="field-error mb-3">{publicProfileError}</p>
+	{/if}
+	<div class="flex flex-wrap gap-3">
+		<Button type="button" onclick={confirmMakeProfilePublic} disabled={publicProfileSubmitting}>
+			{#if publicProfileSubmitting}
+				<span class="submit-spinner" aria-hidden="true"></span>
+				Wird gespeichert...
+			{:else}
+				Ja, Profil öffentlich machen
+			{/if}
+		</Button>
+		<Button
+			type="button"
+			variant="ghost"
+			onclick={closePublicProfileModal}
+			disabled={publicProfileSubmitting}
+		>
+			Abbrechen
+		</Button>
+	</div>
+</Modal>
 
 <style>
 	.submit-spinner {

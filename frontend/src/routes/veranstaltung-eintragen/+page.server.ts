@@ -85,6 +85,10 @@ function extractServerFieldErrors(err: unknown): Record<string, string[]> | unde
 export const load: PageServerLoad = async ({ locals, url }) => {
 	let isLoggedIn = false;
 	let isProfilePublic = false;
+	// Voraussetzung, um das Profil aus dem Event-Formular heraus öffentlich zu
+	// stellen (siehe `makeProfilePublic`-Action unten) - ohne Anzeigename gäbe
+	// es keine sinnvolle Veranstalter-Seite (AGENTS.md Abschnitt 3).
+	let hasDisplayName = false;
 	let currentUserId = '';
 	try {
 		const me = await locals.trpc.users.me.query();
@@ -92,6 +96,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		currentUserId = me.id;
 		const { profile } = await locals.trpc.users.getProfile.query({ userId: me.id });
 		isProfilePublic = profile?.isPublic ?? false;
+		hasDisplayName = !!profile?.displayName;
 	} catch {
 		// nicht eingeloggt - Formular bleibt sichtbar, aber ohne Submit-Möglichkeit
 	}
@@ -138,12 +143,59 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		bundeslaenderByCountry,
 		isLoggedIn,
 		isProfilePublic,
+		hasDisplayName,
 		currentUserId,
 		editingEvent
 	};
 };
 
 export const actions: Actions = {
+	// Erlaubt es, das eigene Profil direkt aus dem Event-Formular heraus
+	// öffentlich zu stellen (Produktvorgabe: wer sich beim Eintragen selbst als
+	// Veranstalter wählen will, aber kein öffentliches Profil hat, soll das per
+	// Bestätigungs-Modal erledigen können, ohne die Seite zu verlassen und die
+	// bereits eingegebenen Formulardaten zu verlieren - siehe Modal-Aufruf in
+	// +page.svelte). Ruft dieselbe tRPC-Mutation wie `/profil` (?/updateProfile)
+	// auf, nur mit `isPublic: true` statt des gesamten Formulars - Drizzles
+	// `mapUpdateSet` überspringt Felder mit `undefined`-Wert beim Update, alle
+	// anderen Profilfelder (Anzeigename, Bio, Avatar, ...) bleiben also
+	// unangetastet (backend/src/routers/users.ts, upsertProfile). Anders als
+	// beim Privat-Stellen (siehe Kommentar bei `isPublic === false` dort) gibt es
+	// hierfür keine serverseitige Sperre.
+	makeProfilePublic: async ({ locals, url }) => {
+		let me: Awaited<ReturnType<typeof locals.trpc.users.me.query>>;
+		try {
+			me = await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		// Anzeigename ist Voraussetzung für ein öffentliches Profil (analog zur
+		// Prüfung in frontend/src/routes/profil/+page.server.ts) - im Normalfall
+		// immer erfüllt, da der Anzeigename der einzige Pflichtschritt im
+		// Onboarding ist (/willkommen). Ausnahme: Nutzer:innen, die das
+		// Onboarding komplett übersprungen haben (`users.skipOnboarding` setzt
+		// keinen Anzeigenamen) - für die bleibt der Link ins volle Profilformular
+		// als Fallback (siehe +page.svelte).
+		const { profile } = await locals.trpc.users.getProfile.query({ userId: me.id });
+		if (!profile?.displayName) {
+			return fail(400, {
+				publicProfileError:
+					'Du brauchst zuerst einen Anzeigenamen, bevor dein Profil öffentlich werden kann.'
+			});
+		}
+
+		try {
+			await locals.trpc.users.updateMyProfile.mutate({ isPublic: true });
+		} catch (err) {
+			return fail(400, {
+				publicProfileError:
+					err instanceof Error ? err.message : 'Profil konnte nicht öffentlich gestellt werden.'
+			});
+		}
+
+		return { publicProfileMadePublic: true };
+	},
 	uploadPhoto: async ({ request, locals, url }) => {
 		try {
 			await locals.trpc.users.me.query();
