@@ -11,6 +11,9 @@ export interface User {
 	/** Platzhalter-Account für einen nicht registrierten Veranstalter (AGENTS.md 5.4). */
 	isGhost: boolean;
 	createdAt: string;
+	/** Schlanke Profil-Vorschau für die Navbar-User-Card, siehe users.me. */
+	displayName: string | null;
+	avatarUrl: string | null;
 }
 
 export interface UserProfile {

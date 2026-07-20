@@ -16,6 +16,25 @@
 	};
 
 	let theme: 'dark' | 'light' = $state('dark');
+	let userMenuOpen = $state(false);
+	let userMenuEl: HTMLDivElement | undefined = $state();
+
+	function handleOutsideClick(event: MouseEvent) {
+		if (userMenuEl && !userMenuEl.contains(event.target as Node)) {
+			userMenuOpen = false;
+		}
+	}
+
+	$effect(() => {
+		if (!userMenuOpen) return;
+		document.addEventListener('click', handleOutsideClick);
+		return () => document.removeEventListener('click', handleOutsideClick);
+	});
+
+	const userInitial = $derived.by(() => {
+		const source = user?.displayName || user?.email || '';
+		return source.trim().charAt(0).toUpperCase() || '?';
+	});
 
 	onMount(() => {
 		const stored = localStorage.getItem('theme');
@@ -100,11 +119,68 @@
 				<a class="text-muted no-underline hover:text-text" href={resolve('/partyliste')}
 					>Partyliste</a
 				>
-				<a class="text-muted no-underline hover:text-text" href={resolve('/profil')}>Mein Profil</a>
 				{#if isModerator}
 					<a class="text-muted no-underline hover:text-text" href={resolve('/review')}>Review</a>
 				{/if}
-				<a class="text-muted no-underline hover:text-text" href={resolve('/auth/logout')}>Logout</a>
+				<div class="relative" bind:this={userMenuEl}>
+					<button
+						type="button"
+						class="flex cursor-pointer items-center gap-2 border border-border bg-transparent px-2 py-1.5 text-text"
+						onclick={() => (userMenuOpen = !userMenuOpen)}
+						aria-haspopup="menu"
+						aria-expanded={userMenuOpen}
+					>
+						{#if user.avatarUrl}
+							<img
+								class="h-6 w-6 rounded-full object-cover"
+								src={user.avatarUrl}
+								alt=""
+								width="24"
+								height="24"
+							/>
+						{:else}
+							<span
+								class="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[0.7rem] font-bold text-ink"
+							>
+								{userInitial}
+							</span>
+						{/if}
+						<span class="max-w-32 truncate text-[0.9rem]"
+							>{user.displayName || user.email || 'Nutzer'}</span
+						>
+					</button>
+					{#if userMenuOpen}
+						<div
+							class="absolute top-full right-0 z-10 mt-1.5 flex min-w-40 flex-col border border-border bg-bg-alt py-1.5"
+							role="menu"
+						>
+							<a
+								class="px-3.5 py-2 text-[0.9rem] text-text no-underline hover:bg-border"
+								href={resolve('/profil')}
+								role="menuitem"
+								onclick={() => (userMenuOpen = false)}
+							>
+								Mein Profil
+							</a>
+							<a
+								class="px-3.5 py-2 text-[0.9rem] text-text no-underline hover:bg-border"
+								href={resolve('/meine-veranstaltungen')}
+								role="menuitem"
+								onclick={() => (userMenuOpen = false)}
+							>
+								Veranstaltungen
+							</a>
+							<a
+								class="px-3.5 py-2 text-[0.9rem] text-text no-underline hover:bg-border"
+								href={resolve('/auth/logout')}
+								role="menuitem"
+								onclick={() => (userMenuOpen = false)}
+							>
+								Logout
+							</a>
+						</div>
+					{/if}
+				</div>
 			{:else}
 				<a class="text-muted no-underline hover:text-text" href={resolve('/auth/login')}>Login</a>
 			{/if}

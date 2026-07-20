@@ -449,6 +449,7 @@ export const eventsRouter = router({
         bundeslandName: bundeslandTable.name,
         kreisName: kreis.name,
         partyArtName: partyArt.name,
+        country: bundeslandTable.country,
       })
       .from(event)
       .leftJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))

@@ -148,7 +148,26 @@ async function upsertProfile(
 }
 
 export const usersRouter = router({
-  me: protectedProcedure.query(({ ctx }) => ctx.user),
+  // Liefert zusätzlich zu den Kern-User-Feldern eine schlanke Profil-Vorschau
+  // (Anzeigename/Avatar) für die Navbar-User-Card - kein vollständiger
+  // getProfile()-Aufruf nötig, um Login-Status + Anzeige gemeinsam zu laden.
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const [profileRow] = await ctx.db
+      .select({
+        displayName: userProfile.displayName,
+        avatarS3Key: userProfile.avatarS3Key,
+      })
+      .from(userProfile)
+      .where(eq(userProfile.userId, ctx.user.id));
+
+    return {
+      ...ctx.user,
+      displayName: profileRow?.displayName ?? null,
+      avatarUrl: profileRow?.avatarS3Key
+        ? buildPublicStorageUrl(profileRow.avatarS3Key)
+        : null,
+    };
+  }),
 
   getProfile: publicProcedure
     .input(z.object({ userId: z.string().uuid() }))
