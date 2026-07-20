@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { countryStore, userStore } from '$lib/stores.js';
-	import { COUNTRIES, type Country } from '@dorfpartys/shared';
+	import { userStore } from '$lib/stores.js';
+	import type { Country } from '@dorfpartys/shared';
 	import { onMount } from 'svelte';
 
 	const user = $derived.by(() => $userStore);
-	const country = $derived.by(() => $countryStore);
 
-	const COUNTRY_LABELS: Record<Country, string> = { de: 'DE', at: 'AT', ch: 'CH' };
+	// Land-Toggle wurde von hier auf die Landing Page verschoben (dort hat er
+	// tatsächlich Wirkung: er steuert, welches Land dort angezeigt wird - im
+	// Such-Baum unter /{country}/... ist das Land bereits durch die URL selbst
+	// festgelegt, ein globaler Navbar-Switcher war dort wirkungslos/irreführend).
 	const TIMEZONE_COUNTRY: Record<string, Country> = {
 		'Europe/Vienna': 'at',
 		'Europe/Zurich': 'ch'
@@ -52,7 +52,7 @@
 		if (!document.cookie.includes('country_explicit=1')) {
 			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 			const refined = TIMEZONE_COUNTRY[timezone];
-			if (refined && refined !== country) {
+			if (refined) {
 				document.cookie = `country=${refined}; path=/; max-age=31536000; samesite=lax`;
 			}
 		}
@@ -88,27 +88,6 @@
 		</a>
 
 		<nav class="flex flex-wrap items-center gap-4.5 text-[0.9rem]" aria-label="Hauptnavigation">
-			<div class="flex border border-border" role="group" aria-label="Land wählen">
-				{#each COUNTRIES as c, i (c)}
-					<button
-						class="cursor-pointer px-2.5 py-1.5 text-[0.78rem] font-bold tracking-[0.03em] no-underline"
-						class:border-r={i < COUNTRIES.length - 1}
-						class:border-border={i < COUNTRIES.length - 1}
-						class:bg-primary={c === country}
-						class:text-ink={c === country}
-						onclick={() => {
-							countryStore.set(c);
-							goto(
-								resolve(`/land/[country]?to=${encodeURIComponent(page.url.pathname)}`, {
-									country: c
-								})
-							);
-						}}
-					>
-						{COUNTRY_LABELS[c]}
-					</button>
-				{/each}
-			</div>
 			{#if user}
 				<a
 					class="text-muted no-underline hover:text-text"

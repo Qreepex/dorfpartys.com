@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Button from '$lib/components/Button.svelte';
 	import { DropdownSelect, EventList, FaqList } from '$lib/components/index.js';
 	import { FAQ_ENTRIES } from '$lib/content/faq.js';
 	import { buildFaqJsonLd, jsonLdScriptTag } from '$lib/seo.js';
-	import { countryStore } from '$lib/stores.js';
 	import {
 		COUNTRIES,
 		SITE_URL,
@@ -23,18 +23,64 @@
 		ch: 'Schweiz'
 	};
 
-	let country = $derived.by(() => $countryStore);
+	// Land kommt jetzt direkt aus der eigenen Page-Load (`data.country`), nicht
+	// mehr aus einem Client-Store - siehe Kommentar in lib/stores.ts. `data`
+	// wird von SvelteKit bei Client-Navigation zwischen `/`, `/?land=de` etc.
+	// frisch neu geladen (Komponente bleibt gemountet, `data` ändert sich),
+	// daher müssen alle davon abhängigen Werte unten reaktiv (`$derived`) sein.
+	let country = $derived(data.country);
 	let bundeslandSlug = $state('');
 	let artSlug = $state('');
+
+	/**
+	 * Baut eine Landing-Page-URL, die die aktuellen Query-Parameter beibehält
+	 * und nur die übergebenen überschreibt/entfernt (`null` = Parameter löschen).
+	 * Genutzt für den Land-Toggle (`?land=`) und die Alle-Länder/Nur-Land-Links
+	 * (`?alle`), damit beide Zustände unabhängig voneinander kombinierbar bleiben.
+	 * Baut die Query bewusst ohne `new URLSearchParams(...)` (mutable Instanz),
+	 * um Svelte-Reactivity-Lint-Regeln nicht zu verletzen - `page.url.searchParams`
+	 * wird nur gelesen, nicht mutiert.
+	 */
+	function buildHomeHref(overrides: Record<string, string | null>): string {
+		const merged: Record<string, string> = Object.fromEntries(page.url.searchParams);
+		for (const [key, value] of Object.entries(overrides)) {
+			if (value === null) {
+				delete merged[key];
+			} else {
+				merged[key] = value;
+			}
+		}
+		const qs = Object.entries(merged)
+			.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+			.join('&');
+		return qs ? `/?${qs}` : '/';
+	}
+
+	// Land-Toggle (löst den alten Navbar-Toggle ab - hier hat er tatsächlich
+	// Wirkung, siehe Navbar.svelte). Echte `<a href>`-Links zu `/?land=de` etc.,
+	// nicht nur ein Client-Store-Toggle - jeder Zustand ist eine eigene,
+	// crawlbare URL, die Google separat indexieren/differenzieren kann (siehe
+	// Canonical/Title/Description weiter unten).
+	const countryToggleEntries = $derived(
+		COUNTRIES.map((c) => ({
+			code: c,
+			label: COUNTRY_LABELS[c],
+			href: buildHomeHref({ land: c, alle: null })
+		}))
+	);
 
 	const bundeslaenderForCountry = $derived(
 		data.bundeslaenderByCountry.find((g) => g.country === country)?.bundeslaender ?? []
 	);
 
-	const homeHref = resolve('/');
-	const allCountriesHref = resolve('/?alle');
+	// "Nur {Land} anzeigen" behält einen ggf. gesetzten `?land=`-Parameter bei
+	// (entfernt nur `alle`) - sonst würde man beim Zurückwechseln aus der
+	// "Alle Länder"-Ansicht auf einer expliziten Landerseite ungewollt in die
+	// Cookie-Schätzung zurückfallen statt beim gewählten Land zu bleiben.
+	const homeHref = $derived(buildHomeHref({ alle: null }));
+	const allCountriesHref = $derived(buildHomeHref({ alle: '1' }));
 	// `#formular` scrollt beim Ankommen direkt zum Formular (Teil C.3).
-	const veranstaltungEintragenHref = `${resolve('/veranstaltung-eintragen')}#formular`;
+	const veranstaltungEintragenHref = `${resolve('/veranstaltung-eintragen')}`;
 	const faqHref = resolve('/faq');
 
 	function handleSearch(event: SubmitEvent) {
@@ -96,26 +142,38 @@
 		sameAs: ['https://instagram.com/dorfpartys']
 	};
 	const faqJsonLd = buildFaqJsonLd(FAQ_ENTRIES.slice(0, 6));
+
+	// SEO-Differenzierung der Land-Toggle-Zustände (item 3): bare `/` bleibt die
+	// Cookie-/Accept-Language-personalisierte Default-Seite (unverändertes
+	// Verhalten, self-canonical auf `/`). `/?land=de|at|ch` ist je eine eigene,
+	// echte URL-Variante mit eigenem Title/Description/Canonical, die auf das
+	// jeweilige Land verweist - damit hat Google einen Grund, sie als eigene,
+	// legitim unterschiedliche Seiten zu behandeln statt sie als Near-Duplicates
+	// zusammenzufassen.
+	const pageTitle = $derived(
+		data.explicitCountry
+			? `dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in ${COUNTRY_LABELS[data.explicitCountry]}`
+			: 'dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH'
+	);
+	const pageDescription = $derived(
+		data.explicitCountry
+			? `Alle Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten in ${COUNTRY_LABELS[data.explicitCountry]} - kostenlos, werbefrei, filterbar nach Region, Art und Monat. Jede:r kann kostenlos eine Veranstaltung eintragen.`
+			: 'Alle Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten in Deutschland, Österreich und der Schweiz - kostenlos, werbefrei, filterbar nach Region, Art und Monat. Jede:r kann kostenlos eine Veranstaltung eintragen.'
+	);
+	const canonicalUrl = $derived(
+		data.explicitCountry ? `${SITE_URL}/?land=${data.explicitCountry}` : `${SITE_URL}/`
+	);
 </script>
 
 <svelte:head>
-	<title>dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH</title>
-	<meta
-		name="description"
-		content="Alle Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten in Deutschland, Österreich und der Schweiz - kostenlos, werbefrei, filterbar nach Region, Art und Monat. Jede:r kann kostenlos eine Veranstaltung eintragen."
-	/>
+	<title>{pageTitle}</title>
+	<meta name="description" content={pageDescription} />
 	<meta name="robots" content="index,follow" />
-	<link rel="canonical" href={SITE_URL + '/'} />
+	<link rel="canonical" href={canonicalUrl} />
 	<meta property="og:type" content="website" />
-	<meta
-		property="og:title"
-		content="dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH"
-	/>
-	<meta
-		property="og:description"
-		content="Kostenlos, werbefrei und ohne Anmeldung durchsuchbar: alle Dorfpartys im DACH-Raum."
-	/>
-	<meta property="og:url" content={SITE_URL + '/'} />
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDescription} />
+	<meta property="og:url" content={canonicalUrl} />
 	<meta name="twitter:card" content="summary" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(websiteJsonLd)}
@@ -163,6 +221,28 @@
 	</section>
 
 	<section class="mt-2">
+		<div class="flex flex-wrap items-center gap-3">
+			<span class="text-[0.8rem] font-bold tracking-[0.03em] text-muted">Diese Seite zeigt:</span>
+			<div class="flex border border-border" role="group" aria-label="Land für diese Seite wählen">
+				{#each countryToggleEntries as entry, i (entry.code)}
+					<a
+						href={entry.href}
+						class="px-3 py-1.5 text-[0.78rem] font-bold tracking-[0.03em] no-underline"
+						class:border-r={i < countryToggleEntries.length - 1}
+						class:border-border={i < countryToggleEntries.length - 1}
+						class:bg-primary={entry.code === country}
+						class:text-ink={entry.code === country}
+						class:text-text={entry.code !== country}
+						aria-current={entry.code === country ? 'page' : undefined}
+					>
+						{entry.label}
+					</a>
+				{/each}
+			</div>
+		</div>
+	</section>
+
+	<section class="mt-2">
 		<h2 class="mb-1">Direkt ins Land springen</h2>
 
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -172,7 +252,7 @@
 					class="flex min-h-11 items-center justify-between gap-3 border border-border bg-bg-alt px-5 py-4 text-text no-underline transition-colors hover:border-primary hover:text-primary"
 				>
 					<span class="font-display text-lg font-bold">{entry.label}</span>
-					<span class="text-[0.85rem] text-muted">Alle Partys ansehen →</span>
+					<span class="text-[0.85rem] text-muted">entdecken →</span>
 				</a>
 			{/each}
 		</div>
