@@ -5,6 +5,7 @@
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
+	let deleteConfirm = $state<string | null>(null);
 
 	const STATUS_LABELS: Record<string, string> = {
 		draft: 'Entwurf',
@@ -70,6 +71,29 @@
 						>
 							Bearbeiten
 						</a>
+						<button
+							type="button"
+							class="action-link delete"
+							onclick={() => (deleteConfirm = event.id)}
+						>
+							Löschen
+						</button>
+						{#if deleteConfirm === event.id}
+							<div class="delete-confirm">
+								<p>Wirklich unwiderruflich löschen?</p>
+								<form method="POST" action="?/delete" class="confirm-actions">
+									<input type="hidden" name="eventId" value={event.id} />
+									<button type="submit" class="confirm-btn delete">Ja, löschen</button>
+									<button
+										type="button"
+										class="confirm-btn cancel"
+										onclick={() => (deleteConfirm = null)}
+									>
+										Abbrechen
+									</button>
+								</form>
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/each}
@@ -190,10 +214,60 @@
 		border-radius: 3px;
 		text-decoration: none;
 		white-space: nowrap;
+		cursor: pointer;
 	}
 
 	.action-link:hover {
 		border-color: var(--color-primary);
 		color: var(--color-primary);
+	}
+
+	.action-link.delete:hover {
+		border-color: #ef4444;
+		color: #ef4444;
+	}
+
+	.delete-confirm {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+
+	.delete-confirm p {
+		margin: 0;
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+
+	.confirm-actions {
+		display: flex;
+		gap: 4px;
+	}
+
+	.confirm-btn {
+		padding: 4px 8px;
+		font-size: 0.75rem;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg);
+		border-radius: 3px;
+		cursor: pointer;
+	}
+
+	.confirm-btn.delete {
+		border-color: #ef4444;
+		color: #ef4444;
+	}
+
+	.confirm-btn.delete:hover {
+		background: #ef4444;
+		color: white;
+	}
+
+	.confirm-btn.cancel {
+		color: var(--color-muted);
+	}
+
+	.confirm-btn.cancel:hover {
+		border-color: var(--color-muted);
 	}
 </style>

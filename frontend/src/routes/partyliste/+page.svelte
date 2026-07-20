@@ -43,30 +43,28 @@
 								<input type="hidden" name="eventId" value={event.id} />
 								<button type="submit" class="action-button edit">Bearbeiten</button>
 							</form>
-							{#if event.status === 'draft' || event.status === 'rejected'}
-								<button
-									type="button"
-									class="action-button delete"
-									onclick={() => (deleteConfirm = event.id)}
-								>
-									Löschen
-								</button>
-								{#if deleteConfirm === event.id}
-									<div class="delete-confirm">
-										<p>Sicher?</p>
-										<form method="POST" action="?/delete" class="confirm-actions">
-											<input type="hidden" name="eventId" value={event.id} />
-											<button type="submit" class="confirm-btn delete">Ja, löschen</button>
-											<button
-												type="button"
-												class="confirm-btn cancel"
-												onclick={() => (deleteConfirm = null)}
-											>
-												Abbrechen
-											</button>
-										</form>
-									</div>
-								{/if}
+							<button
+								type="button"
+								class="action-button delete"
+								onclick={() => (deleteConfirm = event.id)}
+							>
+								Löschen
+							</button>
+							{#if deleteConfirm === event.id}
+								<div class="delete-confirm">
+									<p>Sicher?</p>
+									<form method="POST" action="?/delete" class="confirm-actions">
+										<input type="hidden" name="eventId" value={event.id} />
+										<button type="submit" class="confirm-btn delete">Ja, löschen</button>
+										<button
+											type="button"
+											class="confirm-btn cancel"
+											onclick={() => (deleteConfirm = null)}
+										>
+											Abbrechen
+										</button>
+									</form>
+								</div>
 							{/if}
 						</div>
 					</div>

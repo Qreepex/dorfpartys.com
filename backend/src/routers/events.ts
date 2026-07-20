@@ -508,18 +508,23 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      if (existing.createdBy !== ctx.user.id) {
+      // Gleiche Eigentums-Regel wie `update`/`getForEdit` (AGENTS.md 5.4): die
+      // einreichende Person, der aktuell hinterlegte Veranstalter (z.B. nach
+      // einem genehmigten Claim) oder ein Moderator/Admin dürfen löschen.
+      // Anders als bei `update` wird der Status bewusst NICHT eingeschränkt -
+      // Löschen ist eine eindeutige, destruktive Aktion, für die es keinen
+      // fachlichen Grund gibt, sie je nach Status zu blockieren. Das ist auch
+      // die einzige Möglichkeit für Veranstalter, ein bereits freigeschaltetes
+      // oder in Prüfung befindliches Event wieder loszuwerden (u.a. damit sie
+      // die Blocker-Prüfung in users.updateMyProfile für "isPublic: false"
+      // auflösen können, siehe dort).
+      const isOwner =
+        existing.createdBy === ctx.user.id ||
+        existing.organizerUserId === ctx.user.id;
+      const isModerator =
+        ctx.user.role === "moderator" || ctx.user.role === "admin";
+      if (!isOwner && !isModerator) {
         throw new TRPCError({ code: "FORBIDDEN" });
-      }
-
-      // Nur Draft oder Rejected Events dürfen gelöscht werden
-      // (Approved Events sollten archiviert, nicht gelöscht werden)
-      if (existing.status !== "draft" && existing.status !== "rejected") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Nur unveröffentlichte oder abgelehnte Events können gelöscht werden",
-        });
       }
 
       // Alle Fotos aus S3 löschen
@@ -530,7 +535,9 @@ export const eventsRouter = router({
 
       await Promise.all(photos.map((p) => deleteS3Object(p.s3Key)));
 
-      // Event löschen (cascades: event_photo, event_link, saved_event)
+      // Event löschen (DB-seitige onDelete: "cascade" für event_photo,
+      // event_link, event_claim, organizer_nomination, saved_event -
+      // backend/src/db/schema.ts)
       await ctx.db.delete(event).where(eq(event.id, input.id));
 
       return { id: input.id };
