@@ -1,6 +1,30 @@
 import { COUNTRIES, submitEventInputSchema } from '@dorfpartys/shared';
 import { fail, redirect } from '@sveltejs/kit';
+import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
+
+// Wandelt einen datetime-local-Wert sicher in ein ISO-Datum um. `new
+// Date(...).toISOString()` wirft bei einem ungültigen Datum (z.B. wenn die
+// clientseitige HTML5-Validierung umgangen wird) eine RangeError, die sonst
+// unbehandelt durch die Action durchschlägt und beim Nutzer als generischer
+// 500-Fehler statt einer verständlichen Validierungsmeldung landet.
+function toIsoStringOrUndefined(raw: FormDataEntryValue | null): string | undefined {
+	if (!raw) return undefined;
+	const date = new Date(String(raw));
+	return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+// Liest Zod-Feldfehler aus einem tRPC-Fehler aus, sofern das Backend sie via
+// `errorFormatter` mitliefert (backend/src/trpc/trpc.ts). Nötig, weil
+// serverseitige Validierungsfehler auch dann auftreten können, wenn die
+// clientseitige Prüfung (siehe safeParse unten) umgangen wurde oder die
+// Backend-Validierung strenger ist (z.B. `assertKreisBelongsToBundesland`).
+function extractServerFieldErrors(err: unknown): Record<string, string[]> | undefined {
+	if (!(err instanceof TRPCClientError)) return undefined;
+	const zodError = (err.data as { zodError?: { fieldErrors?: Record<string, string[]> } } | null)
+		?.zodError;
+	return zodError?.fieldErrors;
+}
 
 // Bewusst KEIN requireUser()-Gate im Load: die Seite ist die zentrale SEO-
 // Landingpage fürs Eintragen ("Veranstaltung kostenlos eintragen") und muss
@@ -88,8 +112,8 @@ export const actions: Actions = {
 		const raw = {
 			title: formData.get('title'),
 			description: formData.get('description') || undefined,
-			startDate: startDateRaw ? new Date(String(startDateRaw)).toISOString() : undefined,
-			endDate: endDateRaw ? new Date(String(endDateRaw)).toISOString() : undefined,
+			startDate: toIsoStringOrUndefined(startDateRaw),
+			endDate: toIsoStringOrUndefined(endDateRaw),
 			bundeslandId: formData.get('bundeslandId'),
 			kreisId: formData.get('kreisId'),
 			addressDescription: formData.get('addressDescription'),
@@ -114,9 +138,20 @@ export const actions: Actions = {
 			await locals.trpc.events.submitForReview.mutate({ id: created.id });
 		} catch (err) {
 			// events.create wirft FORBIDDEN, wenn das Profil nicht öffentlich ist
-			// (serverseitige Durchsetzung, backend/src/routers/events.ts).
+			// (serverseitige Durchsetzung, backend/src/routers/events.ts). Bei
+			// serverseitigen Zod-Validierungsfehlern (z.B. Race Condition oder
+			// umgangene clientseitige Prüfung) liefert das Backend zusätzlich
+			// strukturierte Feldfehler mit (siehe backend/src/trpc/trpc.ts) - die
+			// generische tRPC-Message ("Bad Request" o.ä.) ist für Nutzer:innen
+			// nicht hilfreich, daher in diesem Fall durch einen Hinweistext ersetzt.
+			const fieldErrors = extractServerFieldErrors(err);
 			return fail(400, {
-				error: err instanceof Error ? err.message : 'Einreichung fehlgeschlagen'
+				error: fieldErrors
+					? 'Bitte überprüfe deine Eingaben.'
+					: err instanceof Error
+						? err.message
+						: 'Einreichung fehlgeschlagen',
+				fieldErrors
 			});
 		}
 

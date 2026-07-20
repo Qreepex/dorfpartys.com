@@ -1,7 +1,22 @@
 import { initTRPC, TRPCError } from "@trpc/server";
+import { ZodError } from "zod";
 import type { Context } from "./context.js";
 
-const t = initTRPC.context<Context>().create();
+// Surface Zod-Feldfehler strukturiert an den Client (statt nur einer generischen
+// "Bad Request"-Message), damit das Frontend gezielte Fehlermeldungen pro
+// Formularfeld anzeigen kann, nicht nur einen generischen 500/Fehlertext.
+const t = initTRPC.context<Context>().create({
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
+});
 
 export const router = t.router;
 export const middleware = t.middleware;

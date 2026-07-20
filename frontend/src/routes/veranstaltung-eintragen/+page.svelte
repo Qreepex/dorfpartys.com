@@ -301,6 +301,9 @@
 					required
 					bind:value={startDate}
 				/>
+				{#if form?.fieldErrors?.startDate}
+					<p class="field-error">{form.fieldErrors.startDate[0]}</p>
+				{/if}
 			</div>
 			<div class="field">
 				<label class="field-label" for="endDate">Ende *</label>
@@ -324,6 +327,7 @@
 				options={bundeslandOptions}
 				bind:value={bundeslandId}
 				placeholder="Bitte wählen"
+				error={form?.fieldErrors?.bundeslandId?.[0]}
 			/>
 
 			<DropdownSelect
@@ -334,6 +338,7 @@
 				bind:value={kreisId}
 				placeholder="Bitte wählen"
 				disabled={!bundeslandId}
+				error={form?.fieldErrors?.kreisId?.[0]}
 			/>
 			{#if form?.error}<p class="field-error sm:col-span-full">{form.error}</p>{/if}
 
@@ -344,6 +349,7 @@
 				options={partyArtOptions}
 				bind:value={partyArtId}
 				placeholder="Bitte wählen"
+				error={form?.fieldErrors?.partyArtId?.[0]}
 			/>
 
 			<TextInput
@@ -354,6 +360,7 @@
 				maxlength={300}
 				placeholder="z.B. Dorfplatz, 23845 Steinhorst"
 				bind:value={addressDescription}
+				error={form?.fieldErrors?.addressDescription?.[0]}
 			/>
 
 			<div class="field">
@@ -365,6 +372,9 @@
 					name="customColor"
 					value="#ff6b35"
 				/>
+				{#if form?.fieldErrors?.customColor}
+					<p class="field-error">{form.fieldErrors.customColor[0]}</p>
+				{/if}
 			</div>
 
 			<TextInput
@@ -372,11 +382,15 @@
 				name="priceInfo"
 				maxlength={200}
 				placeholder="z.B. 5€ VVK / 8€ AK"
+				error={form?.fieldErrors?.priceInfo?.[0]}
 			/>
 
 			<div class="field">
 				<label class="field-label" for="minAge">Mindestalter (optional)</label>
 				<input class="field-control" id="minAge" type="number" name="minAge" min="0" max="99" />
+				{#if form?.fieldErrors?.minAge}
+					<p class="field-error">{form.fieldErrors.minAge[0]}</p>
+				{/if}
 			</div>
 
 			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" />
@@ -400,7 +414,7 @@
 									value: 'myself',
 									label: 'Ich selbst',
 									description:
-										'Mein Profil muss öffentlich sein – aktiviere das in den Profileinstellungen'
+										'Profil muss öffentlich sein – aktiviere das in den Profileinstellungen'
 								});
 							}
 							opts.push({
@@ -495,7 +509,7 @@
 								bind:value={organizerName}
 								error={organizerMode === 'freetext' && !organizerName
 									? 'Veranstalter-Name erforderlich'
-									: undefined}
+									: form?.fieldErrors?.organizerName?.[0]}
 							/>
 						</div>
 					{/if}
