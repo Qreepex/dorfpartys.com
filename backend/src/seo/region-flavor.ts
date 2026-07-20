@@ -132,23 +132,98 @@ export const BUNDESLAND_FLAVOR_PARAGRAPH: Record<string, string> = {
 };
 
 /**
+ * Party-Art-Erklärtexte ("was ist das eigentlich, was passiert da konkret") -
+ * zweite Duplicate-Content-Gegenmaßnahme neben den Land-/Bundesland-Absätzen
+ * oben: Eine reine Art-Seite (z.B. "Schützenfeste") soll inhaltlich klar
+ * anders lesen als eine Art-Seite zu "Osterfeuer" - UND dieselbe Art-Seite
+ * soll sich über Regionen hinweg unterscheiden (Bayern vs. Ostholstein),
+ * ohne 13 Party-Arten × ~51 Bundesländer/Kantone (663 Stück) von Hand
+ * pflegen zu müssen.
+ *
+ * Lösung: pro Party-Art genau EIN Template als Funktion
+ * `(regionName: string) => string`, das den jeweils spezifischsten
+ * aufgelösten Regionsnamen (Kreis > Bundesland > Land, siehe
+ * `buildSearchSeoCopy` in `search-copy.ts`, das denselben Namen auch fürs
+ * `subject` der Title/H1-Logik verwendet) organisch in einen echten Satz
+ * einwebt, statt ihn nur als "... in {region}."-Suffix anzuhängen. Ergebnis:
+ * 13 handgeschriebene Basistexte, aber pro Region ein eigener, lesbarer Satz.
+ *
+ * Keyed by `partyArt.slug` aus `PARTY_ART_SEED` (`shared/src/constants/index.ts`).
+ */
+export const PARTY_ART_FLAVOR_TEMPLATE: Record<string, (regionName: string) => string> = {
+  schuetzenfeste: (region) =>
+    `Ein Schützenfest dreht sich um den örtlichen Schützenverein: Beim Königsschießen wird der neue Schützenkönig oder die Schützenkönigin ermittelt, dazu gibt es einen Festumzug mit Musikkapelle durchs Dorf und abends Tanz im Festzelt. Auch in ${region} reicht diese Tradition oft Generationen zurück - das Schützenfest ist vielerorts bis heute der wichtigste Termin im Vereinskalender.`,
+
+  zeltfeten: (region) =>
+    `Eine Zeltfete ist die unkomplizierte Variante der Dorfparty: Ein Festzelt auf der Wiese oder dem Sportplatz, DJ oder Live-Band, eine Bar mit Bier vom Fass - meist organisiert von einem Sportverein, einer Jugendfeuerwehr oder einer losen Gruppe aus dem Ort. In ${region} sind solche Zeltpartys oft der einzige Termin im Jahr, an dem sich das ganze Umland in einem Dorf trifft.`,
+
+  scheunenfeten: (region) =>
+    `Bei einer Scheunenfete wird die Party wörtlich genommen: gefeiert wird in einer echten Scheune, meist mit Strohballen als Deko und Sitzgelegenheit, organisiert von der örtlichen Landjugend oder jungen Landwirten aus der Nachbarschaft. Der rustikale Charme ist Programm - auch in ${region} gehören Scheunenfeten zu den Partys, bei denen man garantiert niemanden aus der Stadt trifft.`,
+
+  stoppelfeten: (region) =>
+    `Eine Stoppelfete ist ein Erntedank-Fest im Kleinformat: Direkt nach der Getreideernte wird auf dem abgeernteten Feld - dem Stoppelfeld - gefeiert, oft mit Lagerfeuer, Bierwagen und Live-Musik unter freiem Himmel. Die Tradition ist vor allem in Norddeutschland verwurzelt, und auch in ${region} markiert die Stoppelfete für viele Landwirte und Dorfjugendliche das inoffizielle Ende der Erntesaison.`,
+
+  dorffeste: (region) =>
+    `Ein Dorffest ist der Sammelbegriff für die große, mehrtägige Gemeinschaftsfeier: Festumzug, Essensstände, Livemusik, Kinderprogramm tagsüber und Party abends - meist organisiert von den örtlichen Vereinen gemeinsam. In ${region} sind solche Dorffeste oft an ein Ortsjubiläum, ein Kirchweihfest oder einfach eine lange Tradition geknüpft und das gesellschaftliche Highlight des Jahres.`,
+
+  osterfeuer: (region) =>
+    `Ein Osterfeuer ist der große Holzstapel, der in der Nacht von Karsamstag auf Ostersonntag entzündet wird - oft meterhoch aus gesammeltem Baum- und Strauchschnitt sowie ausgedienten Weihnachtsbäumen, häufig von der freiwilligen Feuerwehr organisiert und abgesichert. Dazu gibt es meist Glühwein und Bratwurst. Auch in ${region} ist das Osterfeuer für viele der erste Anlass im Jahr, sich draußen zu treffen, wenn der Winter vorbei ist.`,
+
+  oktoberfeste: (region) =>
+    `Ein Oktoberfest ist die lokale Hommage an die Münchner Wiesn: Festzelt, Blaskapelle, Maßkrüge und wer mag Tracht - meist von einem Verein oder Gastronomen organisiert, oft schon im September gefeiert, ganz wie das Original. In ${region} muss dafür niemand nach Bayern fahren, das Bierzelt kommt hier ins eigene Dorf.`,
+
+  "karneval-fasching": (region) =>
+    `Karneval, Fasching oder Fastnacht - je nach Gegend heißt die "fünfte Jahreszeit" anders, gemeint ist aber überall dasselbe: Kostüme, Umzüge mit Wagen, Büttenreden und ausgelassenes Feiern vor der Fastenzeit. In ${region} hat die närrische Zeit ihre ganz eigene Prägung, aber das Prinzip bleibt gleich: verkleiden, mitziehen, mitfeiern.`,
+
+  sportfeste: (region) =>
+    `Ein Sportfest wird meist vom örtlichen Sportverein ausgerichtet: tagsüber Turnier - oft Fußball -, abends Festzelt mit Musik und Bar, der Erlös finanziert häufig neue Trikots oder das Vereinsheim. In ${region} ist das Sportfest damit oft doppelt wichtig: sportlicher Wettkampf am Nachmittag, Dorfparty am Abend.`,
+
+  feuerwehrfeste: (region) =>
+    `Ein Feuerwehrfest wird von der freiwilligen Feuerwehr vor Ort organisiert - meist mit Fahrzeugschau und kleiner Übungsvorführung am Nachmittag, gefolgt von Festzelt und Tanz am Abend. Der Erlös fließt zurück in Ausrüstung und Vereinsleben. In ${region} ist das Feuerwehrfest oft eine der wenigen Gelegenheiten im Jahr, bei denen sich die ganze Gemeinde bei den Einsatzkräften bedanken kann.`,
+
+  erntefeste: (region) =>
+    `Ein Erntefest, oft auch Erntedankfest genannt, feiert das Ende der Erntesaison: Ein Umzug mit geschmückten Traktoren und Wagen, eine Erntekrone aus Getreide, häufig ein Gottesdienst und danach ein gemeinsames Essen der ganzen Gemeinde. In ${region} ist das Erntefest tief mit der Landwirtschaft vor Ort verwurzelt und dementsprechend familiär.`,
+
+  maifeste: (region) =>
+    `Ein Maifest dreht sich um den Maibaum: Er wird traditionell in der Nacht zum 1. Mai aufgestellt oder bewacht - vielerorts ein beliebter Sport für die Dorfjugend -, dazu gibt es "Tanz in den Mai" mit Musik und Feuer am Vorabend. In ${region} ist das Maifest damit einer der ersten großen Anlässe im Jahr, um wieder draußen zu feiern.`,
+
+  "trecker-treck-tractorplling": (region) =>
+    `Bei einem Trecker-Treck (auch Tractorpulling) treten umgebaute, oft brachial aufgemotzte Traktoren gegeneinander an, um einen immer schwerer werdenden Schlitten möglichst weit zu ziehen - laut, staubig und bei Landwirten und Motorsportfans gleichermaßen beliebt. In ${region} ist das Trecker-Treck meist mit Festzelt und Party danach verbunden, nicht nur reiner Wettkampf.`,
+};
+
+/**
  * Liefert die zusätzlichen Flavor-Absätze für eine aufgelöste Filter-Kombination:
  * immer der Land-Absatz (sobald ein Country-Kontext existiert, also praktisch
  * immer), plus - falls vorhanden - der Bundesland-/Kantons-Absatz. Wird auch
  * auf Kreis-Seiten verwendet, da ein Kreis immer ein Bundesland impliziert
  * (siehe AGENTS.md 1.3/1.4) und es keinen eigenen Kreis-Absatz gibt (out of
  * scope - zu granular).
+ *
+ * Zusätzlich (falls `partyArtSlug` aufgelöst ist, siehe `PARTY_ART_FLAVOR_TEMPLATE`
+ * oben): ein Erklär-Absatz zur Party-Art selbst, mit dem `regionName` (dem
+ * spezifischsten aufgelösten Namen - Kreis > Bundesland > Land, siehe
+ * `buildSearchSeoCopy`) organisch eingewoben. Wird angehängt, ersetzt also
+ * nicht den Land-/Bundesland-Absatz.
  */
 export function getRegionFlavorParagraphs(
   country: Country,
   bundeslandSlug: string | null,
+  partyArtSlug: string | null = null,
+  regionName?: string,
 ): string[] {
-  let paragraphs: string[] = [COUNTRY_FLAVOR_PARAGRAPH[country]];
+  const paragraphs: string[] = [COUNTRY_FLAVOR_PARAGRAPH[country]];
 
   if (bundeslandSlug) {
     const flavor = BUNDESLAND_FLAVOR_PARAGRAPH[bundeslandSlug];
     if (flavor) {
-      paragraphs = [flavor];
+      paragraphs.push(flavor);
+    }
+  }
+
+  if (partyArtSlug && regionName) {
+    const template = PARTY_ART_FLAVOR_TEMPLATE[partyArtSlug];
+    if (template) {
+      paragraphs.push(template(regionName));
     }
   }
 

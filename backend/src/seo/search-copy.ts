@@ -10,6 +10,8 @@ export interface SearchCopyInput {
   bundeslandName: string | null;
   kreisName: string | null;
   artName: string | null;
+  /** Slug der aufgelösten Party-Art, für den Party-Art-Flavor-Absatz (siehe `region-flavor.ts`). */
+  artSlug: string | null;
   total: number;
 }
 
@@ -72,12 +74,18 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   }
   const intro = introParts.join(" ");
 
-  // Zusätzliche, regionsspezifische Absätze (Land + ggf. Bundesland/Kanton) -
-  // Duplicate-Content-Gegenmaßnahme, siehe region-flavor.ts. Wird auf Kreis-Seiten
-  // ebenfalls ausgeliefert, da ein Kreis immer ein Bundesland impliziert.
+  // Zusätzliche, regionsspezifische Absätze (Land + ggf. Bundesland/Kanton, ggf.
+  // Party-Art) - Duplicate-Content-Gegenmaßnahme, siehe region-flavor.ts. Wird auf
+  // Kreis-Seiten ebenfalls ausgeliefert, da ein Kreis immer ein Bundesland impliziert.
+  // `ort ?? countryNom` ist derselbe spezifischste aufgelöste Name (Kreis > Bundesland
+  // > Land), der oben bereits fürs `subject` (Title/H1) verwendet wird - hier wird er
+  // wiederverwendet statt erneut berechnet, damit Title/H1 und Flavor-Text konsistent
+  // dieselbe Region benennen.
   const regionFlavorParagraphs = getRegionFlavorParagraphs(
     input.country,
     input.bundeslandSlug,
+    input.artSlug,
+    ort ?? countryNom,
   );
 
   return { title, description, h1, intro, regionFlavorParagraphs };

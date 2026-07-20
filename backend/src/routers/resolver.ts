@@ -186,6 +186,7 @@ export const resolverRouter = router({
         bundeslandName: names.bundeslandName,
         kreisName: names.kreisName,
         artName: names.artName,
+        artSlug: outcome.filters.artSlug,
         total: outcome.total,
       });
       const breadcrumbJsonLd = buildBreadcrumbsForResult(
