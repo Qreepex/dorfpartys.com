@@ -25,6 +25,27 @@ export const MONTHS: MonthDefinition[] = [
 
 export const MONTH_SLUGS = MONTHS.map((m) => m.slug) as [string, ...string[]];
 
+/**
+ * Baut Slug (Fragment-Id) + Label für eine Monats-Überschrift auf Filter-/Suchseiten.
+ *
+ * Events im aktuellen Kalenderjahr behalten das evergreen Format ("August" / "#august").
+ * Events in einem abweichenden Jahr (z.B. Archiv-Events aus dem Vorjahr, oder weit im
+ * Voraus liegende kommende Events) bekommen zur Disambiguierung das Jahr angehängt
+ * ("August 2027" / "#august-2027") - siehe AGENTS.md Abschnitt 1.2/6 zu Month-Badges.
+ *
+ * Das Jahr wird IMMER angehängt sobald es vom aktuellen Jahr abweicht (nicht nur bei
+ * tatsächlicher Kollision mit einem anderen Monat), damit das Verhalten vorhersehbar
+ * bleibt statt von den übrigen Events auf der Seite abzuhängen.
+ */
+export function monthGroup(date: Date, now: Date = new Date()): { slug: string; label: string } {
+	const month = MONTHS[date.getMonth()];
+	const year = date.getFullYear();
+	if (year === now.getFullYear()) {
+		return { slug: month.slug, label: month.name };
+	}
+	return { slug: `${month.slug}-${year}`, label: `${month.name} ${year}` };
+}
+
 // Canonical filter-segment order per AGENTS.md 1.2/1.4: bundesland -> kreis -> art.
 export const CANONICAL_SEGMENT_ORDER = ['bundesland', 'kreis', 'art'] as const;
 export type SegmentType = (typeof CANONICAL_SEGMENT_ORDER)[number];

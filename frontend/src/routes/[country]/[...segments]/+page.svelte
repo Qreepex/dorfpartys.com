@@ -4,10 +4,10 @@
 	import NavTree from '$lib/components/NavTree.svelte';
 	import { jsonLdScriptTag, robotsContent } from '$lib/seo.js';
 	import {
-		MONTHS,
 		SITE_URL,
 		buildEventUrl,
 		buildFilterUrl,
+		monthGroup,
 		type Country
 	} from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
@@ -20,36 +20,60 @@
 		result ? `${SITE_URL}${buildFilterUrl(result.filters.country, result.filters)}` : ''
 	);
 
-	// Gruppiere Events nach Monat + Archiv-Status für semantische H2-Überschriften
+	// Gruppiere Events nach Monat (+ Jahr, sobald abweichend vom aktuellen Jahr) + Archiv-Status
+	// für semantische H2/H3-Überschriften. Jahr wird angehängt sobald ein Event nicht im
+	// aktuellen Kalenderjahr liegt (nicht nur bei tatsächlicher Kollision), siehe monthGroup().
+	type MonthBucket = { slug: string; label: string; events: NonNullable<typeof result>['results'] };
+
 	const eventsByMonth = $derived.by(() => {
 		if (!result)
 			return {
-				future: [],
-				archive: []
+				future: [] as MonthBucket[],
+				archive: [] as MonthBucket[]
 			};
 
 		const now = new Date();
-		const futureGroups: Record<string, typeof result.results> = {};
-		const archiveGroups: Record<string, typeof result.results> = {};
+		const futureGroups = new Map<string, MonthBucket>();
+		const archiveGroups = new Map<string, MonthBucket>();
 
 		for (const event of result.results) {
 			const startDate = new Date(event.startDate);
 			const isArchive = startDate < now;
-			const monthNum = startDate.getMonth();
-			const month = MONTHS[monthNum];
-			const monthKey = month.slug;
+			const { slug, label } = monthGroup(startDate, now);
 
 			const target = isArchive ? archiveGroups : futureGroups;
-			if (!target[monthKey]) {
-				target[monthKey] = [];
+			let bucket = target.get(slug);
+			if (!bucket) {
+				bucket = { slug, label, events: [] };
+				target.set(slug, bucket);
 			}
-			target[monthKey].push(event);
+			bucket.events.push(event);
 		}
 
 		return {
-			future: Object.entries(futureGroups).map(([slug, events]) => [slug, events] as const),
-			archive: Object.entries(archiveGroups).map(([slug, events]) => [slug, events] as const)
+			future: [...futureGroups.values()],
+			archive: [...archiveGroups.values()]
 		};
+	});
+
+	// Ein Badge pro auf der Seite vorhandenem Monat (inkl. Jahres-Suffix bei Bedarf) - verlinkt
+	// bevorzugt in die "kommende" Sektion; nur wenn ein Monat ausschließlich im Archiv vorkommt,
+	// zeigt der Badge dorthin (Archiv-Überschriften bekommen ein "archiv-"-Präfix in der Id, damit
+	// z.B. "August" (kommend) und "August" (archiviert, gleiches Jahr) nie dieselbe Fragment-Id
+	// teilen).
+	const monthBadges = $derived.by(() => {
+		const badges: Array<{ slug: string; label: string; href: string }> = [];
+		const seen = new Set<string>();
+		for (const bucket of eventsByMonth.future) {
+			badges.push({ slug: bucket.slug, label: bucket.label, href: `#${bucket.slug}` });
+			seen.add(bucket.slug);
+		}
+		for (const bucket of eventsByMonth.archive) {
+			if (seen.has(bucket.slug)) continue;
+			badges.push({ slug: bucket.slug, label: bucket.label, href: `#archiv-${bucket.slug}` });
+			seen.add(bucket.slug);
+		}
+		return badges;
 	});
 
 	// ItemList-JSON-LD für alle Events
@@ -194,31 +218,27 @@
 			</header>
 
 			<!-- Month badge filter (scrolls to matching section) -->
-			{#if eventsByMonth.future.length > 0 || eventsByMonth.archive.length > 0}
+			{#if monthBadges.length > 0}
 				<nav class="mb-8 flex flex-wrap gap-2" aria-label="Monatlicher Filter">
-					{#each MONTHS as month (month.slug)}
-						{@const hasFuture = eventsByMonth.future.some(([slug]) => slug === month.slug)}
-						{@const hasArchive = eventsByMonth.archive.some(([slug]) => slug === month.slug)}
-						{#if hasFuture || hasArchive}
-							<a
-								href="#{month.slug}"
-								class="hover:bg-accent inline-block rounded-full border border-border px-3 py-1 text-sm transition-colors"
-							>
-								{month.name}
-							</a>
-						{/if}
+					{#each monthBadges as badge (badge.href)}
+						<a
+							href={badge.href}
+							class="hover:bg-accent inline-block rounded-full border border-border px-3 py-1 text-sm transition-colors"
+						>
+							{badge.label}
+						</a>
 					{/each}
 				</nav>
 			{/if}
 
 			<!-- Future Events -->
 			<section aria-label="Kommende Veranstaltungen">
-				{#each eventsByMonth.future as [monthSlug, events] (monthSlug)}
+				{#each eventsByMonth.future as bucket (bucket.slug)}
 					<div class="mb-12">
-						<h2 id={monthSlug} class="mb-4 text-xl font-semibold">
-							{MONTHS.find((m) => m.slug === monthSlug)?.name || monthSlug}
+						<h2 id={bucket.slug} class="mb-4 text-xl font-semibold">
+							{bucket.label}
 						</h2>
-						<EventList events={[...events]} country={result.filters.country} />
+						<EventList events={[...bucket.events]} country={result.filters.country} />
 					</div>
 				{/each}
 			</section>
@@ -227,19 +247,12 @@
 			{#if eventsByMonth.archive.length > 0}
 				<section class="mt-16 border-t pt-8" aria-label="Archivierte Veranstaltungen">
 					<h2 class="mb-6 text-lg font-semibold text-muted">Archiv (letzte 12 Monate)</h2>
-					{#each eventsByMonth.archive as [monthSlug, events] (monthSlug)}
+					{#each eventsByMonth.archive as bucket (bucket.slug)}
 						<div class="mb-8">
-							<h3 class="mb-3 text-sm font-medium text-muted">
-								{(() => {
-									const event = events[0];
-									if (!event) return monthSlug;
-									const startDate = new Date(event.startDate);
-									const year = startDate.getFullYear();
-									const month = MONTHS.find((m) => m.slug === monthSlug);
-									return `${month?.name || monthSlug} ${year}`;
-								})()}
+							<h3 id="archiv-{bucket.slug}" class="mb-3 text-sm font-medium text-muted">
+								{bucket.label}
 							</h3>
-							<EventList events={[...events]} country={result.filters.country} />
+							<EventList events={[...bucket.events]} country={result.filters.country} />
 						</div>
 					{/each}
 				</section>
