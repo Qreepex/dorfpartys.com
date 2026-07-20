@@ -23,7 +23,7 @@ spec:
       # als separater Job vor dem Rollout auslösen.
       initContainers:
         - name: migrate
-          image: ghcr.io/qreepex/dorfpartys/backend:0.1.0
+          image: ghcr.io/qreepex/dorfpartys/backend:0.2.0
           command: ["node", "backend/dist/db/migrate.js"]
           envFrom:
             - configMapRef:
@@ -31,7 +31,7 @@ spec:
             - secretRef:
                 name: backend-secret
         - name: seed
-          image: ghcr.io/qreepex/dorfpartys/backend:0.1.0
+          image: ghcr.io/qreepex/dorfpartys/backend:0.2.0
           command: ["node", "backend/dist/db/seed/index.js"]
           envFrom:
             - configMapRef:
@@ -40,7 +40,7 @@ spec:
                 name: backend-secret
       containers:
         - name: backend
-          image: ghcr.io/qreepex/dorfpartys/backend:0.1.2
+          image: ghcr.io/qreepex/dorfpartys/backend:0.2.0
           ports:
             - containerPort: 5000
           envFrom:
