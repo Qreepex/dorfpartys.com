@@ -15,7 +15,7 @@
 
 		{#if result.navigationTree.bundeslaender && result.navigationTree.bundeslaender.length > 0}
 			<div class="mb-6">
-				<h4 class="mb-2 text-sm font-medium text-muted">Bundesländer</h4>
+				<h4 class="text-md mb-2 font-medium text-muted">Regionen</h4>
 				<ul class="space-y-1">
 					{#each result.navigationTree.bundeslaender.sort((a, b) => {
 						const diff = b.eventCount - a.eventCount;
@@ -47,7 +47,7 @@
 
 		{#if result.navigationTree.kreise && result.navigationTree.kreise.length > 0}
 			<div class="mb-6">
-				<h4 class="mb-2 text-sm font-medium text-muted">Partys in</h4>
+				<h4 class="text-md mb-2 font-medium text-muted">Partys in</h4>
 				<ul class="space-y-1">
 					{#each result.navigationTree.kreise.sort((a, b) => {
 						const diff = b.eventCount - a.eventCount;
@@ -79,7 +79,7 @@
 
 		{#if result.navigationTree.partyArten && result.navigationTree.partyArten.length > 0}
 			<div>
-				<h4 class="mb-2 text-sm font-medium text-muted">Veranstaltungsarten</h4>
+				<h4 class="text-md mb-2 font-medium text-muted">Veranstaltungsarten</h4>
 				<ul class="space-y-1">
 					{#each result.navigationTree.partyArten.sort((a, b) => {
 						const diff = b.eventCount - a.eventCount;
