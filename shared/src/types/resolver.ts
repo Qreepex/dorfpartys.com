@@ -27,6 +27,13 @@ export interface ResolvedSeoCopy {
 	description: string;
 	h1: string;
 	intro: string;
+	/**
+	 * Zusätzliche, individuelle Absätze pro Land/Bundesland (siehe
+	 * `backend/src/seo/region-flavor.ts`) - Duplicate-Content-Gegenmaßnahme für
+	 * Seiten mit wenig/keinen Events. Ergänzt `intro`, ersetzt es nicht.
+	 * Leeres Array, wenn kein Country-Kontext vorliegt.
+	 */
+	regionFlavorParagraphs: string[];
 }
 
 /**

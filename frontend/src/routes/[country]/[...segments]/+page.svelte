@@ -177,6 +177,9 @@
 			<header class="mb-8">
 				<h1>{result.seo.h1}</h1>
 				<p class="mt-2 max-w-[60ch] text-muted">{result.seo.intro}</p>
+				{#each result.seo.regionFlavorParagraphs as paragraph, index (index)}
+					<p class="mt-2 max-w-[60ch] text-muted">{paragraph}</p>
+				{/each}
 				<p class="mt-2 text-[0.85rem] text-muted">
 					{#if result.futureCount && result.pastCount}
 						{result.futureCount} kommend, {result.pastCount} archiviert

@@ -182,6 +182,7 @@ export const resolverRouter = router({
       );
       const seo = buildSearchSeoCopy({
         country: input.country,
+        bundeslandSlug: outcome.filters.bundeslandSlug,
         bundeslandName: names.bundeslandName,
         kreisName: names.kreisName,
         artName: names.artName,

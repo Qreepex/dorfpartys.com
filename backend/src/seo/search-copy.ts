@@ -1,5 +1,6 @@
 import type { Country, ResolvedSeoCopy } from "@dorfpartys/shared";
 import { SITE_NAME } from "@dorfpartys/shared";
+import { getRegionFlavorParagraphs } from "./region-flavor.js";
 
 const COUNTRY_NAMES: Record<Country, string> = {
   de: "Deutschland",
@@ -16,6 +17,7 @@ const COUNTRY_NAMES_NOMINATIVE: Record<Country, string> = {
 
 export interface SearchCopyInput {
   country: Country;
+  bundeslandSlug: string | null;
   bundeslandName: string | null;
   kreisName: string | null;
   artName: string | null;
@@ -77,5 +79,13 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   }
   const intro = introParts.join(" ");
 
-  return { title, description, h1, intro };
+  // Zusätzliche, regionsspezifische Absätze (Land + ggf. Bundesland/Kanton) -
+  // Duplicate-Content-Gegenmaßnahme, siehe region-flavor.ts. Wird auf Kreis-Seiten
+  // ebenfalls ausgeliefert, da ein Kreis immer ein Bundesland impliziert.
+  const regionFlavorParagraphs = getRegionFlavorParagraphs(
+    input.country,
+    input.bundeslandSlug,
+  );
+
+  return { title, description, h1, intro, regionFlavorParagraphs };
 }
