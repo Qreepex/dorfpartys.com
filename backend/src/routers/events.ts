@@ -31,12 +31,20 @@ import {
 } from "../slug/index.js";
 import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
 import { sanitizeInput, sanitizeText } from "../sanitization/index.js";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "../rate-limit/index.js";
 import {
   moderatorProcedure,
   protectedProcedure,
   publicProcedure,
   router,
 } from "../trpc/trpc.js";
+
+// Abuse-Schutz (Produktvorgabe: "beliebig viele Veranstaltungen anlegen kann
+// zu Abuse führen") - sowohl pro Nutzer als auch pro IP, da ein Nutzer sich
+// mit mehreren Accounts anmelden und so ein rein User-basiertes Limit
+// umgehen könnte. Siehe backend/src/rate-limit/index.ts für die Limit-Werte.
+const EVENT_CREATE_LIMIT_MESSAGE =
+  "Du hast das Limit für Veranstaltungs-Einreichungen erreicht. Bitte versuche es später erneut.";
 
 async function assertKreisBelongsToBundesland(
   db: Database,
@@ -264,6 +272,21 @@ export const eventsRouter = router({
   create: protectedProcedure
     .input(submitEventInputSchema)
     .mutation(async ({ ctx, input }) => {
+      await enforceRateLimit(
+        ctx.db,
+        "event_create:user",
+        ctx.user.id,
+        RATE_LIMITS.eventCreatePerUser,
+        EVENT_CREATE_LIMIT_MESSAGE,
+      );
+      await enforceRateLimit(
+        ctx.db,
+        "event_create:ip",
+        getClientIp(ctx.req),
+        RATE_LIMITS.eventCreatePerIp,
+        EVENT_CREATE_LIMIT_MESSAGE,
+      );
+
       await assertKreisBelongsToBundesland(
         ctx.db,
         input.kreisId,

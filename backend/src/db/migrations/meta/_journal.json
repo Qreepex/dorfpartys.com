@@ -36,6 +36,13 @@
       "when": 1784555869588,
       "tag": "0004_illegal_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784561247363,
+      "tag": "0005_sticky_annihilus",
+      "breakpoints": true
     }
   ]
 }

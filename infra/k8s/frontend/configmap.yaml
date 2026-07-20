@@ -11,3 +11,10 @@ data:
   PUBLIC_SITE_URL: "https://www.dorfpartys.com"
   AUTHENTIK_ISSUER: "https://auth.dorfpartys.com/application/o/dorf-partys-com/"
   AUTHENTIK_REDIRECT_URI: "https://www.dorfpartys.com/auth/callback"
+  # SvelteKit Node-Adapter: vertraut dem von ingress-nginx gesetzten
+  # x-forwarded-for-Header, damit event.getClientAddress() (frontend/src/hooks.server.ts)
+  # die echte Browser-IP liefert statt der internen Ingress-Pod-IP. XFF_DEPTH=1,
+  # weil ingress-nginx der einzige Proxy-Hop vor dem Frontend ist - ohne diese
+  # beiden Variablen ignoriert der Adapter den Header standardmäßig.
+  ADDRESS_HEADER: "x-forwarded-for"
+  XFF_DEPTH: "1"

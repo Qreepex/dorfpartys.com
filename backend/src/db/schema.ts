@@ -397,6 +397,25 @@ export const reportRateLimit = pgTable("report_rate_limit", {
   resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
 });
 
+// Generischer Fixed-Window-Rate-Limit-Zähler (backend/src/rate-limit/index.ts).
+// `scope` unterscheidet die geschützte Aktion + Dimension (z.B.
+// "event_create:user", "event_create:ip", "upload:user", "upload:ip"),
+// `key` ist die konkrete User-ID oder IP-Adresse. DB-gestützt statt In-Memory,
+// weil das Backend mit mehreren Replicas läuft (infra/k8s/backend/deployment.yaml,
+// replicas: 2) - ein In-Memory-Zähler pro Pod würde effektive Limits je nach
+// Load-Balancing bis zu verdoppeln.
+export const rateLimitCounter = pgTable(
+  "rate_limit_counter",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    scope: text("scope").notNull(),
+    key: text("key").notNull(),
+    count: integer("count").notNull().default(1),
+    resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [uniqueIndex("rate_limit_scope_key_idx").on(table.scope, table.key)],
+);
+
 // --- Relations ---------------------------------------------------------
 
 export const bundeslandRelations = relations(bundesland, ({ many }) => ({

@@ -5,10 +5,40 @@ import {
   createValidatedImage,
   uploadToS3,
 } from "../storage/index.js";
+import { enforceRateLimit, getClientIp, RATE_LIMITS } from "../rate-limit/index.js";
 import { protectedProcedure, router } from "../trpc/trpc.js";
 
 const contentTypeSchema = z.enum(["image/jpeg", "image/png"]);
 const bufferSchema = z.instanceof(Buffer);
+
+// Abuse-Schutz (Produktvorgabe: "beliebig viele ... Bilder hochladen kann zu
+// Abuse führen") - sowohl pro Nutzer als auch pro IP. Gilt für beide
+// Upload-Mutationen (Event-Fotos + Profilbild) unter demselben Scope, weil
+// beide dieselbe teure Re-Encoding-/S3-Pipeline durchlaufen (AGENTS.md
+// Abschnitt 7: presigned Uploads laufen serverseitig über dieses Backend).
+const UPLOAD_LIMIT_MESSAGE =
+  "Du hast das Limit für Bild-Uploads erreicht. Bitte versuche es später erneut.";
+
+async function enforceUploadRateLimit(
+  db: Parameters<typeof enforceRateLimit>[0],
+  req: Parameters<typeof getClientIp>[0],
+  userId: string,
+) {
+  await enforceRateLimit(
+    db,
+    "upload:user",
+    userId,
+    RATE_LIMITS.uploadPerUser,
+    UPLOAD_LIMIT_MESSAGE,
+  );
+  await enforceRateLimit(
+    db,
+    "upload:ip",
+    getClientIp(req),
+    RATE_LIMITS.uploadPerIp,
+    UPLOAD_LIMIT_MESSAGE,
+  );
+}
 
 export const uploadsRouter = router({
   uploadEventPhoto: protectedProcedure
@@ -19,7 +49,8 @@ export const uploadsRouter = router({
         buffer: bufferSchema,
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      await enforceUploadRateLimit(ctx.db, ctx.req, ctx.user.id);
       try {
         // Production-grade validation with re-encoding
         const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
@@ -57,6 +88,7 @@ export const uploadsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await enforceUploadRateLimit(ctx.db, ctx.req, ctx.user.id);
       try {
         // Production-grade validation with re-encoding
         const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
