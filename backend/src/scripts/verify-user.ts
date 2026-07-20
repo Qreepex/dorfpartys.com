@@ -20,9 +20,10 @@ async function verifyUser(
   method: (typeof verificationMethods)[number],
 ) {
   // Bestimme, ob Input Email oder UUID ist
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    emailOrUserId,
-  );
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      emailOrUserId,
+    );
 
   // Lade User + Profil
   let userRow, profileRow;
@@ -86,7 +87,7 @@ async function verifyUser(
         and(
           eq(schema.userProfile.verifiedInstagramHandle, handleToVerify),
           ne(schema.userProfile.userId, userRow.id),
-        )
+        ),
       );
 
     for (const conflictUser of conflictUsers) {
@@ -110,7 +111,7 @@ async function verifyUser(
         and(
           eq(schema.userProfile.verifiedTiktokHandle, handleToVerify),
           ne(schema.userProfile.userId, userRow.id),
-        )
+        ),
       );
 
     for (const conflictUser of conflictUsers) {
@@ -159,7 +160,9 @@ async function verifyUser(
 const [emailOrUserId, method] = process.argv.slice(2);
 
 if (!emailOrUserId || !method) {
-  console.error("Usage: verify-user <email-or-user-id> <email|instagram|tiktok>");
+  console.error(
+    "Usage: verify-user <email-or-user-id> <email|instagram|tiktok>",
+  );
   process.exit(1);
 }
 
@@ -170,7 +173,7 @@ if (!verificationMethods.includes(method as any)) {
   process.exit(1);
 }
 
-verifyUser(emailOrUserId, method as typeof verificationMethods[number]).catch(
+verifyUser(emailOrUserId, method as (typeof verificationMethods)[number]).catch(
   (err) => {
     console.error("Error during verification:", err);
     process.exit(1);

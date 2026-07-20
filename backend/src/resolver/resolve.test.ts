@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import { resolve } from "./resolve.js";
 import type { EventFilterIds, TaxonomyRepository } from "./types.js";
 
-// Fixture spiegelt die Beispiel-URLs aus AGENTS.md 1.2 wider.
 class FakeTaxonomyRepository implements TaxonomyRepository {
-  constructor(private readonly eventCount = 1) {}
+  constructor(
+    private readonly eventCount = 1,
+    private readonly archiveCount = 0,
+  ) {}
 
   async findBundeslandBySlug(_country: string, slug: string) {
     if (slug === "schleswig-holstein") return { id: "bl-sh", slug };
@@ -38,22 +40,29 @@ class FakeTaxonomyRepository implements TaxonomyRepository {
   async listApprovedEvents(): Promise<EventListItem[]> {
     return [];
   }
+
+  async listApprovedEventsPast12Months(): Promise<EventListItem[]> {
+    return [];
+  }
+
+  async listKreiseForBundesland(
+    _country: string,
+    _bundeslandId: string,
+    _filters?: EventFilterIds,
+  ) {
+    return [];
+  }
+
+  async listPartyArtenForLocation(_country: string, _filters: EventFilterIds) {
+    return [];
+  }
 }
 
-const repo = new FakeTaxonomyRepository(1);
-const emptyRepo = new FakeTaxonomyRepository(0);
+const repo = new FakeTaxonomyRepository(1, 0);
+const emptyRepo = new FakeTaxonomyRepository(0, 0);
 
-describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
-  it("bundesland/kreis/art/monat", async () => {
-    const result = await resolve(
-      "de",
-      ["schleswig-holstein", "ostholstein", "schuetzenfeste", "august"],
-      repo,
-    );
-    expect(result.kind).toBe("result");
-  });
-
-  it("bundesland/kreis/art", async () => {
+describe("resolve - URLs ohne Monat (Phase 2 Refactor)", () => {
+  it("bundesland/kreis/art (3 Segmente)", async () => {
     const result = await resolve(
       "de",
       ["schleswig-holstein", "ostholstein", "schuetzenfeste"],
@@ -62,16 +71,7 @@ describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
     expect(result.kind).toBe("result");
   });
 
-  it("bundesland/kreis/monat", async () => {
-    const result = await resolve(
-      "de",
-      ["schleswig-holstein", "ostholstein", "august"],
-      repo,
-    );
-    expect(result.kind).toBe("result");
-  });
-
-  it("bundesland/kreis", async () => {
+  it("bundesland/kreis (2 Segmente)", async () => {
     const result = await resolve(
       "de",
       ["schleswig-holstein", "ostholstein"],
@@ -80,12 +80,7 @@ describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
     expect(result.kind).toBe("result");
   });
 
-  it("bundesland/monat", async () => {
-    const result = await resolve("de", ["schleswig-holstein", "august"], repo);
-    expect(result.kind).toBe("result");
-  });
-
-  it("bundesland/art", async () => {
+  it("bundesland/art (2 Segmente)", async () => {
     const result = await resolve(
       "de",
       ["schleswig-holstein", "schuetzenfeste"],
@@ -94,13 +89,13 @@ describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
     expect(result.kind).toBe("result");
   });
 
-  it("art", async () => {
-    const result = await resolve("de", ["schuetzenfeste"], repo);
+  it("nur bundesland (1 Segment)", async () => {
+    const result = await resolve("de", ["schleswig-holstein"], repo);
     expect(result.kind).toBe("result");
   });
 
-  it("monat", async () => {
-    const result = await resolve("de", ["august"], repo);
+  it("nur art (1 Segment)", async () => {
+    const result = await resolve("de", ["schuetzenfeste"], repo);
     expect(result.kind).toBe("result");
   });
 
@@ -108,9 +103,19 @@ describe("resolve - kanonische URLs aus AGENTS.md 1.2 (kein Redirect)", () => {
     const result = await resolve("de", [], repo);
     expect(result.kind).toBe("result");
   });
+
+  it("Monat-Segment ist jetzt 404", async () => {
+    const result = await resolve("de", ["august"], repo);
+    expect(result.kind).toBe("not-found");
+  });
+
+  it("Monat mit anderen Segmenten ist 404", async () => {
+    const result = await resolve("de", ["schleswig-holstein", "august"], repo);
+    expect(result.kind).toBe("not-found");
+  });
 });
 
-describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
+describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4 updated)", () => {
   it("Kreis impliziert Bundesland: fehlt es, wird es per 301 ergänzt", async () => {
     const result = await resolve("de", ["ostholstein", "zeltfeten"], repo);
     expect(result).toEqual({
@@ -120,11 +125,15 @@ describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
     });
   });
 
-  it("falsche Segment-Reihenfolge wird zur kanonischen Reihenfolge redirected", async () => {
-    const result = await resolve("de", ["august", "schleswig-holstein"], repo);
+  it("falsche Segment-Reihenfolge wird zur kanonischen Reihenfolge redirected (ohne Monat)", async () => {
+    const result = await resolve(
+      "de",
+      ["schuetzenfeste", "schleswig-holstein"],
+      repo,
+    );
     expect(result).toEqual({
       kind: "redirect",
-      location: "/de/schleswig-holstein/august/",
+      location: "/de/schleswig-holstein/schuetzenfeste/",
       permanent: true,
     });
   });
@@ -139,34 +148,28 @@ describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4)", () => {
     expect(result).toEqual({ kind: "not-found" });
   });
 
-  it("mehr als 4 Segmente ist 404", async () => {
+  it("mehr als 3 Segmente ist 404", async () => {
     const result = await resolve(
       "de",
-      [
-        "schleswig-holstein",
-        "ostholstein",
-        "schuetzenfeste",
-        "august",
-        "zuviel",
-      ],
+      ["schleswig-holstein", "ostholstein", "schuetzenfeste", "zuviel"],
       repo,
     );
     expect(result).toEqual({ kind: "not-found" });
   });
 });
 
-describe("resolve - Indexierungsregeln (bewusste Abweichung von AGENTS.md 1.6, siehe TODO.md)", () => {
-  it("Treffer > 0 -> indexable", async () => {
+describe("resolve - Indexierungsregeln (Phase 2: Archiv-Integration)", () => {
+  it("future Events > 0 -> indexable = true", async () => {
     const result = await resolve("de", ["schuetzenfeste"], repo);
     if (result.kind !== "result") throw new Error("expected result");
     expect(result.indexable).toBe(true);
     expect(result.total).toBe(1);
   });
 
-  it("keine Treffer, aber gültige Kombination -> trotzdem indexable (Ranking-Aufbau für künftige Events)", async () => {
+  it("keine Events (future + archive = 0) -> indexable = false (noindex)", async () => {
     const result = await resolve("de", ["schuetzenfeste"], emptyRepo);
     if (result.kind !== "result") throw new Error("expected result");
-    expect(result.indexable).toBe(true);
+    expect(result.indexable).toBe(false);
     expect(result.total).toBe(0);
   });
 });

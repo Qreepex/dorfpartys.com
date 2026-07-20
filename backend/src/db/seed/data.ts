@@ -1035,8 +1035,3 @@ export const BUNDESLAND_SEED: BundeslandSeed[] = [
     ],
   },
 ];
-
-export const PARTY_ART_EXTRA_SEED: Array<{ slug: string; name: string }> = [
-  { slug: "dorffeste", name: "Dorffest" },
-  { slug: "sonstiges", name: "Sonstiges" },
-];

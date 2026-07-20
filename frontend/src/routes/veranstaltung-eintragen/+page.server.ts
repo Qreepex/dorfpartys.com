@@ -9,9 +9,11 @@ import type { Actions, PageServerLoad } from './$types.js';
 export const load: PageServerLoad = async ({ locals }) => {
 	let isLoggedIn = false;
 	let isProfilePublic = false;
+	let currentUserId = '';
 	try {
 		const me = await locals.trpc.users.me.query();
 		isLoggedIn = true;
+		currentUserId = me.id;
 		const { profile } = await locals.trpc.users.getProfile.query({ userId: me.id });
 		isProfilePublic = profile?.isPublic ?? false;
 	} catch {
@@ -32,7 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})
 	);
 
-	return { partyArten, bundeslaenderByCountry, isLoggedIn, isProfilePublic };
+	return { partyArten, bundeslaenderByCountry, isLoggedIn, isProfilePublic, currentUserId };
 };
 
 export const actions: Actions = {
@@ -80,6 +82,9 @@ export const actions: Actions = {
 		const minAgeRaw = formData.get('minAge');
 		const photoS3Key = formData.get('photoS3Key');
 
+		const organizerUserId = formData.get('organizerUserId');
+		const organizerName = formData.get('organizerName');
+
 		const raw = {
 			title: formData.get('title'),
 			description: formData.get('description'),
@@ -94,6 +99,8 @@ export const actions: Actions = {
 			minAge: minAgeRaw ? Number(minAgeRaw) : undefined,
 			allowsMuttizettel: formData.get('allowsMuttizettel') === 'on',
 			isOutdoor: formData.get('isOutdoor') === 'on',
+			...(organizerUserId ? { organizerUserId: String(organizerUserId) } : {}),
+			...(organizerName ? { organizerName: String(organizerName) } : {}),
 			...(photoS3Key ? { photos: [{ s3Key: String(photoS3Key), position: 1 }] } : {})
 		};
 

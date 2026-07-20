@@ -23,7 +23,6 @@ export const slugTypeEnum = pgEnum("slug_type", [
   "bundesland",
   "kreis",
   "party_art",
-  "monat",
 ]);
 
 export const reportTypeEnum = pgEnum("report_type", [
@@ -46,6 +45,12 @@ export const verificationMethodEnum = pgEnum("verification_method", [
   "email",
   "instagram",
   "tiktok",
+]);
+
+export const eventClaimStatusEnum = pgEnum("event_claim_status", [
+  "pending",
+  "approved",
+  "rejected",
 ]);
 
 // --- Taxonomie / Stammdaten ---------------------------------------------
@@ -99,48 +104,51 @@ export const user = pgTable("user", {
     .defaultNow(),
 });
 
-export const userProfile = pgTable("user_profile", {
-  userId: uuid("user_id")
-    .primaryKey()
-    .references(() => user.id, { onDelete: "cascade" }),
-  // Veranstalter-Slug für /{country}/veranstalter/{slug}/ - vergeben, sobald
-  // ein display_name gesetzt wird; eigener URL-Baum ohne Kollisionsrisiko zu
-  // den vier Filter-Vokabularen, analog zu Event-Slugs (AGENTS.md 1.7).
-  slug: text("slug").unique(),
-  // Standardmäßig privat - öffentliche Sichtbarkeit ist Voraussetzung fürs
-  // Eintragen von Veranstaltungen (enforced sowohl im Backend als auch im
-  // Frontend, siehe events.create und /veranstaltung-eintragen).
-  isPublic: boolean("is_public").notNull().default(false),
-  displayName: text("display_name"),
-  avatarS3Key: text("avatar_s3_key"),
-  websiteUrl: text("website_url"),
-  instagramUrl: text("instagram_url"),
-  facebookUrl: text("facebook_url"),
-  tiktokUrl: text("tiktok_url"),
-  bio: text("bio"),
-  // Verifizierung (AGENTS.md Abschnitt Veranstalter-Verifizierung):
-  // verifiedAt = null: nicht verifiziert
-  verifiedAt: timestamp("verified_at", { withTimezone: true }),
-  verificationMethod: verificationMethodEnum("verification_method"),
-  verificationCode: text("verification_code"),
-  verificationRequestedAt: timestamp("verification_requested_at", {
-    withTimezone: true,
-  }),
-  // Normalisierte Handles (lowercase, @-frei) für Uniqueness-Checks across Users
-  verifiedInstagramHandle: text("verified_instagram_handle"),
-  verifiedTiktokHandle: text("verified_tiktok_handle"),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-},
-(t) => [
-  uniqueIndex("user_profile_verified_instagram_handle_idx").on(
-    t.verifiedInstagramHandle,
-  ),
-  uniqueIndex("user_profile_verified_tiktok_handle_idx").on(
-    t.verifiedTiktokHandle,
-  ),
-]);
+export const userProfile = pgTable(
+  "user_profile",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // Veranstalter-Slug für /{country}/veranstalter/{slug}/ - vergeben, sobald
+    // ein display_name gesetzt wird; eigener URL-Baum ohne Kollisionsrisiko zu
+    // den vier Filter-Vokabularen, analog zu Event-Slugs (AGENTS.md 1.7).
+    slug: text("slug").unique(),
+    // Standardmäßig privat - öffentliche Sichtbarkeit ist Voraussetzung fürs
+    // Eintragen von Veranstaltungen (enforced sowohl im Backend als auch im
+    // Frontend, siehe events.create und /veranstaltung-eintragen).
+    isPublic: boolean("is_public").notNull().default(false),
+    displayName: text("display_name"),
+    avatarS3Key: text("avatar_s3_key"),
+    websiteUrl: text("website_url"),
+    instagramUrl: text("instagram_url"),
+    facebookUrl: text("facebook_url"),
+    tiktokUrl: text("tiktok_url"),
+    bio: text("bio"),
+    // Verifizierung (AGENTS.md Abschnitt Veranstalter-Verifizierung):
+    // verifiedAt = null: nicht verifiziert
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verificationMethod: verificationMethodEnum("verification_method"),
+    verificationCode: text("verification_code"),
+    verificationRequestedAt: timestamp("verification_requested_at", {
+      withTimezone: true,
+    }),
+    // Normalisierte Handles (lowercase, @-frei) für Uniqueness-Checks across Users
+    verifiedInstagramHandle: text("verified_instagram_handle"),
+    verifiedTiktokHandle: text("verified_tiktok_handle"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("user_profile_verified_instagram_handle_idx").on(
+      t.verifiedInstagramHandle,
+    ),
+    uniqueIndex("user_profile_verified_tiktok_handle_idx").on(
+      t.verifiedTiktokHandle,
+    ),
+  ],
+);
 
 export const userLink = pgTable("user_link", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -159,9 +167,11 @@ export const event = pgTable("event", {
   // Slug wird erst beim Freischalten im Review vergeben (AGENTS.md 1.7/5).
   slug: text("slug").unique(),
   title: text("title").notNull(),
-  organizerUserId: uuid("organizer_user_id")
-    .notNull()
-    .references(() => user.id),
+  organizerUserId: uuid("organizer_user_id").references(() => user.id),
+  // Für Freitext-Veranstalter oder wenn kein User-Profil gewählt wird
+  organizerName: text("organizer_name"),
+  // Gibt an, ob der aktuelle Veranstalter (User oder Name) verifiziert ist
+  organizerVerified: boolean("organizer_verified").notNull().default(false),
   description: text("description").notNull(),
   startDate: timestamp("start_date", { withTimezone: true }).notNull(),
   endDate: timestamp("end_date", { withTimezone: true }).notNull(),
@@ -226,6 +236,35 @@ export const eventLink = pgTable(
   },
   (t) => [
     uniqueIndex("event_link_event_position_idx").on(t.eventId, t.position),
+  ],
+);
+
+// Veranstalter-Claims: Wenn ein Event nicht vom Veranstalter selbst eingereicht wurde
+// oder der Veranstalter nicht verifiziert ist, können verifizierte Veranstalter das
+// Event "claimen" und erhalten nach Moderation die volle Kontrolle.
+export const eventClaim = pgTable(
+  "event_claim",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    claimedByUserId: uuid("claimed_by_user_id")
+      .notNull()
+      .references(() => user.id),
+    status: eventClaimStatusEnum("status").notNull().default("pending"),
+    reason: text("reason"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    reviewedBy: uuid("reviewed_by").references(() => user.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("event_claim_event_pending_idx").on(
+      t.eventId,
+      t.claimedByUserId,
+    ),
   ],
 );
 
@@ -302,6 +341,12 @@ export const userRelations = relations(user, ({ one, many }) => ({
   }),
   links: many(userLink),
   events: many(event, { relationName: "organizer" }),
+  eventClaimsInitiated: many(eventClaim, {
+    relationName: "eventClaimsInitiated",
+  }),
+  eventClaimsReviewed: many(eventClaim, {
+    relationName: "eventClaimsReviewed",
+  }),
 }));
 
 export const userProfileRelations = relations(userProfile, ({ one }) => ({
@@ -329,6 +374,7 @@ export const eventRelations = relations(event, ({ one, many }) => ({
   }),
   photos: many(eventPhoto),
   links: many(eventLink),
+  claims: many(eventClaim),
 }));
 
 export const eventPhotoRelations = relations(eventPhoto, ({ one }) => ({
@@ -337,6 +383,20 @@ export const eventPhotoRelations = relations(eventPhoto, ({ one }) => ({
 
 export const eventLinkRelations = relations(eventLink, ({ one }) => ({
   event: one(event, { fields: [eventLink.eventId], references: [event.id] }),
+}));
+
+export const eventClaimRelations = relations(eventClaim, ({ one }) => ({
+  event: one(event, { fields: [eventClaim.eventId], references: [event.id] }),
+  claimedBy: one(user, {
+    fields: [eventClaim.claimedByUserId],
+    references: [user.id],
+    relationName: "eventClaimsInitiated",
+  }),
+  reviewedByUser: one(user, {
+    fields: [eventClaim.reviewedBy],
+    references: [user.id],
+    relationName: "eventClaimsReviewed",
+  }),
 }));
 
 export const savedEventRelations = relations(savedEvent, ({ one }) => ({

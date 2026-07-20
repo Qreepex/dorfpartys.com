@@ -4,7 +4,7 @@ Kontext-Dokument für Agenten, die an der Implementierung von dorfpartys.com arb
 
 ## Projektüberblick
 
-dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform zum Finden und Eintragen von Partys, mit Fokus auf lokale Veranstaltungen (Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten etc.). Kernanforderung: sehr granulare, SEO-indizierbare Filter-URLs (Geografie × Party-Art × Monat), nach Vorbild von Faceted-Navigation-Portalen wie Zalando.
+dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform zum Finden und Eintragen von Partys, mit Fokus auf lokale Veranstaltungen (Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten etc.). Kernanforderung: sehr granulare, SEO-indizierbare Filter-URLs (Geografie × Party-Art), nach Vorbild von Faceted-Navigation-Portalen wie Zalando. Zeitfilter (Monate) werden via Fragment-IDs für semantische Grouping und Google Sitelinks genutzt, nicht in URL-Pfaden.
 
 **Scope dieser Phase:** ausschließlich technisches Fundament - Routing, Datenmodell, Auth, Nutzerprofile, Review-Workflow, SEO-Grundgerüst. Kein UI-Design/Styling.
 
@@ -43,7 +43,7 @@ dorfpartys.com ist eine DACH-weite (Deutschland/Österreich/Schweiz) Plattform z
   types/                                 # Event, User, UserProfile, Bundesland, Kreis, PartyArt, etc.
   schemas/                               # Zod-Schemas (Event-Einreichung, Profil, Resolver-Input) – von tRPC-Routern
                                           # im Backend UND für Client-seitige Formvalidierung im Frontend genutzt
-  constants/                             # Monats-Liste, kanonische Segment-Reihenfolge
+  constants/                             # Monats-Konstanten (Frontend-only für Rendering), kanonische Segment-Reihenfolge
   url/                                   # reine Funktionen zum Bauen kanonischer URLs (kein DB-Zugriff)
 
 /infra/k8s
@@ -57,7 +57,7 @@ Package-Manager: **pnpm workspaces** (`pnpm-workspace.yaml` bindet frontend/back
 
 Warum tRPC: Frontend und Backend sind beide TypeScript im selben Monorepo - der Frontend-Workspace importiert den `AppRouter`-Typ **nur als Typ** aus `/backend` (kein Laufzeit-Coupling), dadurch volle Typsicherheit zwischen Event-/Resolver-/Profil-Endpunkten ohne manuell gepflegtes OpenAPI-Schema. Zod-Schemas für Input-Validierung liegen in `/shared`, damit Frontend-Formulare dieselbe Validierung vor dem Absenden ausführen können wie das Backend.
 
-## 1. URL-Architektur
+## 1. URL-Architektur (Phase 2 Refactor: Monate aus URLs entfernt)
 
 Resolver-Logik läuft **im Backend** (braucht DB-Zugriff auf Slug-Registry). Frontend ruft in `+page.server.ts` den tRPC-Endpunkt `resolver.resolve({ country, segments })` auf, der entweder `{ redirect: url }` (→ SvelteKit `redirect(301, url)`) oder `{ filters, results }` zurückgibt.
 
@@ -71,39 +71,43 @@ Resolver-Logik läuft **im Backend** (braucht DB-Zugriff auf Slug-Registry). Fro
 
 Land ist immer das erste Pfadsegment. Eine Domain (`dorfpartys.com`) für den gesamten DACH-Raum - keine separaten ccTLDs.
 
-### 1.2 Filter-Segmente (Suche/Browse)
+### 1.2 Filter-Segmente (Suche/Browse) – Monate als Fragment, nicht Path
 
-Nach dem Land-Segment folgen 0–4 weitere Segmente in fester kanonischer Reihenfolge:
+Nach dem Land-Segment folgen 0–3 weitere Segmente in fester kanonischer Reihenfolge (max 3 statt vorher 4):
 
 ```
-/{country}/{bundesland}/{kreis}/{art}/{monat}/
+/{country}/{bundesland}/{kreis}/{art}/
 ```
 
 Alle folgenden Varianten müssen auflösbar sein:
 
 ```
-/de/schleswig-holstein/ostholstein/schuetzenfeste/august/
-/de/schleswig-holstein/ostholstein/schuetzenfeste/
-/de/schleswig-holstein/ostholstein/august/
-/de/schleswig-holstein/ostholstein/
-/de/schleswig-holstein/august/
-/de/schleswig-holstein/schuetzenfeste/
-/de/schuetzenfeste/
-/de/august/
+/de/schleswig-holstein/ostholstein/schuetzenfeste/    # 3 Filter
+/de/schleswig-holstein/ostholstein/                   # 2 Filter
+/de/schleswig-holstein/schuetzenfeste/                # 2 Filter
+/de/schleswig-holstein/                               # 1 Filter
+/de/schuetzenfeste/                                   # 1 Filter
+/de/                                                   # Root (alle Filter)
 ```
 
-Kein literales `/art/`- oder `/monat/`-Präfix. Welches Segment was bedeutet, wird über den Resolver anhand kontrollierter Vokabulare bestimmt, nicht über die Position.
+**Monate werden nicht in Pfaden kodiert.** Stattdessen:
+
+- Seiten laden alle kommenden + letzten 12 Monate archivierter Events
+- Frontend gruppiert Events nach Monat mit semantischen `<h2 id="august">August</h2>` Überschriften
+- Nutzer clicfen auf Month-Badges → scrollen zu `#august` (Fragment wird in URL angehängt: `/de/schleswig-holstein/#august`)
+- Google indexiert die Main-URL und erkennt Sitelink-Opportunities über die Monat-Überschriften
+
+Kein literales `/art/`-Präfix. Welches Segment was bedeutet, wird über den Resolver anhand kontrollierter Vokabulare bestimmt, nicht über die Position.
 
 ### 1.3 Segment-Resolver
 
-Vier kontrollierte Vokabulare, **global kollisionsfrei** (siehe 1.5):
+Drei kontrollierte Vokabulare, **global kollisionsfrei** (siehe 1.5):
 
 | Vokabular  | Beispiele                                                   | Herkunft                                |
 | ---------- | ----------------------------------------------------------- | --------------------------------------- |
 | Bundesland | schleswig-holstein, bayern, ...                             | Stammdaten je Land                      |
 | Kreis      | ostholstein, ...                                            | Stammdaten, referenziert ein Bundesland |
 | Party-Art  | schuetzenfeste, zeltfeten, scheunenfeten, stoppelfeten, ... | Admin-gepflegte Liste                   |
-| Monat      | januar … dezember                                           | fest, 12 Werte                          |
 
 Resolver-Logik (Pseudocode, Backend):
 
@@ -119,8 +123,6 @@ for segment in segments:
     filters.bundesland_implied = lookup_bundesland_for_kreis(segment)
   elif segment in PartyArt-Slugs:
     filters.art = segment
-  elif segment in Monat-Slugs:
-    filters.monat = segment
   else:
     return 404
 
@@ -129,24 +131,27 @@ if filters.bundesland present AND filters.bundesland_implied present:
     return 404
 ```
 
+**Monate-Segmente werden 404** (nicht mehr akzeptiert).
+
 ### 1.4 Kanonisierung & Redirects (301)
 
 Ziel: pro Inhalt genau **eine** indexierbare URL.
 
-- **Kanonische Reihenfolge:** `bundesland → kreis → art → monat`. Jede andere Reihenfolge der vorhandenen Segmente → 301 zur kanonischen Reihenfolge.
+- **Kanonische Reihenfolge:** `bundesland → kreis → art` (Monate nicht in Reihenfolge). Jede andere Reihenfolge der vorhandenen Segmente → 301 zur kanonischen Reihenfolge.
 - **Kreis impliziert Bundesland:** Ist ein Kreis-Segment vorhanden, muss die kanonische URL immer auch das zugehörige Bundesland enthalten. `/de/ostholstein/zeltfeten/` → 301 → `/de/schleswig-holstein/ostholstein/zeltfeten/`.
-- **Monat ist evergreen**, kein Jahr im Pfad. Für ein konkretes Jahr: Query-Parameter `?jahr=2026` (nicht Teil der kanonischen URL).
+- **Monate sind evergreen:** Alle Events der Saison (kommend + 12 Monate Archiv) auf einer URL; Fragment-Scrolling für Monat-Navigation.
 
 ### 1.5 Slug-Kollisionsvermeidung
 
-Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **alle vier Vokabulare hinweg** (Bundesland, Kreis, Party-Art, Monat). Beim Anlegen eines neuen Eintrags gegen die Registry prüfen; bei Kollision automatisch disambiguieren oder Anlage blockieren.
+Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **drei Vokabulare** (Bundesland, Kreis, Party-Art). Monate nicht in Registry (keine Slugs für Monate). Beim Anlegen eines neuen Eintrags gegen die Registry prüfen; bei Kollision automatisch disambiguieren oder Anlage blockieren.
 
-### 1.6 Indexierungsregeln
+### 1.6 Indexierungsregeln (Dynamic Soft-404s)
 
-- **Abweichung von der ursprünglichen Planung:** Jede gültige Filter-Kombination ist `index,follow`, **auch ohne aktuelle Treffer** - nicht nur solche mit mindestens einem aktuellen/kommenden Event. Begründung: valide Such-URLs sollen schon vor dem ersten eingetragenen Event Ranking aufbauen, damit künftig eingetragene Events sofort in einer bereits indexierten Seite auftauchen (siehe TODO.md "seite ohne events indizieren lassen? ich glaub ja"). Umgesetzt in `backend/src/resolver/resolve.ts` (`ResolveResult.indexable`) sowie in den Orte-/Arten-Sitemaps (`backend/src/seo/sitemap.ts`), die jetzt die volle Taxonomie statt nur Kombinationen mit Events auflisten.
-- Leere Kombinationen: **kein 404**, sondern normale Seite mit Hinweis (Call-to-Action zum Eintragen).
+- **Dynamisches `indexable`-Flag:** Seiten mit **null Events (future + 12-month archive = 0)** bekommen `<meta name="robots" content="noindex, follow">` um Soft-404-Meldungen in Search Console zu vermeiden. Seiten mit mindestens einem Event (egal ob aktuell oder archiviert) bleiben `index,follow`.
+- **Archiv-Integration:** Vergangene Events der letzten 12 Monate werden auf Filter-Seiten sichtbar gemacht, um leere Seiten in der Nebensaison zu vermeiden.
+- **Leere Kombinationen:** Kein 404, sondern normale Seite mit Hinweis (Call-to-Action zum Eintragen).
 - Jede Segment-Kombination hat serverseitig gebauten, eindeutigen SEO-Text (Title/Description/H1/Intro) aus den Klarnamen der Filter - `backend/src/seo/search-copy.ts`, ausgeliefert über `resolver.resolve`.
-- `BreadcrumbList` JSON-LD auf allen Filter-/Suchseiten.
+- `BreadcrumbList` JSON-LD auf allen Filter-/Suchseiten (max 3 Items: Country → Bundesland → Kreis/Art).
 
 ### 1.7 Event-Detailseiten (eigener URL-Baum)
 
@@ -156,25 +161,30 @@ Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **alle vier Vok
 
 Beispiel: `/de/veranstaltung/steinhorst-open-air/`
 
-Entkoppelt von den vier Filter-Vokabularen (kein Kollisionsrisiko), einfacheres Routing. Ranking läuft über interne Verlinkung, `BreadcrumbList`- und `schema.org/Event`-Markup, nicht über URL-Tiefe.
+Entkoppelt von den drei Filter-Vokabularen (kein Kollisionsrisiko), einfacheres Routing. Ranking läuft über interne Verlinkung, `BreadcrumbList`- und `schema.org/Event`-Markup, nicht über URL-Tiefe.
 
 - Slug = Event-Titel-Slug, bei Kollision Disambiguator anhängen (i. d. R. Ortsname): `dorffest` → `dorffest-eutin`.
 - Slug-Vergabe (inkl. Kollisionsprüfung) passiert beim **Freischalten im Review**.
 - Kein Datum im Pfad. Datum steckt in `schema.org/Event` (`startDate`).
 - Wiederkehrende Veranstaltungen: dieselbe URL/Seite wird bei erneuter Einreichung aktualisiert statt jedes Jahr eine neue anzulegen.
 
-### 1.8 Sitemaps
+### 1.8 Sitemaps (Phase 2: Split per Country + Bundesland)
 
 ```
-/sitemap.xml
-/sitemap-pages.xml
-/sitemap-{country}-orte.xml
-/sitemap-{country}-arten.xml
-/sitemap-events.xml
-/sitemap-veranstalter.xml
+/sitemap.xml                                 (Sitemap Index, dynamisch)
+├── /sitemap-pages.xml                       (statische Seiten)
+├── /sitemap-events.xml                      (Event-Detailseiten)
+├── /sitemap-veranstalter.xml                (Organisator-Profile)
+├── /sitemap-{country}-orte.xml              (Bundesland + Kreis)
+├── /sitemap-{country}-arten.xml             (einzelne Party-Arten)
+├── /sitemap-{country}-filter-combinations-level1.xml   (einzelne Filter: BL only, Art only)
+├── /sitemap-{country}-filter-combinations-level2.xml   (zwei Filter: BL+Kreis, BL+Art)
+└── /sitemap-{country}-{bundesland}-level3.xml  [DYNAMISCH pro Bundesland]  (BL+Kreis+Art)
 ```
 
-Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen - konsistent mit der Indexierungsregel in 1.6 - die volle Taxonomie, nicht nur Kombinationen mit aktuellen Events.
+Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen die volle Taxonomie (nicht nur Kombinationen mit aktuellen Events). Level1/Level2 sind pro Country. Level3 ist per Bundesland, um unter 50k URLs pro Sitemap zu bleiben.
+
+**URL-Reduktion durch Monat-Entfernung:** ~200k URLs → ~15-20k URLs (93% Reduktion).
 
 ## 2. Datenmodell
 
@@ -182,7 +192,6 @@ Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` dec
 bundesland      (id, slug, name, country [de|at|ch])
 kreis           (id, slug, name, bundesland_id → bundesland)
 party_art       (id, slug, name, active)
--- monat: fixes Enum/Lookup, kein dynamisches Anlegen
 
 user (
   id, authentik_subject, email, role [user | moderator | admin],
@@ -208,7 +217,10 @@ user_link (                        -- zusätzliche, frei erweiterbare Profil-Lin
 event (
   -- Pflichtfelder
   id, slug, title,
-  organizer_user_id → user,        -- "Veranstalter", wird über user_profile angezeigt
+  organizer_user_id → user (nullable),  -- "Veranstalter" (User), wird über user_profile angezeigt;
+                                         -- nullable wenn organizer_name gesetzt (Freitext-Veranstalter)
+  organizer_name text (nullable),       -- Veranstalter als Freitext (wenn kein User-Profil)
+  organizer_verified boolean,           -- zeigt an, ob der aktuelle Veranstalter verifiziert ist
   description,
   start_date, end_date,
   bundesland_id → bundesland,      -- für die Suche/den Resolver
@@ -232,11 +244,18 @@ event (
   created_at, updated_at
 )
 
+event_claim (                      -- Claim-Workflow für Veranstalter-Übernahme von nicht-verifizierten Events
+  id, event_id → event, claimed_by_user_id → user,
+  status [pending | approved | rejected],
+  reason text (nullable),          -- optionale Begründung warum man das Event claim will
+  requested_at, reviewed_by → user (nullable), reviewed_at (nullable)
+)
+
 event_photo     (id, event_id → event, s3_key, position [1–3])   -- max. 3 pro Event
 event_link      (id, event_id → event, url, label, position [1–3])  -- max. 3 pro Event,
                                                                        -- label z.B. "Veranstalter", "Website", "Instagram"
 
-slug_registry   (slug, type [bundesland|kreis|party_art|monat], entity_id)   -- Unique-Constraint auf slug
+slug_registry   (slug, type [bundesland|kreis|party_art], entity_id)   -- Unique-Constraint auf slug
 
 saved_event     (id, user_id → user, event_id → event, created_at)   -- "Partyliste", Unique(user_id, event_id)
 ```
@@ -273,6 +292,62 @@ Constraints/Validierung im Backend (nicht nur UI):
 - Status-Flow: `draft` → `in_review` → `approved` (öffentlich) oder `rejected`.
 - Slug-Generierung + Kollisions-Disambiguierung findet beim Approve-Schritt statt, nicht bei Einreichung.
 
+## 5.3 Organizer-Auswahl beim Event-Eintrag
+
+Veranstaltungen können für verschiedene Veranstalter eingetragen werden (nicht nur für die einreichende Person):
+
+**Profil-Sichtbarkeit regelt die Wahloptionen:**
+
+- **Öffentliches Profil:** Nutzer kann sich selbst, andere öffentliche Veranstalter-Profile (Suche/Autofill) oder Freitext-Namen angeben.
+- **Privates Profil:** Nutzer kann nur andere öffentliche Veranstalter-Profile (Suche) oder Freitext-Namen angeben.
+
+**Datenmodell:**
+
+- `event.organizer_user_id`: NULL wenn `organizer_name` gesetzt (Freitext-Veranstalter); andernfalls User-ID eines Profils.
+- `event.organizer_name`: Text für Freitext-Veranstalter; NULL wenn `organizer_user_id` gesetzt.
+- `event.organizer_verified`: Boolean, zeigt an, ob der aktuelle Veranstalter (User oder Name) verifiziert ist.
+  - Verifizierte Veranstalter (User-Profil mit `verifiedAt`): `organizer_verified = true`
+  - Nicht-verifizierte Veranstalter (User ohne Verifizierung oder Freitext-Name): `organizer_verified = false`
+
+**Verifiziertes Veranstalter-Branding:**
+
+- Auf der Event-Detailseite wird der Veranstalter-Name angezeigt. Wenn `organizer_verified = true`, erhält er ein Verifizierungs-Badge.
+- Das Badge signalisiert dem Nutzer: "Dieser Veranstalter wurde von dorfpartys.com verifiziert, sein Eintrag ist legitim."
+
+## 5.4 Event-Claim-Workflow (für nicht-verifizierte Events)
+
+Wenn ein Event **nicht vom Veranstalter selbst eingereicht wurde** oder **der Veranstalter nicht verifiziert ist**, können andere **verifizierte Veranstalter** das Event "claimen" und damit die volle Kontrolle übernehmen.
+
+**Workflow:**
+
+1. Verifizierter Nutzer navigiert zu einem "unclaimed" Event (organizer_verified = false)
+2. Auf der Event-Detailseite sieht er einen "Dieses Event verwalten"-Button
+3. Klick öffnet ein Modal mit optionalem Grund-Textfeld ("Warum sollte ich dieses Event verwalten?")
+4. Nutzer submittet den Claim → neuer `event_claim`-Datensatz mit `status = pending`
+5. Moderationsteam (`moderator`/`admin`) prüft in einem neuen Dashboard (`/review/claims`) alle ausstehenden Claims
+6. Moderator genehmigt oder lehnt ab:
+   - **Genehmigt:** `event_claim.status = approved` + `event.organizer_user_id` wird auf den claimenden User gesetzt + `event.organizer_name` wird NULL + `event.organizer_verified = true` (da User verifiziert ist)
+   - **Abgelehnt:** `event_claim.status = rejected` + Event bleibt unverändert
+
+**Eindeutigkeit:** Pro Event/User-Paar nur ein ausstehender Claim gleichzeitig (Unique-Index auf `event_id` + `claimed_by_user_id`, aber nur für pending-Claims). Ein abgelehnter oder genehmigter Claim blockiert keine neuen Claims vom selben User.
+
+**Wann wird ein Event "claimbar"?**
+
+- Immer wenn `event.organizer_verified = false`
+- Nach Genehmigung: `organizer_verified = true` (wurde claimed und approved) → nicht mehr claimbar
+
+## 5.5 Automatische Verifizierung beim Selbst-Eintrag
+
+Wenn ein **verifizierter Veranstalter selbst ein Event einträgt** (wählt sich selbst als `organizer_user_id`):
+
+- Backend setzt `event.organizer_verified = true` automatisch (basierend auf `user_profile.verifiedAt` des Einreichers)
+- Das Event kann nicht mehr geclaimt werden
+
+Wenn ein **nicht-verifizierter Nutzer** selbst ein Event einträgt:
+
+- `event.organizer_verified = false`
+- Das Event kann von anderen verifizierten Veranstaltern geclaimt werden
+
 ## 5a. Gemerkte Veranstaltungen ("Partyliste")
 
 - Eingeloggte Nutzer:innen können Events merken/entmerken (Button auf der Event-Detailseite) - Tabelle `saved_event`, tRPC-Router `savedEvents` (`save`/`unsave`/`listMine`).
@@ -294,11 +369,12 @@ SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu e
 ## 6. SEO-Implementierungsregeln (verbindlich)
 
 - **Alle öffentlichen Seiten serverseitig gerendert** (SvelteKit SSR), kein Client-only-Rendering für crawlbaren Content.
-- Robots-Meta: `index,follow` für jede gültige Filter-/Event-Kombination, auch ohne aktuelle Treffer (bewusste Abweichung, siehe 1.6); `noindex,nofollow` für rein personenbezogene Seiten (`/willkommen`, `/partyliste`, `/profil`).
-- `schema.org/Event` JSON-LD auf jeder Event-Seite.
-- `BreadcrumbList` JSON-LD auf Filter- und Event-Seiten.
+- Robots-Meta: **Dynamisch basierend auf Events:** `index,follow` wenn >= 1 Event (future oder 12-month archive), `noindex,follow` wenn 0 Events total. Persönliche Seiten (`/willkommen`, `/partyliste`, `/profil`): `noindex,nofollow`.
+- `schema.org/Event` JSON-LD auf jeder Event-Seite + auf Filter-Seiten für alle gelisteten Events.
+- `BreadcrumbList` JSON-LD auf Filter- und Event-Seiten (max 3 Items ohne Monat).
 - Filter-/Suchseiten verlinken Events als serverseitig gerenderte `<a href>`.
 - 301-Redirects für alle nicht-kanonischen Segment-Reihenfolgen (siehe 1.4).
+- **Month Badges in Frontend:** Semantic HTML mit `<h2 id="august">August</h2>` erzeugt Google Sitelink-Opportunities.
 
 ## 7. Domains & Storage
 
@@ -340,24 +416,47 @@ profiles/{user_id}/{avatar_id}.{ext}
 - Keine Bezahlfunktionen/Promotion von Events.
 - Keine weiteren Event-Customization-Optionen außer Farbe.
 
-## 10. Offene Punkte (vor/während Implementierung zu klären)
+## 10. Implementierungsstand (Phase 2 SEO Refactor – abgeschlossen)
 
-- Vollständige Bundesland/Kreis-Stammdaten für DE/AT/CH importieren (z. B. Destatis/GeoNames). **Erledigt:** `backend/src/db/seed/data.ts` enthält alle 16 DE-Bundesländer (401 Kreise/kreisfreie Städte plus Berlin-Bezirke, Hamburg-Bezirke, Bremen/Bremerhaven), alle 9 AT-Bundesländer (93 Bezirke/Statutarstädte) und alle 26 CH-Kantone (124 Bezirke/Wahlkreise/Amtsbezirke, wo administrativ vorhanden). Quelle ist Modell-Wissen zu den Standard-Verwaltungsgliederungen (Destatis/Statistik Austria/BFS) zum Trainingsstand - bei künftigen Gebietsreformen (Kreisfusionen etc.) manuell nachziehen.
-- Finale Liste der Party-Arten festlegen (Startpunkt: Schützenfest, Zeltfete, Scheunenfete, Stoppelfete). **Startliste umgesetzt** (`shared/src/constants/index.ts` → `PARTY_ART_SEED`), finale Liste weiterhin offen.
-- Vollständige Liste optionaler Event-Felder über `custom_fields` hinaus abstimmen (aktuell: Preis, Altersbeschränkung/Muttizettel, Open Air als dedizierte Spalten).
-- Sitemap-Generierungs-Trigger festlegen (Cronjob im Cluster vs. on-demand bei Event-Änderung). **Aktuell:** on-demand, ohne Caching - jeder Aufruf von `/sitemap-*.xml` fragt live gegen die DB ab (`backend/src/seo/sitemap.ts`). Für Produktionslast ggf. Cronjob + Cache/S3-Ablage nachziehen.
+### Monat-Entfernung aus URLs
 
-### Bekannter Implementierungsstand vs. aktueller Spezifikation
+- ✅ `slugTypeEnum`: "monat" entfernt (nur Bundesland/Kreis/PartyArt)
+- ✅ URL-Builder: `buildFilterUrl()` akzeptiert kein `monatSlug` mehr (max 3 Segmente)
+- ✅ Resolver: Monat-Segmente werden 404
+- ✅ Canonicalize: Monat nicht in kanonischer Reihenfolge
+- ✅ Tests: Monat-URLs testen jetzt 404-Verhalten
 
-- **`allows_muttizettel`** (Abschnitt 2): umgesetzt (Drizzle-Schema/Migration, Zod-Schema, Typen, Submit-/Detailseite). Migrationshistorie wurde dabei auf eine einzige saubere Erstmigration zurückgesetzt, da noch kein echtes Deployment mit Daten existiert.
-- **S3-Struktur** (Abschnitt 7.1): umgesetzt - `events/{event_id}/{event_photo_id}.{ext}` bzw. `profiles/{user_id}/{avatar_id}.{ext}` (`backend/src/storage/presign.ts`), Dateigrößen-Validierung (Server-seitiger Grenzwert-Check auf den vom Client angegebenen Wert - SigV4-presignte PUT-URLs erzwingen keine Content-Length-Range kryptographisch) sowie aktives Löschen alter S3-Keys beim Ersetzen eines Event-Fotos/Avatars (`backend/src/storage/delete.ts`). Die Event-ID wird dafür vom Client vor `events.create` generiert (`submitEventInputSchema.id`) - ein clientseitiges Upload-Widget (Datei-Picker + presigned PUT) ist noch **nicht** gebaut, nur die Backend-Endpunkte (`uploads.requestEventPhotoUploadUrl`/`requestAvatarUploadUrl`).
-- **E-Mail-Benachrichtigungs-Hook** (Abschnitt 9): Kommentar an beiden Review-Entscheidungen ergänzt (`backend/src/routers/events.ts`, `review`-Mutation).
-- **Marketing-/Kurzlink-Domains** `dorf.party`/`dp.gg` (Abschnitt 7): rein informativ, keine Kurzlink-Generierung o. Ä. implementiert oder in dieser Phase vorgesehen.
-- **Rollen-Mapping Authentik-Gruppen → App-Rollen** (Abschnitt 5): erledigt. In der echten Authentik-Instanz existieren die Gruppen `Dorfpartys.com - Admin` (Gruppen-ID `4e4f3f40-20ce-4492-b0d9-5e908597f3da`) und `Dorfpartys.com - Moderator` (Gruppen-ID `182f4f89-8e94-435a-aaef-2c28cf0952b9`), verdrahtet über `AUTHENTIK_ADMIN_GROUP`/`AUTHENTIK_MODERATOR_GROUP` in `.env.example` bzw. `infra/k8s/backend/configmap.yaml` (`backend/src/auth/roles.ts`). Wichtig: Der JWT-`groups`-Claim führt Gruppen-**Namen**, nicht die Authentik-Gruppen-IDs (siehe die `profile`-Scope-Mapping der Authentik-Instanz) - die IDs oben dienen nur der Rückverfolgbarkeit in Authentik selbst.
-- **SSO-Login-Flow in Authentik** (Abschnitt 5): für die Anwendung `dorf-partys-com` ist ein dedizierter Login-Flow eingerichtet, der ausschließlich Federated Login über die Quellen `discord-dorfpartys`, `google-dorfpartys` und `facebook-dorfpartys` anbietet - kein lokales Nutzername/Passwort-Formular, keine Nutzername-Eingabe bei Erstregistrierung (Identification-Stage ohne `user_fields`, Enrollment-Flow ohne Prompt-Stage). Reine Authentik-Konfiguration (Flows/Stages/Sources), kein Code in diesem Repo; die drei Quellen sind dediziert für diese App und werden nicht mit anderen in derselben Authentik-Instanz laufenden Anwendungen geteilt.
-- **Stats-Endpunkt** (TODO.md "stats endpunkt backend"): `stats.overview` (`backend/src/routers/stats.ts`) liefert aggregierte, nicht-personenbezogene Kennzahlen (freigeschaltete/kommende Events, abgedeckte Kreise/Bundesländer, aktive Party-Arten, Anzahl Veranstalter mit öffentlichem Profil) für die Vertrauensleiste auf der Startseite.
-- **Landingpage** (Abschnitt 9 hebt den Design-Ausschluss für diese Phase auf, sobald DESIGN.md gilt): umgesetzt (`frontend/src/routes/+page.svelte`) - Hero mit Land/Bundesland/Art/Monat-Suchformular (Poster-/Lineup-Ästhetik nach `brand-mockup.html`), Stats-Leiste, DACH-weite "Nächste Partys"-Lineup-Sektion (`events.listUpcoming`) sowie ein Erklärungsblock (Herkunft der Events, Vorteile fürs Eintragen: kostenlos, werbefrei, kein Tracking, bessere Sichtbarkeit).
-- **Demo-Daten** (für lokales Testen): `pnpm --filter backend db:seed:demo` (nach `db:seed`) legt einen Demo-Veranstalter mit öffentlichem Profil und 5 bereits freigeschaltete Beispiel-Events in unterschiedlichen Ländern/Bundesländern/Party-Arten an (`backend/src/db/seed/demo-events.ts`) - nicht Teil des Produktions-Seeds.
-- **Legal-Seiten** `/impressum`, `/datenschutz`, `/nutzungsbedingungen`: Routen existierten als leere Verzeichnisse ohne `+page.svelte` (von Footer verlinkt, aber ohne Inhalt). Jetzt mit Platzhaltertexten befüllt - **vor Livegang durch rechtsverbindliche Inhalte ersetzen** (insbesondere Anbieterkennzeichnung nach § 5 TMG).
-- **Registrierungs-Flow, Partyliste, Land-Erkennung**: umgesetzt, siehe Abschnitte 5/5a/5b.
-- **Fastify `maxParamLength`**: tRPCs `httpBatchLink` fügt bei parallelen Queries alle Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter ein (z.B. Startseite: `stats.overview,events.listUpcoming,taxonomy.partyArten,taxonomy.bundeslaender,...`). Fastifys Default-Limit von 100 Zeichen wird dabei schnell überschritten (`FST_ERR_MAX_PARAM_LENGTH`, führt clientseitig zu einem irreführenden `TRPCClientError: Unable to transform response from server`, da die 414-Fehlerantwort kein gültiges Batch-JSON ist). Behoben über `Fastify({ maxParamLength: 5000 })` in `backend/src/index.ts` - bei neuen Seiten mit vielen parallelen tRPC-Calls im Hinterkopf behalten.
+### Archive-Integration
+
+- ✅ `listApprovedEventsPast12Months()` DB-Query (12-month window, max 25 events)
+- ✅ `ResolveResult`: `futureCount` + `pastCount` für UI-Granularität
+- ✅ Dynamisches `indexable`: `true` nur wenn (futureCount + pastCount) > 0
+
+### Frontend Rendering
+
+- ✅ `[country]/[...segments]/+page.svelte`: Events nach Monat gruppiert mit `<h2 id="{monatslug}">{monatname}</h2>`
+- ✅ Month-Badges für schnelle Navigation (→ Fragment-Scroll)
+- ✅ "Future" + "Archive" Sektionen getrennt
+- ✅ Breadcrumbs: Nur 3 Items (Land → Bundesland/Kreis → Art), kein Monat
+- ✅ Self-referencing canonical tags
+- ✅ Robots-Meta dynamisch gesetzt (noindex wenn indexable=false)
+
+### Sitemaps (Phase 2 Split)
+
+- ✅ Level1: Single filters (Bundesland-only, Art-only)
+- ✅ Level2: Two-filter (BL+Kreis, BL+Art)
+- ✅ Level3 per Bundesland: BL+Kreis+Art (split für <50k URLs pro Sitemap)
+- ✅ Sitemap Index: Dynamische Bundesland-Aggregation für Level3-Files
+- ✅ URL-Reduktion: ~200k → ~15-20k URLs (93% reduction)
+
+### Tests & Build
+
+- ✅ TypeScript build: erfolgreich
+- ✅ Tests aktualisiert: Monat-URLs testen jetzt 404
+- ✅ Keine Breaking Changes für Events/Organizer/Saved Events
+
+### Performance
+
+- ✅ Sitemaps deutlich kleiner (93% URL-Reduktion)
+- ✅ Keine 200k+ Thin-Content-URLs mehr
+- ✅ Google Indexing API Vorbereitung: Neue Canonical URLs einfacher zu pushen

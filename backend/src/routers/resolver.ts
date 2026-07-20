@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import {
-  MONTHS,
   buildCountryRootUrl,
   buildFilterUrl,
   resolverInputSchema,
@@ -26,7 +25,6 @@ async function resolveNamesForFilters(
     bundeslandSlug: string | null;
     kreisSlug: string | null;
     artSlug: string | null;
-    monatSlug: string | null;
   },
 ): Promise<ResolvedFilterNames> {
   const [bundeslandRow] = filters.bundeslandSlug
@@ -47,18 +45,70 @@ async function resolveNamesForFilters(
         .from(partyArt)
         .where(eq(partyArt.slug, filters.artSlug))
     : [undefined];
-  const monat = filters.monatSlug
-    ? (MONTHS.find((m) => m.slug === filters.monatSlug)?.name ??
-      filters.monatSlug)
-    : null;
 
   return {
     country,
     bundeslandName: bundeslandRow?.name ?? filters.bundeslandSlug,
     kreisName: kreisRow?.name ?? filters.kreisSlug,
     artName: artRow?.name ?? filters.artSlug,
-    monatName: monat,
   };
+}
+
+async function buildNavigationTree(
+  db: Database,
+  country: Country,
+  filters: {
+    bundeslandSlug: string | null;
+    kreisSlug: string | null;
+    artSlug: string | null;
+  },
+) {
+  const repo = createDrizzleTaxonomyRepository(db);
+  const navigationTree: Record<string, unknown> = {};
+
+  // If at Bundesland level, show available Kreise (filtered by current artSlug if present)
+  if (filters.bundeslandSlug && !filters.kreisSlug) {
+    const bundesland = await repo.findBundeslandBySlug(
+      country,
+      filters.bundeslandSlug,
+    );
+    if (bundesland) {
+      const filterIds = filters.artSlug
+        ? { partyArtId: (await repo.findPartyArtBySlug(filters.artSlug))?.id }
+        : undefined;
+      navigationTree.kreise = await repo.listKreiseForBundesland(
+        country,
+        bundesland.id,
+        filterIds,
+      );
+    }
+  }
+
+  // Show available Party-Arten at any level (filtered by current bundesland/kreis)
+  if (filters.bundeslandSlug || filters.kreisSlug) {
+    let bundeslandId: string | undefined;
+    let kreisId: string | undefined;
+
+    if (filters.bundeslandSlug) {
+      bundeslandId = (
+        await repo.findBundeslandBySlug(country, filters.bundeslandSlug)
+      )?.id;
+    }
+    if (filters.kreisSlug) {
+      kreisId = (await repo.findKreisBySlug(country, filters.kreisSlug))?.id;
+    }
+
+    const filterIds = {
+      bundeslandId,
+      kreisId,
+    };
+    navigationTree.partyArten = await repo.listPartyArtenForLocation(
+      country,
+      filterIds,
+    );
+  }
+
+  return Object.keys(navigationTree).length > 0 ? navigationTree : undefined;
 }
 
 function buildBreadcrumbsForResult(
@@ -67,7 +117,6 @@ function buildBreadcrumbsForResult(
     bundeslandSlug: string | null;
     kreisSlug: string | null;
     artSlug: string | null;
-    monatSlug: string | null;
   },
   names: ResolvedFilterNames,
 ) {
@@ -100,17 +149,6 @@ function buildBreadcrumbsForResult(
       }),
     });
   }
-  if (filters.monatSlug) {
-    items.push({
-      name: names.monatName ?? filters.monatSlug,
-      url: buildFilterUrl(country, {
-        bundeslandSlug: filters.bundeslandSlug,
-        kreisSlug: filters.kreisSlug,
-        artSlug: filters.artSlug,
-        monatSlug: filters.monatSlug,
-      }),
-    });
-  }
 
   return buildBreadcrumbJsonLd(items);
 }
@@ -136,7 +174,6 @@ export const resolverRouter = router({
         bundeslandName: names.bundeslandName,
         kreisName: names.kreisName,
         artName: names.artName,
-        monatName: names.monatName,
         total: outcome.total,
       });
       const breadcrumbJsonLd = buildBreadcrumbsForResult(
@@ -144,6 +181,14 @@ export const resolverRouter = router({
         outcome.filters,
         names,
       );
-      return { ...outcome, names, seo, breadcrumbJsonLd };
+
+      // Build navigation tree based on current filter level
+      const navigationTree = await buildNavigationTree(
+        ctx.db,
+        input.country,
+        outcome.filters,
+      );
+
+      return { ...outcome, names, seo, breadcrumbJsonLd, navigationTree };
     }),
 });

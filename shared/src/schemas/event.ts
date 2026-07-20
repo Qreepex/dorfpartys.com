@@ -19,6 +19,8 @@ export const eventLinkInputSchema = z.object({
 
 // Einreichungsformular, siehe AGENTS.md Abschnitt 2 & 5. Slug wird erst beim
 // Approve serverseitig vergeben und ist daher hier bewusst nicht Teil des Inputs.
+// Veranstalter können sich selbst, andere öffentliche Profile oder einen Freitext-Namen
+// angeben (siehe AGENTS.md Abschnitt 5.3 "Organizer-Auswahl").
 export const submitEventInputSchema = z
 	.object({
 		// Vom Client vorab generierte ID (crypto.randomUUID()), damit Event-Fotos
@@ -36,6 +38,10 @@ export const submitEventInputSchema = z
 		partyArtId: z.string().uuid(),
 		customColor: hexColorSchema.optional(),
 
+		// Veranstalter-Auswahl: entweder User-ID oder Freitext-Name (aber nicht beide)
+		organizerUserId: z.string().uuid().optional(),
+		organizerName: z.string().trim().min(1).max(200).optional(),
+
 		priceInfo: z.string().trim().max(200).optional(),
 		minAge: z.number().int().nonnegative().max(99).optional(),
 		allowsMuttizettel: z.boolean().optional(),
@@ -49,6 +55,10 @@ export const submitEventInputSchema = z
 	.refine((data) => new Date(data.endDate) >= new Date(data.startDate), {
 		message: 'endDate darf nicht vor startDate liegen',
 		path: ['endDate']
+	})
+	.refine((data) => data.organizerUserId || data.organizerName || true, {
+		message: 'Veranstalter erforderlich (Profil oder Name)',
+		path: ['organizerName']
 	});
 
 export type SubmitEventInput = z.infer<typeof submitEventInputSchema>;

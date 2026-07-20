@@ -17,11 +17,16 @@ export interface TaxonomyPartyArt {
   slug: string;
 }
 
+export interface NavigationItem {
+  slug: string;
+  name: string;
+  eventCount: number;
+}
+
 export interface EventFilterIds {
   bundeslandId?: string;
   kreisId?: string;
   partyArtId?: string;
-  monatNumber?: number;
 }
 
 export interface TaxonomyRepository {
@@ -43,4 +48,19 @@ export interface TaxonomyRepository {
     filters: EventFilterIds,
     limit?: number,
   ): Promise<EventListItem[]>;
+  listApprovedEventsPast12Months(
+    country: Country,
+    filters: EventFilterIds,
+    limit?: number,
+  ): Promise<EventListItem[]>;
+  // Navigation tree: sub-categories with event counts
+  listKreiseForBundesland(
+    country: Country,
+    bundeslandId: string,
+    filters?: EventFilterIds,
+  ): Promise<NavigationItem[]>;
+  listPartyArtenForLocation(
+    country: Country,
+    filters: EventFilterIds,
+  ): Promise<NavigationItem[]>;
 }

@@ -25,8 +25,8 @@ export const MONTHS: MonthDefinition[] = [
 
 export const MONTH_SLUGS = MONTHS.map((m) => m.slug) as [string, ...string[]];
 
-// Canonical filter-segment order per AGENTS.md 1.2/1.4: bundesland -> kreis -> art -> monat.
-export const CANONICAL_SEGMENT_ORDER = ['bundesland', 'kreis', 'art', 'monat'] as const;
+// Canonical filter-segment order per AGENTS.md 1.2/1.4: bundesland -> kreis -> art.
+export const CANONICAL_SEGMENT_ORDER = ['bundesland', 'kreis', 'art'] as const;
 export type SegmentType = (typeof CANONICAL_SEGMENT_ORDER)[number];
 
 // Startliste Party-Arten (AGENTS.md Abschnitt 10 - vollständige Liste ist offener Punkt).
@@ -36,17 +36,14 @@ export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
 	{ slug: 'scheunenfeten', name: 'Scheunenfeten' },
 	{ slug: 'stoppelfeten', name: 'Stoppelfeten' },
 	{ slug: 'dorffeste', name: 'Dorffeste' },
-	{ slug: 'maifeste', name: 'Maifeste' },
-	{ slug: 'weinfeste', name: 'Weinfeste' },
-	{ slug: 'kirmes', name: 'Kirmes' },
-	{ slug: 'straßenfeste', name: 'Straßenfeste' },
 	{ slug: 'osterfeuer', name: 'Osterfeuer' },
 	{ slug: 'oktoberfeste', name: 'Oktoberfeste' },
-	{ slug: 'karneval', name: 'Karneval' },
-	{ slug: 'fasching', name: 'Fasching' },
-	{ slug: 'weihnachtsmarkt', name: 'Weihnachtsmärkte' },
+	{ slug: 'karneval-fasching', name: 'Karneval / Fasching' },
 	{ slug: 'sportfeste', name: 'Sportfeste' },
-	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfeste' }
+	{ slug: 'feuerwehrfeste', name: 'Feuerwehrfeste' },
+	{ slug: 'erntefeste', name: 'Erntefeste' },
+	{ slug: 'maifeste', name: 'Maifeste' },
+	{ slug: 'trecker-treck-tractorplling', name: 'Trecker-Treck / Tractorpulling' },
 ];
 
 export const SITE_URL = 'https://www.dorfpartys.com';

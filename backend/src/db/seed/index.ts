@@ -1,12 +1,12 @@
-import { MONTHS, PARTY_ART_SEED } from "@dorfpartys/shared";
+import { PARTY_ART_SEED } from "@dorfpartys/shared";
 import "dotenv/config";
 import { db, queryClient } from "../index.js";
 import { bundesland, kreis, partyArt, slugRegistry } from "../schema.js";
-import { BUNDESLAND_SEED, PARTY_ART_EXTRA_SEED } from "./data.js";
+import { BUNDESLAND_SEED } from "./data.js";
 
 async function upsertSlugRegistry(
   slug: string,
-  type: "bundesland" | "kreis" | "party_art" | "monat",
+  type: "bundesland" | "kreis" | "party_art",
   entityId: string,
 ) {
   await db
@@ -42,7 +42,7 @@ async function seedTaxonomy() {
     }
   }
 
-  for (const art of [...PARTY_ART_SEED, ...PARTY_ART_EXTRA_SEED]) {
+  for (const art of [...PARTY_ART_SEED]) {
     const [artRow] = await db
       .insert(partyArt)
       .values({ slug: art.slug, name: art.name })
@@ -52,12 +52,8 @@ async function seedTaxonomy() {
     await upsertSlugRegistry(art.slug, "party_art", artRow.id);
   }
 
-  // Monate sind ein festes Enum ohne eigene Tabelle (AGENTS.md Abschnitt 2) -
-  // trotzdem in der Slug-Registry führen, damit die globale Kollisionsfreiheit
-  // über alle vier Vokabulare hinweg geprüft werden kann (AGENTS.md 1.5).
-  for (const month of MONTHS) {
-    await upsertSlugRegistry(month.slug, "monat", String(month.number));
-  }
+  // Monate sind nicht mehr in der Slug-Registry (Phase 2 Refactor).
+  // Sie werden nur im Frontend für die Event-Gruppierung genutzt (CLAUDE.md 1.2).
 }
 
 await seedTaxonomy();

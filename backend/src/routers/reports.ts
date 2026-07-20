@@ -118,7 +118,9 @@ export const reportsRouter = router({
 
         // Sanitiere Text-Eingaben vor Ablage
         const sanitizedDescription = sanitizeText(input.description);
-        const sanitizedReporterName = input.reporterName ? sanitizeText(input.reporterName) : null;
+        const sanitizedReporterName = input.reporterName
+          ? sanitizeText(input.reporterName)
+          : null;
 
         // Insert report into database
         const reportId = await ctx.db

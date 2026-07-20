@@ -20,7 +20,6 @@
 	let country = $derived.by(() => $countryStore);
 	let bundeslandSlug = $state('');
 	let artSlug = $state('');
-	let monatSlug = $state('');
 
 	const bundeslaenderForCountry = $derived(
 		data.bundeslaenderByCountry.find((g) => g.country === country)?.bundeslaender ?? []
@@ -33,9 +32,9 @@
 
 	function handleSearch(event: SubmitEvent) {
 		event.preventDefault();
-		// Kanonische Reihenfolge bundesland -> kreis -> art -> monat (AGENTS.md 1.2) - Kreis
+		// Kanonische Reihenfolge bundesland -> kreis -> art (AGENTS.md 1.2) - Kreis
 		// wird im Hero-Suchformular bewusst nicht angeboten (zu granular für den Einstieg).
-		const segments = [bundeslandSlug, artSlug, monatSlug].filter(Boolean).join('/');
+		const segments = [bundeslandSlug, artSlug].filter(Boolean).join('/');
 		goto(resolve('/[country]/[...segments]', { country, segments }));
 	}
 
@@ -159,21 +158,7 @@
 				{/each}
 			</select>
 		</div>
-		<div class="flex-1 basis-35 border-r border-border p-3.5 sm:border-r-0">
-			<label class="block text-[0.7rem] tracking-[0.08em] text-muted uppercase" for="monat"
-				>Monat</label
-			>
-			<select
-				class="w-full appearance-none border-none bg-transparent p-0 font-body text-[0.95rem] text-text focus:outline-none"
-				id="monat"
-				bind:value={monatSlug}
-			>
-				<option value="">Alle</option>
-				{#each MONTHS as m (m.slug)}
-					<option value={m.slug}>{m.name}</option>
-				{/each}
-			</select>
-		</div>
+
 		<button
 			type="submit"
 			class="min-h-11 w-full flex-1 basis-full cursor-pointer border-none bg-primary p-4 font-bold text-ink sm:basis-auto sm:px-7"
@@ -323,8 +308,7 @@
 					<a
 						class="inline-block border border-border px-4 py-2 text-[0.9rem] text-text no-underline hover:border-primary hover:text-primary"
 						href={buildFilterUrl(country, {
-							artSlug: art.slug,
-							monatSlug: currentMonth?.slug
+							artSlug: art.slug
 						})}
 					>
 						{art.name}

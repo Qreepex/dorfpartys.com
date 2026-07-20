@@ -3,6 +3,10 @@ import { COUNTRIES } from "@dorfpartys/shared";
 import {
   getArtenSitemapEntries,
   getEventSitemapEntries,
+  getFilterCombinationsLevel1SitemapEntries,
+  getFilterCombinationsLevel2SitemapEntries,
+  getFilterCombinationsLevel3SitemapEntries,
+  getBundeslandSlugsForSitemapIndex,
   getOrteSitemapEntries,
   getVeranstalterSitemapEntries,
 } from "../seo/index.js";
@@ -18,6 +22,34 @@ export const sitemapRouter = router({
   arten: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES) }))
     .query(({ ctx, input }) => getArtenSitemapEntries(ctx.db, input.country)),
+
+  filterCombinationsLevel1: publicProcedure
+    .input(z.object({ country: z.enum(COUNTRIES) }))
+    .query(({ ctx, input }) =>
+      getFilterCombinationsLevel1SitemapEntries(ctx.db, input.country),
+    ),
+
+  filterCombinationsLevel2: publicProcedure
+    .input(z.object({ country: z.enum(COUNTRIES) }))
+    .query(({ ctx, input }) =>
+      getFilterCombinationsLevel2SitemapEntries(ctx.db, input.country),
+    ),
+
+  filterCombinationsLevel3: publicProcedure
+    .input(z.object({ country: z.enum(COUNTRIES), bundeslandSlug: z.string() }))
+    .query(({ ctx, input }) =>
+      getFilterCombinationsLevel3SitemapEntries(
+        ctx.db,
+        input.country,
+        input.bundeslandSlug,
+      ),
+    ),
+
+  bundeslandSlugsForSitemapIndex: publicProcedure
+    .input(z.object({ country: z.enum(COUNTRIES) }))
+    .query(({ ctx, input }) =>
+      getBundeslandSlugsForSitemapIndex(ctx.db, input.country),
+    ),
 
   veranstalter: publicProcedure.query(({ ctx }) =>
     getVeranstalterSitemapEntries(ctx.db),

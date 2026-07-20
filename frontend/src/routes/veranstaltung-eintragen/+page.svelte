@@ -3,7 +3,14 @@
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
 	import ImageUpload from '$lib/components/ImageUpload.svelte';
-	import { Button, DropdownSelect, FormGrid, TextInput, Toggle } from '$lib/components/index.js';
+	import {
+		Button,
+		DropdownSelect,
+		FormGrid,
+		RadioGroup,
+		TextInput,
+		Toggle
+	} from '$lib/components/index.js';
 	import { SITE_URL } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
@@ -12,11 +19,15 @@
 	const loginHref = $derived(
 		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
 	);
-	const profilHref = resolve('/profil');
 
 	let bundeslandId = $state('');
 	let kreisId = $state('');
 	let uploadedPhotoS3Key = $state<string | null>(null);
+
+	// Organizer selection state
+	let organizerMode = $state<'myself' | 'profile' | 'freetext'>('myself');
+	let organizerUserId = $state('');
+	let organizerName = $state('');
 
 	const bundeslandOptions = $derived(
 		data.bundeslaenderByCountry.flatMap((group) =>
@@ -37,11 +48,11 @@
 	);
 
 	const canonical = `${SITE_URL}/veranstaltung-eintragen`;
-	const canSubmit = $derived(data.isLoggedIn && data.isProfilePublic);
+	const canSubmit = $derived(data.isLoggedIn);
 </script>
 
 <svelte:head>
-	<title>Veranstaltung kostenlos eintragen - dorfpartys.com</title>
+	<title>Veranstaltung kostenlos eintragen | dorfpartys.com</title>
 	<meta
 		name="description"
 		content="Trag dein Schützenfest, deine Zeltfete, Scheunenfete oder dein Dorffest kostenlos ein - in wenigen Minuten online, DACH-weit sichtbar, für immer werbefrei."
@@ -111,14 +122,6 @@
 	{/if}
 	{#if form?.error}
 		<p class="mb-6 border border-secondary bg-bg-alt p-4 text-text">{form.error}</p>
-	{/if}
-
-	{#if data.isLoggedIn && !data.isProfilePublic}
-		<p class="mb-6 max-w-[60ch] border border-secondary bg-bg-alt p-4 text-text">
-			Dein Profil ist aktuell privat. Um eine Veranstaltung einzutragen, muss dein Profil öffentlich
-			sichtbar sein (das macht dich unter deiner Veranstalter-Seite auffindbar).
-			<a class="text-primary" href={profilHref}>Jetzt in den Profileinstellungen aktivieren</a>.
-		</p>
 	{/if}
 
 	<form method="POST">
@@ -241,6 +244,87 @@
 
 			<Toggle label="Muttizettel erforderlich" name="allowsMuttizettel" />
 			<Toggle label="Open Air" name="isOutdoor" />
+
+			{#if data.isLoggedIn}
+				<div class="border-t border-border pt-4 sm:col-span-full">
+					<RadioGroup
+						legend="Veranstalter"
+						name="organizerMode"
+						bind:value={organizerMode}
+						options={(() => {
+							const opts = [];
+							if (data.isProfilePublic) {
+								opts.push({
+									value: 'myself',
+									label: 'Ich selbst'
+								});
+							} else {
+								opts.push({
+									value: 'myself',
+									label: 'Ich selbst',
+									description:
+										'Mein Profil muss öffentlich sein – aktiviere das in den Profileinstellungen'
+								});
+							}
+							opts.push({
+								value: 'profile',
+								label: 'Anderes öffentliches Profil'
+							});
+							opts.push({
+								value: 'freetext',
+								label: 'Freitext-Name'
+							});
+							return opts;
+						})()}
+						disabled={!data.isProfilePublic && organizerMode === 'myself'}
+					/>
+
+					{#if !data.isProfilePublic && organizerMode === 'myself'}
+						<p class="mt-3 rounded border border-secondary bg-bg-alt p-3 text-sm text-muted">
+							Um dich selbst als Veranstalter eintragen zu können, muss dein Profil öffentlich sein.
+							<a href={resolve('/profil')} class="text-primary hover:underline"
+								>Aktiviere das jetzt in deinen Profileinstellungen →</a
+							>
+						</p>
+					{/if}
+
+					{#if organizerMode === 'profile'}
+						<div class="mt-3">
+							<TextInput
+								label="Veranstalter suchen"
+								name="organizerProfileSearch"
+								placeholder="Name eingeben..."
+								bind:value={organizerName}
+							/>
+						</div>
+					{/if}
+
+					{#if organizerMode === 'freetext'}
+						<div class="mt-3">
+							<TextInput
+								label="Veranstalter-Name"
+								name="organizerName"
+								required={organizerMode === 'freetext'}
+								minlength={1}
+								maxlength={200}
+								placeholder="z.B. Heimatverein Steinhorst"
+								bind:value={organizerName}
+								error={organizerMode === 'freetext' && !organizerName
+									? 'Veranstalter-Name erforderlich'
+									: undefined}
+							/>
+						</div>
+					{/if}
+
+					{#if organizerMode === 'myself'}
+						<input type="hidden" name="organizerUserId" value={data.currentUserId} />
+					{:else if organizerMode === 'profile'}
+						<input type="hidden" name="organizerUserId" value={organizerUserId} />
+					{:else if organizerMode === 'freetext'}
+						<input type="hidden" name="organizerName" value={organizerName} />
+					{/if}
+				</div>
+			{/if}
 		</FormGrid>
 
 		{#if uploadedPhotoS3Key}
@@ -250,7 +334,9 @@
 		{#if canSubmit}
 			<Button type="submit">Kostenlos eintragen</Button>
 		{:else if data.isLoggedIn}
-			<Button type="button" href={profilHref}>Profil öffentlich stellen</Button>
+			<p class="mt-4 text-[0.85rem] text-muted">
+				Du kannst Events einreichen, sobald du eingeloggt bist.
+			</p>
 		{:else}
 			<div>
 				<Button type="button" href={loginHref}>Einloggen zum Eintragen</Button>

@@ -1,7 +1,10 @@
 CREATE TYPE "public"."country" AS ENUM('de', 'at', 'ch');--> statement-breakpoint
 CREATE TYPE "public"."event_status" AS ENUM('draft', 'in_review', 'approved', 'rejected');--> statement-breakpoint
-CREATE TYPE "public"."slug_type" AS ENUM('bundesland', 'kreis', 'party_art', 'monat');--> statement-breakpoint
+CREATE TYPE "public"."report_status" AS ENUM('open', 'reviewed', 'resolved');--> statement-breakpoint
+CREATE TYPE "public"."report_type" AS ENUM('normal', 'dmca', 'copyright', 'dsa', 'netzdk', 'netsperrer', 'swisslaw');--> statement-breakpoint
+CREATE TYPE "public"."slug_type" AS ENUM('bundesland', 'kreis', 'party_art');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('user', 'moderator', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."verification_method" AS ENUM('email', 'instagram', 'tiktok');--> statement-breakpoint
 CREATE TABLE "bundesland" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" text NOT NULL,
@@ -69,6 +72,35 @@ CREATE TABLE "party_art" (
 	CONSTRAINT "party_art_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
+CREATE TABLE "report" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"type" "report_type" NOT NULL,
+	"subject_type" text NOT NULL,
+	"subject_id" text,
+	"url" text NOT NULL,
+	"description" text NOT NULL,
+	"reporter_email" text,
+	"reporter_name" text,
+	"country" "country",
+	"status" "report_status" DEFAULT 'open' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "report_rate_limit" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"ip_address" text NOT NULL,
+	"report_count" integer DEFAULT 1 NOT NULL,
+	"reset_at" timestamp with time zone NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "saved_event" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"event_id" uuid NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "slug_registry" (
 	"slug" text PRIMARY KEY NOT NULL,
 	"type" "slug_type" NOT NULL,
@@ -80,6 +112,7 @@ CREATE TABLE "user" (
 	"authentik_subject" text NOT NULL,
 	"email" text NOT NULL,
 	"role" "user_role" DEFAULT 'user' NOT NULL,
+	"onboarding_completed_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_authentik_subject_unique" UNIQUE("authentik_subject"),
 	CONSTRAINT "user_email_unique" UNIQUE("email")
@@ -96,11 +129,20 @@ CREATE TABLE "user_link" (
 CREATE TABLE "user_profile" (
 	"user_id" uuid PRIMARY KEY NOT NULL,
 	"slug" text,
+	"is_public" boolean DEFAULT false NOT NULL,
 	"display_name" text,
 	"avatar_s3_key" text,
 	"website_url" text,
 	"instagram_url" text,
+	"facebook_url" text,
+	"tiktok_url" text,
 	"bio" text,
+	"verified_at" timestamp with time zone,
+	"verification_method" "verification_method",
+	"verification_code" text,
+	"verification_requested_at" timestamp with time zone,
+	"verified_instagram_handle" text,
+	"verified_tiktok_handle" text,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_profile_slug_unique" UNIQUE("slug")
 );
@@ -114,7 +156,12 @@ ALTER TABLE "event" ADD CONSTRAINT "event_approved_by_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "event_link" ADD CONSTRAINT "event_link_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "event_photo" ADD CONSTRAINT "event_photo_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "kreis" ADD CONSTRAINT "kreis_bundesland_id_bundesland_id_fk" FOREIGN KEY ("bundesland_id") REFERENCES "public"."bundesland"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "saved_event" ADD CONSTRAINT "saved_event_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "saved_event" ADD CONSTRAINT "saved_event_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_link" ADD CONSTRAINT "user_link_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_profile" ADD CONSTRAINT "user_profile_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "event_link_event_position_idx" ON "event_link" USING btree ("event_id","position");--> statement-breakpoint
-CREATE UNIQUE INDEX "event_photo_event_position_idx" ON "event_photo" USING btree ("event_id","position");
+CREATE UNIQUE INDEX "event_photo_event_position_idx" ON "event_photo" USING btree ("event_id","position");--> statement-breakpoint
+CREATE UNIQUE INDEX "saved_event_user_event_idx" ON "saved_event" USING btree ("user_id","event_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_profile_verified_instagram_handle_idx" ON "user_profile" USING btree ("verified_instagram_handle");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_profile_verified_tiktok_handle_idx" ON "user_profile" USING btree ("verified_tiktok_handle");

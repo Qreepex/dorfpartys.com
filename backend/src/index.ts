@@ -3,12 +3,16 @@ import cors from "@fastify/cors";
 import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
 import "dotenv/config";
 import Fastify from "fastify";
+import { verifyDatabaseConnection } from "./db/index.js";
 import { appRouter } from "./routers/index.js";
 import { createContext } from "./trpc/context.js";
 
 // Type-only Re-Export für den Frontend-Workspace (AGENTS.md Abschnitt 0):
 // `import type { AppRouter } from '@dorfpartys/backend'` - kein Laufzeit-Coupling.
 export type { AppRouter } from "./routers/index.js";
+
+// Datenbankverbindung vor dem Server-Start überprüfen
+await verifyDatabaseConnection();
 
 // maxParamLength angehoben: tRPCs httpBatchLink fügt bei parallelen Queries alle
 // Prozedur-Pfade kommagetrennt in einen einzigen dynamischen Route-Parameter

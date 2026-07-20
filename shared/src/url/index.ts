@@ -4,21 +4,22 @@ export interface CanonicalFilterSlugs {
 	bundeslandSlug?: string | null;
 	kreisSlug?: string | null;
 	artSlug?: string | null;
-	monatSlug?: string | null;
 }
 
 /**
  * Baut die kanonische Filter-URL aus vorhandenen Segmenten in fester Reihenfolge
- * bundesland -> kreis -> art -> monat (AGENTS.md 1.2/1.4). Reine Funktion, kein DB-Zugriff -
+ * bundesland -> kreis -> art (AGENTS.md 1.2/1.4). Reine Funktion, kein DB-Zugriff -
  * ruft NICHT das Backend auf, um z.B. den Bundesland-Slug zu einem Kreis nachzuschlagen.
  * Der Aufrufer muss kreisSlug nur zusammen mit dem passenden bundeslandSlug übergeben.
+ *
+ * Monate werden nicht in URLs kodiert, sondern über Fragment-IDs (#august) und
+ * Query-Parameter gelöst (siehe AGENTS.md 1.2 überarbeitete Struktur).
  */
 export function buildFilterUrl(country: Country, filters: CanonicalFilterSlugs = {}): string {
 	const segments = [
 		filters.bundeslandSlug,
 		filters.kreisSlug,
-		filters.artSlug,
-		filters.monatSlug
+		filters.artSlug
 	].filter((segment): segment is string => Boolean(segment));
 
 	return `/${[country, ...segments].join('/')}/`;

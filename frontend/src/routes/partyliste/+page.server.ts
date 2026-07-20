@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	await requireUser(locals.trpc, url.pathname);
 	const [{ upcoming, past }, myEvents] = await Promise.all([
 		locals.trpc.savedEvents.listMine.query(),
-		locals.trpc.events.listMine.query(),
+		locals.trpc.events.listMine.query()
 	]);
 	return { upcoming, past, myEvents };
 };
@@ -43,5 +43,5 @@ export const actions: Actions = {
 		if (eventId) {
 			redirect(302, `/veranstaltung-eintragen?id=${eventId}`);
 		}
-	},
+	}
 };

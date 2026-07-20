@@ -61,7 +61,7 @@
 		{/if}
 		<div>
 			<p class="mb-1 text-[0.75rem] tracking-[0.08em] text-muted uppercase">Veranstalter</p>
-			<h1 class="flex items-center gap-2 m-0">
+			<h1 class="m-0 flex items-center gap-2">
 				{displayName}
 				{#if profile.verifiedAt}
 					<VerifiedBadge title="Verifizierter Veranstalter" />

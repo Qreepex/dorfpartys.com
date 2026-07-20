@@ -19,7 +19,6 @@ export interface SearchCopyInput {
   bundeslandName: string | null;
   kreisName: string | null;
   artName: string | null;
-  monatName: string | null;
   total: number;
 }
 
@@ -30,20 +29,12 @@ export interface SearchCopyInput {
  * AGENTS.md 1.2 ab (0–4 Segmente).
  */
 export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
-  const {
-    bundeslandName: bl,
-    kreisName: kr,
-    artName: art,
-    monatName: monat,
-  } = input;
-  const ort = kr ?? bl; // Kreis ist die spezifischste Orts-Angabe, impliziert Bundesland.
+  const { bundeslandName: bl, kreisName: kr, artName: art } = input;
+  const ort = kr ?? bl;
   const countryIn = COUNTRY_NAMES[input.country];
   const countryNom = COUNTRY_NAMES_NOMINATIVE[input.country];
 
-  // Titel/H1: "[Art] in [Ort/Land]" bzw. "Dorfpartys in [Ort]" ohne Art,
-  // jeweils optional mit " im [Monat]" angehängt.
   const artLabel = art ?? "Dorfpartys";
-  const ortLabel = ort ?? countryNom;
 
   let subject: string;
   if (art && ort) {
@@ -56,26 +47,24 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
     subject = `Dorfpartys in ${countryNom}`;
   }
 
-  const zeitraum = monat ? ` im ${monat}` : "";
-  const h1 = `${subject}${zeitraum}`;
-  const title = `${h1} - ${SITE_NAME}`;
+  const h1 = subject;
+  const title = `${h1} | ${SITE_NAME}`;
 
   const ortSatz = kr ? `${kr} (${bl})` : (bl ?? countryIn);
   const artSatzTeil = art
     ? art
     : "Schützenfeste, Zeltfeten, Scheunenfeten und mehr";
-  const monatSatzTeil = monat ? ` im ${monat}` : " das ganze Jahr über";
 
   const description =
     input.total > 0
-      ? `${input.total} ${input.total === 1 ? "Party-Termin" : "Party-Termine"}: ${artSatzTeil} in ${ortSatz}${monatSatzTeil}. Kostenlos, werbefrei und ohne Anmeldung durchsuchbar.`
-      : `${artSatzTeil} in ${ortSatz}${monatSatzTeil} - aktuell noch keine Einträge. Kostenlos und werbefrei; trag dein Event ein und werde als Erste:r hier gelistet.`;
+      ? `${input.total} ${input.total === 1 ? "Party-Termin" : "Party-Termine"}: ${artSatzTeil} in ${ortSatz}. Kostenlos, werbefrei und ohne Anmeldung durchsuchbar.`
+      : `${artSatzTeil} in ${ortSatz} - aktuell noch keine Einträge. Kostenlos und werbefrei; trag dein Event ein und werde als Erste:r hier gelistet.`;
 
   const introParts: string[] = [];
   introParts.push(
     art
-      ? `Hier findest du alle ${art} in ${ortSatz}${monatSatzTeil} auf einen Blick.`
-      : `Hier findest du alle Dorfpartys in ${ortSatz}${monatSatzTeil} auf einen Blick - von Schützenfest über Zeltfete bis Scheunenfete.`,
+      ? `Hier findest du alle ${art} in ${ortSatz} auf einen Blick.`
+      : `Hier findest du alle Dorfpartys in ${ortSatz} auf einen Blick - von Schützenfest über Zeltfete bis Scheunenfete.`,
   );
   if (input.total > 0) {
     introParts.push(

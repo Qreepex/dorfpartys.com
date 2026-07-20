@@ -1,4 +1,4 @@
-import { MONTHS, type Country } from "@dorfpartys/shared";
+import type { Country } from "@dorfpartys/shared";
 import type { TaxonomyRepository } from "./types.js";
 
 export interface ClassifiedSegments {
@@ -10,8 +10,6 @@ export interface ClassifiedSegments {
   bundeslandSlugImplied?: string;
   artSlug?: string;
   partyArtId?: string;
-  monatSlug?: string;
-  monatNumber?: number;
 }
 
 export type ClassifyResult =
@@ -54,14 +52,6 @@ export async function classifySegments(
       if (classified.artSlug) return { ok: false, reason: "not-found" };
       classified.artSlug = partyArtMatch.slug;
       classified.partyArtId = partyArtMatch.id;
-      continue;
-    }
-
-    const monatMatch = MONTHS.find((m) => m.slug === segment);
-    if (monatMatch) {
-      if (classified.monatSlug) return { ok: false, reason: "not-found" };
-      classified.monatSlug = monatMatch.slug;
-      classified.monatNumber = monatMatch.number;
       continue;
     }
 

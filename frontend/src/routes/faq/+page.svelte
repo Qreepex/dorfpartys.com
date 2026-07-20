@@ -18,7 +18,7 @@
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Häufig gestellte Fragen - dorfpartys.com" />
+	<meta property="og:title" content="Häufig gestellte Fragen | dorfpartys.com" />
 	<meta property="og:url" content={canonical} />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html jsonLdScriptTag(faqJsonLd)}

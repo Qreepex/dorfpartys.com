@@ -30,8 +30,8 @@ export const adminVerificationRouter = router({
       .where(
         and(
           isNotNull(userProfile.verificationCode),
-          isNull(userProfile.verifiedAt)
-        )
+          isNull(userProfile.verifiedAt),
+        ),
       )
       .orderBy(userProfile.verificationRequestedAt);
 
@@ -44,7 +44,7 @@ export const adminVerificationRouter = router({
       z.object({
         userId: z.string().uuid(),
         method: z.enum(["email", "instagram", "tiktok"]),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       // Lade Profil
@@ -99,8 +99,8 @@ export const adminVerificationRouter = router({
           .where(
             and(
               eq(userProfile.verifiedInstagramHandle, handleToVerify),
-              ne(userProfile.userId, input.userId)
-            )
+              ne(userProfile.userId, input.userId),
+            ),
           );
 
         for (const conflictUser of conflictUsers) {
@@ -120,8 +120,8 @@ export const adminVerificationRouter = router({
           .where(
             and(
               eq(userProfile.verifiedTiktokHandle, handleToVerify),
-              ne(userProfile.userId, input.userId)
-            )
+              ne(userProfile.userId, input.userId),
+            ),
           );
 
         for (const conflictUser of conflictUsers) {

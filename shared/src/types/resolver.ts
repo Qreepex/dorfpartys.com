@@ -6,7 +6,6 @@ export interface ResolvedFilters {
 	bundeslandSlug: string | null;
 	kreisSlug: string | null;
 	artSlug: string | null;
-	monatSlug: string | null;
 }
 
 export interface ResolveRedirect {
@@ -20,7 +19,6 @@ export interface ResolvedFilterNames {
 	bundeslandName: string | null;
 	kreisName: string | null;
 	artName: string | null;
-	monatName: string | null;
 }
 
 /** Pro Segment-Kombination eindeutiger SEO-Text, serverseitig aus den Klarnamen gebaut. */
@@ -38,20 +36,32 @@ export interface ResolvedSeoCopy {
  * - strukturell kompatibel, hier aber bewusst nicht Teil des Basistyps, damit
  * der Resolver selbst ohne DB-Namenslookup testbar bleibt.
  */
+export interface NavigationItem {
+	slug: string;
+	name: string;
+	eventCount: number;
+}
+
 export interface ResolveResult {
 	kind: 'result';
 	filters: ResolvedFilters;
 	results: EventListItem[];
 	total: number;
 	/**
-	 * index,follow für jede gültige Segment-Kombination, auch ohne aktuelle
-	 * Treffer - bewusste Abweichung von AGENTS.md 1.6: leere, aber valide
-	 * Such-URLs sollen bereits jetzt Ranking aufbauen, damit künftig
-	 * eingetragene Events sofort sichtbar sind (siehe TODO.md).
+	 * true = index,follow. false = noindex,follow.
+	 * noindex nur wenn absolut keine Events vorhanden sind (weder zukünftig noch in den letzten 12 Monaten).
+	 * Neue SEO-Struktur (Phase 2): Soft-404s für Kombinationen mit 0 Ergebnissen, Archiv-Integration.
 	 */
 	indexable: boolean;
+	futureCount?: number;
+	pastCount?: number;
 	/** Social-Media Preview-Bild für diese Filter-Kombination (optional, falls OG-Image generiert wurde) */
 	ogImageUrl?: string;
+	/** Navigation tree: available sub-categories with event counts */
+	navigationTree?: {
+		kreise?: NavigationItem[];
+		partyArten?: NavigationItem[];
+	};
 }
 
 export interface ResolveNotFound {

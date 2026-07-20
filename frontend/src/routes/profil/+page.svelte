@@ -68,7 +68,8 @@
 					placeholder="z.b. meine-party-events"
 				/>
 				<p class="mt-1 text-xs text-muted">
-					Optional: Personalisierte URL wie <code>/veranstalter/meine-party-events</code>. Wenn leer, wird automatisch aus dem Anzeigenamen generiert.
+					Optional: Personalisierte URL wie <code>/veranstalter/meine-party-events</code>. Wenn
+					leer, wird automatisch aus dem Anzeigenamen generiert.
 				</p>
 				{#if form?.verificationError}
 					<p class="mt-1 text-xs text-red-600">{form.verificationError}</p>

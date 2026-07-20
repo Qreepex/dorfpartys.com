@@ -2,11 +2,7 @@
 	let { title = 'Verifizierter Veranstalter' }: { title?: string } = $props();
 </script>
 
-<span
-	class="verified-badge"
-	title={title}
-	aria-label="Verifiziert"
->
+<span class="verified-badge" {title} aria-label="Verifiziert">
 	<svg
 		width="16"
 		height="16"

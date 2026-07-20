@@ -10,17 +10,13 @@ export function canonicalSlugsFor(
       classified.bundeslandSlug ?? classified.bundeslandSlugImplied,
     kreisSlug: classified.kreisSlug,
     artSlug: classified.artSlug,
-    monatSlug: classified.monatSlug,
   };
 }
 
-/** Kanonische Segment-Reihenfolge: bundesland -> kreis -> art -> monat (AGENTS.md 1.2/1.4). */
+/** Kanonische Segment-Reihenfolge: bundesland -> kreis -> art (AGENTS.md 1.2/1.4). Monate werden nicht in URLs kodiert. */
 export function canonicalSegmentList(classified: ClassifiedSegments): string[] {
   const slugs = canonicalSlugsFor(classified);
-  return [
-    slugs.bundeslandSlug,
-    slugs.kreisSlug,
-    slugs.artSlug,
-    slugs.monatSlug,
-  ].filter((segment): segment is string => Boolean(segment));
+  return [slugs.bundeslandSlug, slugs.kreisSlug, slugs.artSlug].filter(
+    (segment): segment is string => Boolean(segment),
+  );
 }

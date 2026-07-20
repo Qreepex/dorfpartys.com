@@ -8,15 +8,15 @@
  * Sicher für Datenbankablage und Frontend-Rendering.
  */
 export function sanitizeText(input: string): string {
-	if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== "string") return "";
 
-	// HTML-Tags entfernen (<tag>, </tag>, etc.)
-	let sanitized = input.replace(/<[^>]*>/g, '');
+  // HTML-Tags entfernen (<tag>, </tag>, etc.)
+  let sanitized = input.replace(/<[^>]*>/g, "");
 
-	// Doppelte Spaces reduzieren (optionale Bereinigung)
-	sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  // Doppelte Spaces reduzieren (optionale Bereinigung)
+  sanitized = sanitized.replace(/\s+/g, " ").trim();
 
-	return sanitized;
+  return sanitized;
 }
 
 /**
@@ -24,17 +24,21 @@ export function sanitizeText(input: string): string {
  * Erlaubt nur http(s) und data-URIs.
  */
 export function sanitizeUrl(input: string): string {
-	if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== "string") return "";
 
-	const trimmed = input.trim();
+  const trimmed = input.trim();
 
-	// Nur erlauben: http://, https://, /
-	if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('/')) {
-		return '';
-	}
+  // Nur erlauben: http://, https://, /
+  if (
+    !trimmed.startsWith("http://") &&
+    !trimmed.startsWith("https://") &&
+    !trimmed.startsWith("/")
+  ) {
+    return "";
+  }
 
-	// Basis-URL-Validierung: Whitespace, newlines, etc. entfernen
-	return trimmed.replace(/[\s\n\r]/g, '');
+  // Basis-URL-Validierung: Whitespace, newlines, etc. entfernen
+  return trimmed.replace(/[\s\n\r]/g, "");
 }
 
 /**
@@ -42,6 +46,6 @@ export function sanitizeUrl(input: string): string {
  * Kombiniert HTML-Stripping und grundlegende Validierung.
  */
 export function sanitizeInput(input: unknown): string {
-	if (!input || typeof input !== 'string') return '';
-	return sanitizeText(input);
+  if (!input || typeof input !== "string") return "";
+  return sanitizeText(input);
 }

@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Nutzungsbedingungen - dorfpartys.com</title>
+	<title>Nutzungsbedingungen | dorfpartys.com</title>
 	<meta
 		name="description"
 		content="Nutzungsbedingungen für die kostenlose Event-Eintragung und -Suche auf dorfpartys.com."

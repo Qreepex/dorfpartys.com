@@ -1,7 +1,7 @@
 import {
   completeOnboardingInputSchema,
   updateProfileInputSchema,
-  type UpdateProfileInput
+  type UpdateProfileInput,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
@@ -40,8 +40,12 @@ async function upsertProfile(
   // Sanitiere Textfelder
   const sanitized = {
     ...profileFields,
-    displayName: profileFields.displayName ? sanitizeText(profileFields.displayName) : profileFields.displayName,
-    bio: profileFields.bio ? sanitizeText(profileFields.bio) : profileFields.bio,
+    displayName: profileFields.displayName
+      ? sanitizeText(profileFields.displayName)
+      : profileFields.displayName,
+    bio: profileFields.bio
+      ? sanitizeText(profileFields.bio)
+      : profileFields.bio,
   };
   if (sanitized.avatarS3Key) {
     const [existing] = await db
@@ -109,7 +113,10 @@ async function upsertProfile(
   }
 
   // Wenn sich eine verifizierungsrelevante Profilfeld ändert, Reset der Verifizierung
-  if (existing?.verifiedAt && isVerificationRelevantChange(existing, sanitized)) {
+  if (
+    existing?.verifiedAt &&
+    isVerificationRelevantChange(existing, sanitized)
+  ) {
     verificationReset = {
       verifiedAt: null,
       verificationMethod: null,

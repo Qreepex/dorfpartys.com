@@ -24,7 +24,10 @@ const RESERVED_SLUGS = new Set([
   ".well-known",
 ]);
 
-export function validateSlugFormat(slug: string): { valid: boolean; error?: string } {
+export function validateSlugFormat(slug: string): {
+  valid: boolean;
+  error?: string;
+} {
   // Mindestens 2 Zeichen
   if (slug.length < 2) {
     return { valid: false, error: "Slug muss mindestens 2 Zeichen lang sein" };
@@ -45,17 +48,26 @@ export function validateSlugFormat(slug: string): { valid: boolean; error?: stri
 
   // Nicht mit Bindestrich anfangen oder enden
   if (slug.startsWith("-") || slug.endsWith("-")) {
-    return { valid: false, error: "Slug darf nicht mit Bindestrich anfangen oder enden" };
+    return {
+      valid: false,
+      error: "Slug darf nicht mit Bindestrich anfangen oder enden",
+    };
   }
 
   // Keine doppelten Bindestriche
   if (slug.includes("--")) {
-    return { valid: false, error: "Slug darf keine doppelten Bindestriche enthalten" };
+    return {
+      valid: false,
+      error: "Slug darf keine doppelten Bindestriche enthalten",
+    };
   }
 
   // Nicht reserviert
   if (RESERVED_SLUGS.has(slug)) {
-    return { valid: false, error: `"${slug}" ist reserviert und nicht verfügbar` };
+    return {
+      valid: false,
+      error: `"${slug}" ist reserviert und nicht verfügbar`,
+    };
   }
 
   return { valid: true };
@@ -64,7 +76,7 @@ export function validateSlugFormat(slug: string): { valid: boolean; error?: stri
 export async function isSlugAvailable(
   db: Database,
   slug: string,
-  excludeUserId?: string
+  excludeUserId?: string,
 ): Promise<boolean> {
   const [existing] = await db
     .select()

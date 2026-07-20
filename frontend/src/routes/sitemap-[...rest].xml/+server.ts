@@ -33,9 +33,10 @@ const STATIC_PAGES = [
 
 /**
  * Bedient sitemap-pages.xml, sitemap-events.xml, sitemap-veranstalter.xml,
- * sitemap-{country}-orte.xml und sitemap-{country}-arten.xml (AGENTS.md 1.8).
- * Orte/Arten enthalten inzwischen bewusst auch Kombinationen ohne aktuelle
- * Events (siehe seo/sitemap.ts) - Datenaufbereitung läuft im Backend.
+ * sitemap-{country}-orte.xml, sitemap-{country}-arten.xml,
+ * sitemap-{country}-filter-combinations-level[1-4].xml und
+ * sitemap-{country}-{bundesland}-level4.xml (AGENTS.md 1.8).
+ * Filter-Kombinationen werden auf 4 Komplexitätslevel + pro-Bundesland aufgeteilt.
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const rest = params.rest;
@@ -64,7 +65,23 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		});
 	}
 
-	const match = /^(de|at|ch)-(orte|arten)$/.exec(rest);
+	// Pattern: {country}-{bundesland}-level3 (z.B. de-schleswig-holstein-level3)
+	// Three-filter combinations split by Bundesland to stay under 50k URLs per sitemap
+	const blMatch = /^(de|at|ch)-(.+)-level3$/.exec(rest);
+	if (blMatch) {
+		const [, countrySegment, bundeslandSlug] = blMatch;
+		if (!isCountry(countrySegment)) {
+			error(404);
+		}
+		const entries = await locals.trpc.sitemap.filterCombinationsLevel3.query({
+			country: countrySegment,
+			bundeslandSlug
+		});
+		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	}
+
+	// Two- and three-filter combinations at country level
+	const match = /^(de|at|ch)-(orte|arten|filter-combinations-level[1-2])$/.exec(rest);
 	if (!match) {
 		error(404);
 	}
@@ -73,10 +90,29 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		error(404);
 	}
 
-	const entries =
-		kind === 'orte'
-			? await locals.trpc.sitemap.orte.query({ country: countrySegment })
-			: await locals.trpc.sitemap.arten.query({ country: countrySegment });
+	if (kind === 'orte') {
+		const entries = await locals.trpc.sitemap.orte.query({ country: countrySegment });
+		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	}
 
-	return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	if (kind === 'arten') {
+		const entries = await locals.trpc.sitemap.arten.query({ country: countrySegment });
+		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	}
+
+	if (kind === 'filter-combinations-level1') {
+		const entries = await locals.trpc.sitemap.filterCombinationsLevel1.query({
+			country: countrySegment
+		});
+		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	}
+
+	if (kind === 'filter-combinations-level2') {
+		const entries = await locals.trpc.sitemap.filterCombinationsLevel2.query({
+			country: countrySegment
+		});
+		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
+	}
+
+	error(404);
 };

@@ -1,1 +1,0 @@
-ALTER TABLE "user_profile" ADD COLUMN "is_public" boolean DEFAULT false NOT NULL;

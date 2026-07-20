@@ -47,13 +47,22 @@ export async function resolve(
       classified.bundeslandIdExplicit ?? classified.bundeslandIdImplied,
     kreisId: classified.kreisId,
     partyArtId: classified.partyArtId,
-    monatNumber: classified.monatNumber,
   };
 
-  const total = await repo.countApprovedEvents(country, filterIds);
-  // Leere Kombinationen sind kein 404, sondern eine normale Seite (AGENTS.md 1.6).
-  const results =
-    total > 0 ? await repo.listApprovedEvents(country, filterIds) : [];
+  const totalFuture = await repo.countApprovedEvents(country, filterIds);
+  const futureResults =
+    totalFuture > 0 ? await repo.listApprovedEvents(country, filterIds) : [];
+
+  // Archiv: letzte 12 Monate, max 25 Events
+  const pastResults = await repo.listApprovedEventsPast12Months(
+    country,
+    filterIds,
+    25,
+  );
+
+  const allResults = [...futureResults, ...pastResults];
+  const total = futureResults.length + pastResults.length;
+  const hasAnyEvents = total > 0;
 
   // Konstruiere OG-Image-URL basierend auf Filters
   // Format: og-image-{art}-{bundesland}-{kreis}-{country}
@@ -61,8 +70,10 @@ export async function resolve(
   const ogImageSlug = [
     canonicalSlugs.artSlug,
     canonicalSlugs.kreisSlug ?? canonicalSlugs.bundeslandSlug,
-    country
-  ].filter(Boolean).join("-");
+    country,
+  ]
+    .filter(Boolean)
+    .join("-");
 
   const ogImageUrl = ogImageSlug
     ? `https://speicher.dorfpartys.com/og-images/og-image-${ogImageSlug}.png`
@@ -75,13 +86,15 @@ export async function resolve(
       bundeslandSlug: canonicalSlugs.bundeslandSlug ?? null,
       kreisSlug: canonicalSlugs.kreisSlug ?? null,
       artSlug: canonicalSlugs.artSlug ?? null,
-      monatSlug: canonicalSlugs.monatSlug ?? null,
     },
-    results,
+    results: allResults,
     total,
-    // Jede gültige Kombination ist index,follow, auch ohne aktuelle Treffer -
-    // bewusste Abweichung von AGENTS.md 1.6, siehe ResolveResult.indexable.
-    indexable: true,
+    futureCount: futureResults.length,
+    pastCount: pastResults.length,
+    // noindex für absolut leere Filter (0 zukünftig + 0 archiv), ansonsten index
+    indexable: hasAnyEvents,
     ogImageUrl,
+    // Navigation tree wird vom tRPC-Router enriched (siehe resolver.ts router)
+    navigationTree: undefined,
   };
 }
