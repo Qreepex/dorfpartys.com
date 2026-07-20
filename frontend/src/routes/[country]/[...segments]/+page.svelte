@@ -296,11 +296,11 @@
 
 			{#if result.results.length === 0}
 				<p class="mt-6 text-muted">
-					Kennst du eine Party in der Umgebung?
+					<strong class="text-text">Deine Party fehlt hier?</strong>
 					<a class="text-primary" href={`${resolve('/veranstaltung-eintragen')}#formular`}
-						>Trag sie kostenlos ein</a
+						>Trag sie in 2 Minuten ein</a
 					>
-					- du bist als Erste:r auf dieser Seite gelistet.
+					- dann bist du die Nummer 1 auf dieser Seite.
 				</p>
 			{/if}
 

@@ -417,7 +417,10 @@
 		{#if data.upcoming.length === 0}
 			<p class="mb-6 text-[0.9rem] text-muted">
 				Noch keine Termine{#if !data.showAllCountries}
-					in {COUNTRY_LABELS[country]}{/if} eingetragen - sei die erste Person, die eine einträgt.
+					in {COUNTRY_LABELS[country]}{/if}?
+				<a class="text-primary" href={`${veranstaltungEintragenHref}#formular`}
+					>Trag die erste Party ein</a
+				> - dauert 2 Minuten.
 			</p>
 		{:else}
 			<p class="mb-6 text-[0.9rem] text-muted">{data.upcoming.length} kommende Termine</p>
@@ -467,7 +470,9 @@
 				Veranstaltungen an einem Ort - praktisch für Vereine mit wiederkehrenden Festen.
 			</li>
 		</ul>
-		<Button href={veranstaltungEintragenHref} class="mt-6">Jetzt Event eintragen</Button>
+		<Button href={`${veranstaltungEintragenHref}#formular`} class="mt-6"
+			>Jetzt Event eintragen</Button
+		>
 	</section>
 
 	<section class="mt-16">
