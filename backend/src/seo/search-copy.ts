@@ -1,19 +1,8 @@
 import type { Country, ResolvedSeoCopy } from "@dorfpartys/shared";
-import { SITE_NAME } from "@dorfpartys/shared";
+import { buildInCountryTag, COUNTRY_NAMES, COUNTRY_NAMES_NOMINATIVE, SITE_NAME } from "@dorfpartys/shared";
 import { getRegionFlavorParagraphs } from "./region-flavor.js";
 
-const COUNTRY_NAMES: Record<Country, string> = {
-  de: "Deutschland",
-  at: "Österreich",
-  ch: "der Schweiz",
-};
 
-// Für Überschriften/Meta-Title braucht es die Nominativ-Form ohne "der".
-const COUNTRY_NAMES_NOMINATIVE: Record<Country, string> = {
-  de: "Deutschland",
-  at: "Österreich",
-  ch: "die Schweiz",
-};
 
 export interface SearchCopyInput {
   country: Country;
@@ -46,7 +35,7 @@ export function buildSearchSeoCopy(input: SearchCopyInput): ResolvedSeoCopy {
   } else if (!art && ort) {
     subject = `Dorfpartys in ${ort}`;
   } else {
-    subject = `Dorfpartys in ${countryNom}`;
+    subject = `Dorfpartys ${buildInCountryTag(input.country)}`;
   }
 
   const h1 = subject;

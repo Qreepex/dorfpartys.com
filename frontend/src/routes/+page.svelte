@@ -11,6 +11,7 @@
 		SITE_URL,
 		buildCountryRootUrl,
 		buildFilterUrl,
+		buildInCountryTag,
 		type Country
 	} from '@dorfpartys/shared';
 	import type { PageData } from './$types.js';
@@ -401,7 +402,7 @@
 		<div class="flex flex-wrap items-baseline justify-between gap-3">
 			<h2>
 				Nächste Partys {#if !data.showAllCountries}
-					in {COUNTRY_LABELS[country]}{/if}
+					{buildInCountryTag(country)}{/if}
 			</h2>
 			{#if data.showAllCountries}
 				<a class="text-[0.85rem] text-primary no-underline hover:underline" href={homeHref}>

@@ -91,3 +91,26 @@ export const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
 // serverseitig nochmal (nie dem Client vertrauen, siehe
 // backend/src/storage/image-validation.ts).
 export const MAX_AVATAR_DIMENSION = 128;
+
+
+
+export function buildInCountryTag(country: Country): string {
+	if (country === "ch") {
+		return `in der ${COUNTRY_NAMES[country]}`;
+	}
+
+	return `in ${COUNTRY_NAMES[country]}`;
+}
+
+export const COUNTRY_NAMES: Record<Country, string> = {
+	de: "Deutschland",
+	at: "Österreich",
+	ch: "Schweiz",
+};
+
+// Für Überschriften/Meta-Title braucht es die Nominativ-Form ohne "der".
+export const COUNTRY_NAMES_NOMINATIVE: Record<Country, string> = {
+	de: "Deutschland",
+	at: "Österreich",
+	ch: "Schweiz",
+};
