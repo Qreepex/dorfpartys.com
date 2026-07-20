@@ -88,10 +88,18 @@
 				: '')
 	);
 	const ogImage = $derived(event.photos[0]?.url);
+	// HTML-<title> ergänzt Kreis + Bundesland (z.B. "... in Ostholstein,
+	// Schleswig-Holstein"), analog zur Titel-Erweiterung auf Kreis-Filterseiten
+	// in backend/src/seo/search-copy.ts.
+	const pageTitle = $derived(
+		event.kreisName && event.bundeslandName
+			? `${event.title} in ${event.kreisName}, ${event.bundeslandName} | dorfpartys.com`
+			: `${event.title} | dorfpartys.com`
+	);
 </script>
 
 <svelte:head>
-	<title>{event.title} | dorfpartys.com</title>
+	<title>{pageTitle}</title>
 	<meta name="description" content={metaDescription} />
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
