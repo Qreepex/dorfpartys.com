@@ -2,19 +2,33 @@
 	import { resolve } from '$app/paths';
 	import '$lib/components/form-field.css';
 	import {
-		AvatarUpload,
 		Button,
+		FeedbackBanner,
 		FormGrid,
+		PhotoUpload,
 		TextInput,
 		Toggle,
 		VerifiedBadge
 	} from '$lib/components/index.js';
+	import { callAction } from '$lib/utils/form-action.js';
+	import { MAX_AVATAR_DIMENSION } from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
+	let form = $state(initialForm);
 	let verificationCode = $state<string | null>(null);
 	let showVerificationCode = $state(false);
 	let uploadedAvatarS3Key = $state<string | null>(null);
+
+	// Speichern ist erst aktiv, sobald tatsächlich etwas geändert wurde (kein
+	// versehentliches Absenden eines unveränderten Formulars) - `oninput`/
+	// `onchange` auf dem Formular selbst (Event-Delegation) reicht für alle
+	// Text-/Toggle-Felder, ohne jedes einzeln binden zu müssen. Der
+	// Avatar-Upload läuft separat (eigene Action, kein natives Change-Event
+	// auf dem Hauptformular) und setzt `dirty` daher explizit selbst.
+	let dirty = $state(false);
+	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
+	let feedbackDismissed = $state(false);
 
 	const organizerHref = $derived(
 		data.profile?.slug ? resolve('/veranstalter/[slug]', { slug: data.profile.slug }) : null
@@ -30,7 +44,54 @@
 	$effect(() => {
 		handleVerificationResponse();
 	});
+
+	async function handleProfileSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		const formEl = event.currentTarget as HTMLFormElement;
+		submitStatus = 'submitting';
+		feedbackDismissed = false;
+
+		const outcome = await callAction(formEl.action, new FormData(formEl));
+
+		if (outcome.ok) {
+			submitStatus = 'success';
+			form = { success: true } as ActionData;
+			dirty = false;
+		} else {
+			submitStatus = 'error';
+			form = (outcome.data ?? { profileError: outcome.error }) as ActionData;
+		}
+	}
+
+	const feedbackKind = $derived.by((): 'success' | 'error' | null => {
+		if (feedbackDismissed) return null;
+		if (submitStatus === 'success') return 'success';
+		if (submitStatus === 'error') return 'error';
+		return null;
+	});
+	const feedbackMessage = $derived(
+		feedbackKind === 'success'
+			? 'Profil gespeichert.'
+			: (form?.profileError ??
+					'Bitte überprüfe deine Eingaben - Details stehen bei den betroffenen Feldern.')
+	);
+
+	function dismissFeedback() {
+		feedbackDismissed = true;
+	}
+
+	$effect(() => {
+		if (feedbackKind !== 'success') return;
+		const timer = setTimeout(() => {
+			feedbackDismissed = true;
+		}, 5000);
+		return () => clearTimeout(timer);
+	});
 </script>
+
+{#if feedbackKind}
+	<FeedbackBanner kind={feedbackKind} message={feedbackMessage} onDismiss={dismissFeedback} />
+{/if}
 
 <svelte:head>
 	<title>Mein Profil | dorfpartys.com</title>
@@ -39,10 +100,6 @@
 
 <main class="mx-auto max-w-[90ch]">
 	<h1>Mein Profil</h1>
-
-	{#if form?.success}
-		<p class="mb-4 border border-primary bg-bg-alt p-4 text-text">Profil gespeichert.</p>
-	{/if}
 
 	{#if data.pendingNominations.length > 0}
 		<div class="mb-8 border-t border-border pt-6">
@@ -94,15 +151,29 @@
 		</p>
 	{/if}
 
-	<form method="POST" action="?/updateProfile" class="grid gap-6">
+	<form
+		method="POST"
+		action="?/updateProfile"
+		class="grid gap-6"
+		onsubmit={handleProfileSubmit}
+		oninput={() => (dirty = true)}
+		onchange={() => (dirty = true)}
+	>
 		<input type="hidden" name="avatarS3Key" value={uploadedAvatarS3Key ?? ''} />
 		<FormGrid>
 			<div class="sm:col-span-full">
-				<AvatarUpload
+				<PhotoUpload
 					name="avatarFile"
-					currentAvatarUrl={data.profile?.avatarUrl ?? null}
+					label="Profilbild"
+					action="uploadAvatar"
+					shape="round"
+					squareCrop
+					maxDimension={MAX_AVATAR_DIMENSION}
+					currentImageUrl={data.profile?.avatarUrl ?? null}
+					helpText="JPG oder PNG. Wird automatisch auf {MAX_AVATAR_DIMENSION}×{MAX_AVATAR_DIMENSION} zugeschnitten und skaliert."
 					onUploadComplete={(s3Key) => {
 						uploadedAvatarS3Key = s3Key;
+						dirty = true;
 					}}
 				/>
 			</div>
@@ -178,7 +249,9 @@
 			{/if}
 		</div>
 
-		<Button type="submit">Speichern</Button>
+		<Button type="submit" disabled={!dirty || submitStatus === 'submitting'}>
+			{submitStatus === 'submitting' ? 'Wird gespeichert...' : 'Speichern'}
+		</Button>
 	</form>
 
 	{#if data.profile}

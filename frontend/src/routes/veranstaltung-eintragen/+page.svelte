@@ -1,21 +1,21 @@
 <script lang="ts">
-	import { applyAction, deserialize } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
-	import ImageUpload from '$lib/components/ImageUpload.svelte';
 	import {
 		Button,
 		DropdownSelect,
+		FeedbackBanner,
 		FormGrid,
 		Modal,
+		PhotoUpload,
 		RadioGroup,
 		TextInput,
 		Toggle,
 		VerifiedBadge
 	} from '$lib/components/index.js';
+	import { callAction } from '$lib/utils/form-action.js';
 	import { MAX_EVENT_LINKS, SITE_URL } from '@dorfpartys/shared';
-	import type { ActionResult } from '@sveltejs/kit';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
@@ -58,26 +58,18 @@
 		submitStatus = 'submitting';
 		feedbackDismissed = false;
 
-		try {
-			const response = await fetch(formEl.action, {
-				method: 'POST',
-				body: new FormData(formEl)
-			});
-			const result: ActionResult = deserialize(await response.text());
+		const outcome = await callAction(formEl.action, new FormData(formEl));
 
-			if (result.type === 'success') {
-				submitStatus = 'success';
-				form = result.data as ActionData;
-			} else if (result.type === 'failure') {
-				submitStatus = 'error';
-				form = result.data as ActionData;
-			} else {
-				submitStatus = 'idle';
-			}
-
-			await applyAction(result);
-		} catch {
+		if (outcome.ok) {
+			submitStatus = 'success';
+			form = (outcome.data ?? { success: true }) as ActionData;
+			// Neuanlage (nicht Bearbeiten): Formular für die nächste Einreichung
+			// leeren, statt die zuletzt eingetragene Veranstaltung stehen zu
+			// lassen (Produktvorgabe - siehe resetForm() weiter unten).
+			if (!isEditing) resetForm();
+		} else {
 			submitStatus = 'error';
+			form = (outcome.data ?? { error: outcome.error }) as ActionData;
 		}
 	}
 
@@ -119,15 +111,19 @@
 	let partyArtId = $state(editingEvent?.partyArtId ?? '');
 	let addressDescription = $state(editingEvent?.addressDescription ?? '');
 	let uploadedPhotoS3Key = $state<string | null>(null);
-	// Wird von ImageUpload gemeldet, solange ein ausgewähltes Foto noch
+	// Wird von PhotoUpload gemeldet, solange ein ausgewähltes Foto noch
 	// client-seitig optimiert/hochgeladen wird - sperrt "Absenden" (siehe
 	// Button unten), damit ein Klick nicht mitten im Upload passiert. Der
-	// rohe Original-File verlässt zwar seit dem Fix in ImageUpload.svelte
-	// (kein `name`-Attribut auf dem File-Input) ohnehin nie mehr das
-	// Hauptformular, aber ohne diese Sperre würde ein zu frühes Absenden
-	// weiterhin einfach zu einem Event OHNE das gewählte Foto führen
-	// (photoS3Key steht ja erst nach Abschluss des Uploads fest).
+	// rohe Original-File verlässt PhotoUpload.svelte ohnehin nie (kein `name`-
+	// Attribut auf dem File-Input), aber ohne diese Sperre würde ein zu
+	// frühes Absenden weiterhin einfach zu einem Event OHNE das gewählte Foto
+	// führen (photoS3Key steht ja erst nach Abschluss des Uploads fest).
 	let photoUploadBusy = $state(false);
+	// Erzwingt einen Remount von <PhotoUpload> beim Zurücksetzen des Formulars
+	// (resetForm() unten) - einfachster Weg, dessen internen Vorschau-/
+	// Upload-State (previewUrl, uploadedS3Key) zu leeren, ohne eine eigene
+	// imperative Reset-Schnittstelle am Component zu brauchen.
+	let photoResetKey = $state(0);
 	// Bestehendes Foto beim Bearbeiten (max. 1, siehe MAX_EVENT_PHOTOS) - wird
 	// serverseitig automatisch beibehalten, solange weder ein neues Foto
 	// hochgeladen noch "Foto entfernen" angehakt wird (+page.server.ts).
@@ -203,7 +199,7 @@
 	// als Veranstalter soll bei fehlendem öffentlichen Profil direkt hier lösbar
 	// sein, statt nur auf /profil zu verlinken und den ausgefüllten
 	// Formular-Fortschritt zu riskieren). Ruft die Action `?/makeProfilePublic`
-	// (+page.server.ts) per fetch auf - analog zu `handleSubmit`/ImageUpload
+	// (+page.server.ts) per fetch auf - analog zu `handleSubmit`/PhotoUpload
 	// oben, KEIN normaler Form-POST, damit die Seite nicht neu geladen wird.
 	let showPublicProfileModal = $state(false);
 	let publicProfileSubmitting = $state(false);
@@ -222,34 +218,61 @@
 	async function confirmMakeProfilePublic() {
 		publicProfileSubmitting = true;
 		publicProfileError = '';
-		try {
-			const response = await fetch(`${page.url.pathname}?/makeProfilePublic`, {
-				method: 'POST',
-				body: new FormData()
-			});
-			const result: ActionResult = deserialize(await response.text());
 
-			if (result.type === 'success') {
-				isProfilePublic = true;
-				showPublicProfileModal = false;
-			} else if (result.type === 'failure') {
-				publicProfileError =
-					(result.data as { publicProfileError?: string } | undefined)?.publicProfileError ??
-					'Profil konnte nicht öffentlich gestellt werden.';
-			} else {
-				publicProfileError = 'Profil konnte nicht öffentlich gestellt werden.';
-			}
-		} catch {
-			publicProfileError = 'Profil konnte nicht öffentlich gestellt werden. Bitte versuch es erneut.';
-		} finally {
-			publicProfileSubmitting = false;
+		const outcome = await callAction<{ publicProfileError?: string }>(
+			`${page.url.pathname}?/makeProfilePublic`,
+			new FormData()
+		);
+
+		if (outcome.ok) {
+			isProfilePublic = true;
+			showPublicProfileModal = false;
+		} else {
+			publicProfileError =
+				outcome.data?.publicProfileError ??
+				outcome.error ??
+				'Profil konnte nicht öffentlich gestellt werden.';
 		}
+
+		publicProfileSubmitting = false;
 	}
 
 	// Rechte-/Verantwortungsbestätigung (Pflicht-Checkbox vor Submit, siehe AGENTS.md 5 -
 	// Einreichungsformular). Beim Bearbeiten bewusst nicht vorausgefüllt/übersprungen -
 	// wird bei jeder Einreichung erneut bestätigt, siehe Kommentar bei der Checkbox unten.
 	let rightsConfirmed = $state(false);
+
+	// Nach erfolgreicher Neuanlage (nicht Bearbeiten, siehe handleSubmit oben)
+	// wird das Formular komplett geleert, damit dieselbe Seite direkt für die
+	// nächste Einreichung genutzt werden kann, ohne die zuvor eingetragene
+	// Veranstaltung stehen zu lassen.
+	function resetForm() {
+		title = '';
+		description = '';
+		startDate = '';
+		endDate = '';
+		bundeslandId = '';
+		kreisId = '';
+		partyArtId = '';
+		addressDescription = '';
+		uploadedPhotoS3Key = null;
+		removeExistingPhoto = false;
+		photoResetKey += 1;
+		links = [];
+		priceInfo = '';
+		minAge = undefined;
+		allowsMuttizettel = false;
+		isOutdoor = false;
+		customColor = '#ff6b35';
+		organizerMode = 'myself';
+		organizerUserId = '';
+		organizerName = '';
+		organizerSearchQuery = '';
+		organizerSearchResults = [];
+		organizerSelectedLabel = '';
+		organizerError = '';
+		rightsConfirmed = false;
+	}
 
 	$effect(() => {
 		const query = organizerSearchQuery.trim();
@@ -382,32 +405,7 @@
 </svelte:head>
 
 {#if feedbackKind}
-	<!--
-		Teil E: großes, kaum zu übersehendes Feedback nach dem Absenden - fixiert
-		über der ganzen Seitenbreite statt einer kleinen Inline-Meldung. Erfolg
-		verschwindet automatisch (siehe $effect oben), ein Fehler bleibt stehen,
-		bis er aktiv geschlossen wird, da die Person erst die weiter unten
-		verlinkten Feldfehler beheben muss.
-	-->
-	<div
-		class="feedback-banner"
-		class:feedback-success={feedbackKind === 'success'}
-		class:feedback-error={feedbackKind === 'error'}
-		role="alert"
-	>
-		<div class="mx-auto flex max-w-[90ch] items-center gap-4 px-5 py-5">
-			<span class="text-2xl" aria-hidden="true">{feedbackKind === 'success' ? '✓' : '✗'}</span>
-			<p class="flex-1 text-[1.05rem] font-semibold">{feedbackMessage}</p>
-			<button
-				type="button"
-				class="feedback-close"
-				onclick={dismissFeedback}
-				aria-label="Meldung schließen"
-			>
-				×
-			</button>
-		</div>
-	</div>
+	<FeedbackBanner kind={feedbackKind} message={feedbackMessage} onDismiss={dismissFeedback} />
 {/if}
 
 <main class="mx-auto max-w-[90ch]">
@@ -427,7 +425,7 @@
 	{:else}
 		<header>
 			<p class="mb-2 text-[0.75rem] font-bold tracking-[0.08em] text-primary uppercase">
-				Kostenlos · Werbefrei · In 5 Minuten
+				Kostenlos · Werbefrei · Dauert nur eine Minute
 			</p>
 			<h1 class="leading-[1.05]">
 				Trag deine Party ein -<br />
@@ -542,15 +540,21 @@
 			{/if}
 
 			<div class="sm:col-span-full">
-				<ImageUpload
-					name="photo"
-					label={existingPhoto ? 'Foto ersetzen (optional)' : 'Foto (optional)'}
-					onUploadComplete={(s3Key) => {
-						uploadedPhotoS3Key = s3Key;
-						removeExistingPhoto = false;
-					}}
-					onBusyChange={(busy) => (photoUploadBusy = busy)}
-				/>
+				{#key photoResetKey}
+					<PhotoUpload
+						name="photo"
+						label={existingPhoto ? 'Foto ersetzen (optional)' : 'Foto (optional)'}
+						action="uploadPhoto"
+						shape="rect"
+						extraFields={() => ({ eventId: crypto.randomUUID() })}
+						helpText="Wird automatisch skaliert (max. 1920px) und komprimiert"
+						onUploadComplete={(s3Key) => {
+							uploadedPhotoS3Key = s3Key;
+							removeExistingPhoto = false;
+						}}
+						onBusyChange={(busy) => (photoUploadBusy = busy)}
+					/>
+				{/key}
 			</div>
 
 			<div class="sm:col-span-full">
@@ -1029,59 +1033,6 @@
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
-		}
-	}
-
-	/* Teil E: großes, fixiertes Feedback-Banner - bewusst dieselben Farbtokens
-	   wie die restlige App (--color-primary/--color-secondary, siehe
-	   form-field.css .field-error und die Button-Varianten), nur deutlich
-	   größer/prominenter als die bestehenden kleinen Inline-Meldungen. */
-	.feedback-banner {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		z-index: 100;
-		box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-		animation: feedback-slide-in 0.2s ease-out;
-	}
-
-	.feedback-banner.feedback-success {
-		background: var(--color-primary);
-		color: var(--color-ink);
-	}
-
-	.feedback-banner.feedback-error {
-		background: var(--color-secondary);
-		color: var(--color-ink);
-	}
-
-	.feedback-close {
-		flex: 0 0 auto;
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: transparent;
-		border: 1px solid currentColor;
-		border-radius: 2px;
-		color: inherit;
-		font-size: 1.3rem;
-		line-height: 1;
-		cursor: pointer;
-	}
-
-	.feedback-close:hover {
-		background: rgba(0, 0, 0, 0.1);
-	}
-
-	@keyframes feedback-slide-in {
-		from {
-			transform: translateY(-100%);
-		}
-		to {
-			transform: translateY(0);
 		}
 	}
 

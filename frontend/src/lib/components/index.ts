@@ -17,5 +17,6 @@ export { default as VerifiedBadge } from './VerifiedBadge.svelte';
 export { default as LinkTypeIcon } from './LinkTypeIcon.svelte';
 export { default as LegalDisclaimer } from './LegalDisclaimer.svelte';
 export { default as ShareButton } from './ShareButton.svelte';
-export { default as AvatarUpload } from './AvatarUpload.svelte';
+export { default as PhotoUpload } from './PhotoUpload.svelte';
+export { default as FeedbackBanner } from './FeedbackBanner.svelte';
 export { default as Modal } from './Modal.svelte';

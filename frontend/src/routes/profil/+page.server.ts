@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	// Bild-Upload läuft als eigene Action (JS-Fetch aus AvatarUpload.svelte,
+	// Bild-Upload läuft als eigene Action (JS-Fetch aus PhotoUpload.svelte,
 	// analog zu `uploadPhoto` in veranstaltung-eintragen/+page.server.ts) -
 	// getrennt vom eigentlichen Formular-Save, damit die Vorschau sofort nach
 	// dem Hochladen verfügbar ist, ohne das restliche Formular abzuschicken.
@@ -33,7 +33,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			const buffer = Buffer.from(await file.arrayBuffer());
+			// base64, nicht der rohe Buffer: der tRPC-Client läuft ohne
+			// Transformer, ein Buffer würde beim JSON-Transport zu
+			// `{type:'Buffer', data:[...]}` degenerieren (siehe uploads.ts Backend).
+			const buffer = Buffer.from(await file.arrayBuffer()).toString('base64');
 			const result = await locals.trpc.uploads.uploadAvatarPhoto.mutate({
 				contentType: contentType as 'image/jpeg' | 'image/png',
 				buffer

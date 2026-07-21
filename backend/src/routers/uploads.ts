@@ -15,7 +15,13 @@ import {
 import { protectedProcedure, router } from "../trpc/trpc.js";
 
 const contentTypeSchema = z.enum(["image/jpeg", "image/png"]);
-const bufferSchema = z.instanceof(Buffer);
+// Kommt als base64-String über tRPC (der Client nutzt httpBatchLink ohne
+// Transformer, ein roher Node-`Buffer` würde als JSON zu `{type:'Buffer',
+// data:[...]}` degenerieren statt als Buffer-Instanz anzukommen).
+const bufferSchema = z
+  .string()
+  .min(1, "Keine Datei ausgewählt")
+  .transform((base64) => Buffer.from(base64, "base64"));
 
 // Abuse-Schutz (Produktvorgabe: "beliebig viele ... Bilder hochladen kann zu
 // Abuse führen") - sowohl pro Nutzer als auch pro IP. Gilt für beide

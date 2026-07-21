@@ -213,7 +213,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			const buffer = Buffer.from(await file.arrayBuffer());
+			// base64, nicht der rohe Buffer: der tRPC-Client läuft ohne
+			// Transformer, ein Buffer würde beim JSON-Transport zu
+			// `{type:'Buffer', data:[...]}` degenerieren (siehe uploads.ts Backend).
+			const buffer = Buffer.from(await file.arrayBuffer()).toString('base64');
 			const result = await locals.trpc.uploads.uploadEventPhoto.mutate({
 				eventId,
 				contentType: contentType as 'image/jpeg' | 'image/png',
