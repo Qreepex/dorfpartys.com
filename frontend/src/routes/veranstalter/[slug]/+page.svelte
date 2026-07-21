@@ -191,4 +191,15 @@
 			<EventList events={past} country={past[0].country} />
 		</section>
 	{/if}
+
+	<div class="notice mt-12">
+		{#if profile.verifiedAt}
+			Offizielles Veranstalter-Profil auf dorfpartys.com. Dieser Eintrag wird direkt von {displayName}
+			verwaltet.
+		{:else}
+			Dies ist ein unabhängiger Verzeichniseintrag auf dorfpartys.com. Wir stehen in keiner
+			geschäftlichen Verbindung oder offiziellen Partnerschaft mit {displayName}. Alle genannten
+			Namen und Marken sind Eigentum des jeweiligen Inhabers.
+		{/if}
+	</div>
 </main>

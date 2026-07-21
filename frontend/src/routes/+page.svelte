@@ -477,8 +477,8 @@
 				Event wird dauerhaft gefunden, nicht nur für 24 Stunden im Feed.
 			</li>
 			<li class="border-t border-border py-4 leading-relaxed">
-				<strong class="text-text">100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein Tracking,
-				kein Weiterverkauf von Daten - weder deiner noch der deiner Gäste.
+				<strong class="text-text">100&nbsp;% privatsphärefreundlich.</strong> Keine Werbung, kein kommerzielles
+				Tracking, kein Weiterverkauf von Daten - weder deiner noch der deiner Gäste.
 			</li>
 			<li class="border-t border-b border-border py-4 leading-relaxed">
 				<strong class="text-text">Eigene Veranstalter-Seite.</strong> Mit Profil, Links und allen deinen
