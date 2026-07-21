@@ -7,6 +7,7 @@ import {
   protectedProcedure,
   router,
 } from "../trpc/trpc.js";
+import { isOrganizerCurrentlyVerified } from "../verification/index.js";
 
 // Claim-Workflow für nicht-verifizierte Veranstalter (AGENTS.md 5.4): ein
 // verifizierter Veranstalter kann ein Event, das ihm nicht zugeordnet ist,
@@ -35,14 +36,36 @@ export const eventClaimsRouter = router({
         .select({
           id: event.id,
           organizerUserId: event.organizerUserId,
-          organizerVerified: event.organizerVerified,
+          organizerConfirmed: event.organizerConfirmed,
         })
         .from(event)
         .where(eq(event.id, input.eventId));
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      if (existing.organizerVerified) {
+
+      // Live gegen das aktuelle Profil geprüft statt gegen die gespeicherte
+      // `event.organizerVerified`-Momentaufnahme (siehe
+      // isOrganizerCurrentlyVerified()) - sonst bliebe ein Event claimbar,
+      // dessen Veranstalter sich erst NACH der letzten Veranstalter-Zuweisung
+      // verifiziert hat (AGENTS.md 5.4 "Wann wird ein Event claimbar? Immer
+      // wenn organizer_verified = false" - das muss den aktuellen Stand
+      // meinen, nicht eine veraltete Spalte).
+      let currentOrganizerVerifiedAt: Date | null = null;
+      if (existing.organizerUserId) {
+        const [currentOrganizerProfile] = await ctx.db
+          .select({ verifiedAt: userProfile.verifiedAt })
+          .from(userProfile)
+          .where(eq(userProfile.userId, existing.organizerUserId));
+        currentOrganizerVerifiedAt = currentOrganizerProfile?.verifiedAt ?? null;
+      }
+      if (
+        isOrganizerCurrentlyVerified({
+          organizerUserId: existing.organizerUserId,
+          organizerConfirmed: existing.organizerConfirmed,
+          organizerProfileVerifiedAt: currentOrganizerVerifiedAt,
+        })
+      ) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Dieses Event hat bereits einen verifizierten Veranstalter",

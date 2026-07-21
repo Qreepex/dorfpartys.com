@@ -184,7 +184,14 @@ export const event = pgTable("event", {
   organizerUserId: uuid("organizer_user_id").references(() => user.id),
   // Für Freitext-Veranstalter oder wenn kein User-Profil gewählt wird
   organizerName: text("organizer_name"),
-  // Gibt an, ob der aktuelle Veranstalter (User oder Name) verifiziert ist
+  // Momentaufnahme des Verifizierungsstatus zum Zeitpunkt der letzten
+  // Veranstalter-Zuweisung (Einreichung/Bearbeiten, Claim-/Nominierungs-
+  // Genehmigung, Einladungscode-Einlösung). Verifiziert/entverifiziert sich
+  // das zugehörige user_profile DANACH, veraltet diese Spalte - sie ist
+  // deshalb NICHT die Autorität für Anzeige/Berechtigung (Verified-Badge,
+  // Claim-Fähigkeit gemäß AGENTS.md 5.4). Dafür immer
+  // isOrganizerCurrentlyVerified() (backend/src/verification/index.ts)
+  // verwenden, die live gegen user_profile.verifiedAt prüft.
   organizerVerified: boolean("organizer_verified").notNull().default(false),
   // false solange eine Organizer-Nominierung für ein fremdes, reales Profil
   // aussteht (AGENTS.md 5.3/organizer_nomination) - bei Selbst-Eintrag oder

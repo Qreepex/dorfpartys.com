@@ -41,6 +41,7 @@ import {
   getClientIp,
   RATE_LIMITS,
 } from "../rate-limit/index.js";
+import { isOrganizerCurrentlyVerified } from "../verification/index.js";
 import {
   moderatorProcedure,
   protectedProcedure,
@@ -690,7 +691,15 @@ export const eventsRouter = router({
       const organizerAvatarUrl = organizerProfile?.avatarS3Key
         ? buildPublicStorageUrl(organizerProfile.avatarS3Key)
         : null;
-      const organizerVerified = row.organizerVerified;
+      // Live berechnet statt aus der gespeicherten Momentaufnahme
+      // `row.organizerVerified` gelesen - siehe isOrganizerCurrentlyVerified()
+      // für den Hintergrund (Bugfix: Badge blieb nach nachträglicher
+      // Verifizierung des Veranstalters fälschlich unsichtbar).
+      const organizerVerified = isOrganizerCurrentlyVerified({
+        organizerUserId: row.organizerUserId,
+        organizerConfirmed: row.organizerConfirmed,
+        organizerProfileVerifiedAt: organizerProfile?.verifiedAt,
+      });
 
       const eventUrl = buildEventUrl(input.country, row.slug);
       const photosWithUrl = photos.map((p) => ({
@@ -897,6 +906,15 @@ export const eventsRouter = router({
     return rows.map((row) => ({
       ...row,
       organizerDisplayName: row.organizerDisplayName ?? row.organizerName,
+      // Live berechnet statt der gespeicherten Momentaufnahme
+      // `row.organizerVerified` - siehe isOrganizerCurrentlyVerified(). Nutzt
+      // `organizerProfileVerifiedAt`, das oben ohnehin schon separat aus
+      // `userProfile.verifiedAt` mitgeladen wird.
+      organizerVerified: isOrganizerCurrentlyVerified({
+        organizerUserId: row.organizerUserId,
+        organizerConfirmed: row.organizerConfirmed,
+        organizerProfileVerifiedAt: row.organizerProfileVerifiedAt,
+      }),
       photos: (photosByEvent.get(row.id) ?? []).map((p) => ({
         ...p,
         url: buildPublicStorageUrl(p.s3Key),
