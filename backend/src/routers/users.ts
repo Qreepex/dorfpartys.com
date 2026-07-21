@@ -289,7 +289,6 @@ export const usersRouter = router({
           tiktokUrl: userProfile.tiktokUrl,
           bio: userProfile.bio,
           verifiedAt: userProfile.verifiedAt,
-          verificationMethod: userProfile.verificationMethod,
           updatedAt: userProfile.updatedAt,
           mergedIntoUserId: userProfile.mergedIntoUserId,
           isGhost: user.isGhost,
@@ -377,10 +376,21 @@ export const usersRouter = router({
 
       return {
         profile: {
-          ...profileRow,
+          userId: profileRow.userId,
+          slug: profileRow.slug,
+          isPublic: profileRow.isPublic,
+          displayName: profileRow.displayName,
           avatarUrl: profileRow.avatarS3Key
             ? buildPublicStorageUrl(profileRow.avatarS3Key)
             : null,
+          websiteUrl: profileRow.websiteUrl,
+          instagramUrl: profileRow.instagramUrl,
+          facebookUrl: profileRow.facebookUrl,
+          tiktokUrl: profileRow.tiktokUrl,
+          bio: profileRow.bio,
+          verifiedAt: profileRow.verifiedAt,
+          updatedAt: profileRow.updatedAt,
+          isGhost: profileRow.isGhost,
         },
         links,
         upcoming,

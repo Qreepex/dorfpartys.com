@@ -22,3 +22,4 @@ export { default as FeedbackBanner } from './FeedbackBanner.svelte';
 export { default as Modal } from './Modal.svelte';
 export { default as LightboxImage } from './LightboxImage.svelte';
 export { default as NavSearch } from './NavSearch.svelte';
+export { default as SearchAutocomplete } from './SearchAutocomplete.svelte';

@@ -155,9 +155,12 @@
 	<meta name="robots" content="index,follow" />
 	<link rel="canonical" href={canonical} />
 	<meta property="og:type" content="article" />
-	<meta property="og:title" content={event.title} />
+	<meta property="og:title" content={pageTitle} />
 	<meta property="og:description" content={metaDescription} />
 	<meta property="og:url" content={canonical} />
+	<meta property="og:site_name" content="dorfpartys.com" />
+	<meta name="author" content={event.organizerName} />
+	<meta property="article:author" content={event.organizerName} />
 	{#if ogImage}
 		<meta property="og:image" content={ogImage} />
 		<meta name="twitter:card" content="summary_large_image" />

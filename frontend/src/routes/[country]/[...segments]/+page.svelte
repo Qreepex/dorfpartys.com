@@ -3,7 +3,6 @@
 	import { Breadcrumbs, EventList, LegalDisclaimer, ShareButton } from '$lib/components/index.js';
 	import NavTree from '$lib/components/NavTree.svelte';
 	import { jsonLdScriptTag, robotsContent } from '$lib/seo.js';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import {
 		SITE_URL,
 		buildEventUrl,
@@ -11,6 +10,7 @@
 		monthGroup,
 		type Country
 	} from '@dorfpartys/shared';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
@@ -188,14 +188,14 @@
 		<meta property="og:title" content={result.seo.title} />
 		<meta property="og:description" content={result.seo.description} />
 		<meta property="og:url" content={canonical} />
-		{#if result.ogImageUrl}
+		<!-- {#if result.ogImageUrl}
 			<meta property="og:image" content={result.ogImageUrl} />
 			<meta property="og:image:width" content="1200" />
 			<meta property="og:image:height" content="630" />
-			<meta name="twitter:card" content="summary_large_image" />
-		{:else}
-			<meta name="twitter:card" content="summary" />
-		{/if}
+			<meta name="twitter:card" content="summary_large_image" /> -->
+		<!-- {:else} -->
+		<meta name="twitter:card" content="summary" />
+		<!-- {/if} -->
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html jsonLdScriptTag(result.breadcrumbJsonLd)}
 		{#if itemListJsonLd}

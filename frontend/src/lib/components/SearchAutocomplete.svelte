@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { Country } from '@dorfpartys/shared';
+	import './form-field.css';
 	import VerifiedBadge from './VerifiedBadge.svelte';
 
-	// Globale Freitextsuche über die Lupe in der Navbar (Events + Veranstalter,
-	// backend/src/routers/search.ts `global`) - live Autocomplete während der
-	// Eingabe, analog zur Veranstalter-Suche im Einreichungsformular
-	// (frontend/src/routes/veranstaltung-eintragen/+page.svelte).
+	// Inline-Freitextsuche mit Live-Autocomplete (Events + Veranstalter,
+	// backend/src/routers/search.ts `global`, dasselbe `/search`-Endpoint wie
+	// NavSearch.svelte) - im Gegensatz zu NavSearch permanent sichtbares Feld
+	// statt Icon-getriggertem Popover (z.B. Hero-Suchfeld auf der Startseite),
+	// daher eigene, schlankere Komponente statt Wiederverwendung von NavSearch.
 	type EventResult = {
 		type: 'event';
 		slug: string;
@@ -29,39 +30,33 @@
 	};
 	type Result = EventResult | OrganizerResult;
 
+	interface Props {
+		value: string;
+		placeholder?: string;
+		/** Enter ohne aktive Pfeiltasten-Auswahl, oder Klick auf "Alle Ergebnisse". */
+		onSubmit: (value: string) => void;
+	}
+
+	let { value = $bindable(''), placeholder = 'Suchen…', onSubmit }: Props = $props();
+
 	const COUNTRY_LABELS: Record<Country, string> = { de: 'DE', at: 'AT', ch: 'CH' };
 
-	let open = $state(false);
-	let query = $state('');
-	let loading = $state(false);
 	let events = $state<EventResult[]>([]);
 	let organizers = $state<OrganizerResult[]>([]);
+	let loading = $state(false);
 	let activeIndex = $state(-1);
-	let panelEl: HTMLDivElement | undefined = $state();
-	let inputEl: HTMLInputElement | undefined = $state();
+	let focused = $state(false);
+	let containerEl: HTMLDivElement | undefined = $state();
 
 	const results = $derived<Result[]>([...events, ...organizers]);
-	const hasQuery = $derived(query.trim().length > 0);
+	const hasQuery = $derived(value.trim().length > 0);
 	const hasResults = $derived(results.length > 0);
-
-	function openSearch() {
-		open = true;
-		activeIndex = -1;
-		requestAnimationFrame(() => inputEl?.focus());
-	}
-
-	function closeSearch() {
-		open = false;
-		query = '';
-		events = [];
-		organizers = [];
-		activeIndex = -1;
-	}
+	const showPanel = $derived(focused && hasQuery);
 
 	let abortController: AbortController | undefined;
 
 	$effect(() => {
-		const q = query.trim();
+		const q = value.trim();
 		activeIndex = -1;
 		if (q.length < 1) {
 			events = [];
@@ -101,31 +96,33 @@
 			: resolve('/veranstalter/[slug]', { slug: result.slug });
 	}
 
-	// Volltextsuche: Enter ohne aktive Dropdown-Auswahl (oder Klick auf "Alle
-	// Ergebnisse") springt auf die vollwertige Ergebnisseite /suche?q=... statt
-	// nur die Top-6-Autocomplete-Treffer anzuzeigen.
-	function goToFullResults() {
-		const trimmed = query.trim();
-		if (trimmed.length < 1) return;
-		closeSearch();
-		goto(resolve(`/suche?q=${encodeURIComponent(trimmed)}`));
+	function closePanel() {
+		focused = false;
+		activeIndex = -1;
 	}
 
 	function handleOutsideClick(event: MouseEvent) {
-		if (panelEl && !panelEl.contains(event.target as Node)) {
-			closeSearch();
+		if (containerEl && !containerEl.contains(event.target as Node)) {
+			closePanel();
 		}
 	}
 
 	$effect(() => {
-		if (!open) return;
+		if (!showPanel) return;
 		document.addEventListener('click', handleOutsideClick);
 		return () => document.removeEventListener('click', handleOutsideClick);
 	});
 
+	function submitFullResults() {
+		const trimmed = value.trim();
+		if (trimmed.length < 1) return;
+		closePanel();
+		onSubmit(trimmed);
+	}
+
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			closeSearch();
+			closePanel();
 			return;
 		}
 		if (hasResults && event.key === 'ArrowDown') {
@@ -140,13 +137,11 @@
 		}
 		if (event.key === 'Enter') {
 			event.preventDefault();
-			// Ein aktiv per Pfeiltasten ausgewähltes Autocomplete-Ergebnis geht vor -
-			// sonst (keine Auswahl getroffen) landet man auf der vollen Ergebnisseite.
 			if (hasResults && activeIndex >= 0) {
 				window.location.href = resultHref(results[activeIndex]);
 				return;
 			}
-			goToFullResults();
+			submitFullResults();
 		}
 	}
 
@@ -155,66 +150,70 @@
 			? new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
 			: 'Ohne Termin';
 	}
+
+	function clear() {
+		value = '';
+	}
 </script>
 
-<div class="relative" bind:this={panelEl}>
-	<button
-		type="button"
-		class="flex h-11 w-11 cursor-pointer items-center justify-center border border-border bg-transparent text-text hover:border-primary hover:text-primary"
-		onclick={openSearch}
-		aria-haspopup="dialog"
-		aria-expanded={open}
-		aria-label="Suche öffnen"
-	>
-		<svg
-			width="18"
-			height="18"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			aria-hidden="true"
-		>
-			<circle cx="11" cy="11" r="7" />
-			<path d="m20 20-3.5-3.5" />
-		</svg>
-	</button>
-
-	{#if open}
-		<div
-			class="absolute top-full right-0 z-20 mt-1.5 flex max-h-[75vh] w-96 max-w-[90vw] flex-col overflow-hidden border border-border bg-bg-alt"
-			role="dialog"
-			tabindex="-1"
-			aria-label="Veranstaltungen und Veranstalter durchsuchen"
+<div class="field relative" bind:this={containerEl}>
+	<div class="field-control-wrap">
+		<span class="field-affix" aria-hidden="true">
+			<svg
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+			>
+				<circle cx="11" cy="11" r="7" />
+				<path d="m20 20-3.5-3.5" />
+			</svg>
+		</span>
+		<input
+			class="field-control"
+			type="search"
+			bind:value
+			{placeholder}
+			onfocus={() => (focused = true)}
 			onkeydown={handleKeydown}
+			aria-label="Suchbegriff"
+		/>
+		{#if value}
+			<button
+				type="button"
+				class="field-affix clear"
+				aria-label="Suche zurücksetzen"
+				onclick={clear}
+			>
+				<svg
+					width="14"
+					height="14"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+				>
+					<path d="M6 6l12 12M18 6 6 18" />
+				</svg>
+			</button>
+		{/if}
+	</div>
+
+	{#if showPanel}
+		<div
+			class="absolute top-full left-0 z-20 mt-1.5 flex max-h-[70vh] w-full flex-col overflow-hidden border border-border bg-bg-alt"
+			role="listbox"
+			aria-label="Suchergebnisse"
 		>
-			<div class="border-b border-border p-2">
-				<input
-					bind:this={inputEl}
-					bind:value={query}
-					type="search"
-					placeholder="Veranstaltungen, Veranstalter…"
-					class="w-full border-0 bg-transparent px-2 py-2 text-[0.95rem] text-text outline-none placeholder:text-muted"
-					aria-label="Suchbegriff"
-				/>
-			</div>
 			<div class="overflow-y-auto">
-				{#if !hasQuery}
-					<p class="px-3.5 py-4 text-[0.85rem] text-muted">
-						Tippe, um nach Veranstaltungen oder Veranstaltern zu suchen.
-					</p>
-				{:else if loading && !hasResults}
+				{#if loading && !hasResults}
 					<p class="px-3.5 py-4 text-[0.85rem] text-muted">Suche läuft…</p>
 				{:else if !hasResults}
-					<p class="px-3.5 py-4 text-[0.85rem] text-muted">Keine Treffer für „{query}“.</p>
-					<button
-						type="button"
-						class="w-full cursor-pointer border-t border-border bg-transparent px-3.5 py-2.5 text-left text-[0.85rem] text-primary hover:bg-border"
-						onclick={goToFullResults}
-					>
-						Trotzdem alle Ergebnisse anzeigen →
-					</button>
+					<p class="px-3.5 py-4 text-[0.85rem] text-muted">Keine Treffer für „{value}“.</p>
 				{:else}
 					{#if events.length > 0}
 						<p
@@ -228,7 +227,7 @@
 									<a
 										class={`flex items-start gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === i ? 'bg-border' : ''}`}
 										href={resultHref(item)}
-										onclick={closeSearch}
+										onclick={closePanel}
 									>
 										<span
 											class="mt-0.5 flex-0 shrink-0 border border-border px-1.5 py-0.5 text-[0.68rem] font-bold tracking-wider text-muted uppercase"
@@ -259,7 +258,7 @@
 									<a
 										class={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === events.length + i ? 'bg-border' : ''}`}
 										href={resultHref(item)}
-										onclick={closeSearch}
+										onclick={closePanel}
 									>
 										{#if item.avatarUrl}
 											<img
@@ -294,14 +293,14 @@
 							{/each}
 						</ul>
 					{/if}
-					<button
-						type="button"
-						class="w-full cursor-pointer border-t border-border bg-transparent px-3.5 py-2.5 text-left text-[0.85rem] text-primary hover:bg-border"
-						onclick={goToFullResults}
-					>
-						Alle Ergebnisse anzeigen →
-					</button>
 				{/if}
+				<button
+					type="button"
+					class="w-full cursor-pointer border-t border-border bg-transparent px-3.5 py-2.5 text-left text-[0.85rem] text-primary hover:bg-border"
+					onclick={submitFullResults}
+				>
+					Alle Ergebnisse anzeigen →
+				</button>
 			</div>
 		</div>
 	{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
@@ -25,8 +26,6 @@
 	// also bei jedem Mount bereits aktuell.
 	// svelte-ignore state_referenced_locally
 	let form = $state(initialForm);
-	let verificationCode = $state<string | null>(null);
-	let showVerificationCode = $state(false);
 
 	// Speichern ist erst aktiv, sobald tatsächlich etwas geändert wurde (kein
 	// versehentliches Absenden eines unveränderten Formulars) - `oninput`/
@@ -44,22 +43,13 @@
 		data.profile?.slug ? resolve('/veranstalter/[slug]', { slug: data.profile.slug }) : null
 	);
 
-	function handleVerificationResponse() {
-		if (form?.verificationRequested) {
-			verificationCode = form.code || null;
-			showVerificationCode = true;
-		}
-	}
-
-	$effect(() => {
-		handleVerificationResponse();
-	});
-
 	// Analog zu handleProfileSubmit/confirmMakeProfilePublic - per fetch statt
 	// normalem Form-POST, damit die Seite bei der Verifizierungsanfrage nicht
-	// neu geladen wird. `form` wird direkt gesetzt statt `applyAction()`s
-	// Navigation abzuwarten; der bestehende `handleVerificationResponse`-Effect
-	// oben reagiert darauf unverändert (zeigt Code/Fehlermeldung an).
+	// neu geladen wird. Bei Erfolg `invalidateAll()` statt den Code lokal aus
+	// der Action-Antwort nachzubauen: `load()` liefert dann den frisch in der
+	// DB gespeicherten `verificationCode` erneut, und die Anzeige läuft über
+	// dieselbe `data.profile.verificationCode`-Branch weiter unten wie nach
+	// einem echten Seiten-Reload - kein zweiter, davon abweichender Render-Pfad.
 	async function handleVerificationSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		const formEl = event.currentTarget as HTMLFormElement;
@@ -68,7 +58,7 @@
 		const outcome = await callAction(formEl.action, new FormData(formEl));
 
 		if (outcome.ok) {
-			form = { verificationRequested: true, ...outcome.data } as ActionData;
+			await invalidateAll();
 		} else {
 			form = (outcome.data ?? { verificationError: outcome.error }) as ActionData;
 		}
@@ -347,19 +337,6 @@
 
 				{#if form?.verificationError}
 					<p class="mb-4 text-sm text-red-600">{form.verificationError}</p>
-				{/if}
-
-				{#if showVerificationCode && verificationCode}
-					<div class="mb-4 rounded border border-blue-200 bg-blue-50 p-4">
-						<p class="mb-2 text-sm font-semibold">Dein Verifizierungs-Code:</p>
-						<p class="mb-4 font-mono text-lg font-bold tracking-widest">{verificationCode}</p>
-						<p class="text-sm text-text">
-							Sende diesen Code an <strong>@dorfpartys</strong> auf
-							<strong>Instagram</strong> oder <strong>TikTok</strong>, oder schreib eine E-Mail an
-							<a href="mailto:verifizierung@dorfpartys.com">verifizierung@dorfpartys.com</a> (von einer
-							der oben hinterlegten Adressen).
-						</p>
-					</div>
 				{/if}
 			{/if}
 		</div>

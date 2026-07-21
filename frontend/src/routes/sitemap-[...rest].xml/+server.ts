@@ -28,7 +28,8 @@ const STATIC_PAGES = [
 	'/datenschutz',
 	'/nutzungsbedingungen',
 	'/faq',
-	'/veranstaltung-eintragen'
+	'/veranstaltung-eintragen',
+	'/suche'
 ];
 
 /**

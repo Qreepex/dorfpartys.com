@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import type { ResolvedPathname } from '$app/types';
 	import Button from '$lib/components/Button.svelte';
-	import { DropdownSelect, EventList, FaqList } from '$lib/components/index.js';
+	import { DropdownSelect, EventList, FaqList, SearchAutocomplete } from '$lib/components/index.js';
 	import { FAQ_ENTRIES } from '$lib/content/faq.js';
 	import { buildFaqJsonLd, jsonLdScriptTag } from '$lib/seo.js';
 	import {
@@ -46,6 +46,7 @@
 	let country = $derived(data.country);
 	let bundeslandSlug = $state('');
 	let artSlug = $state('');
+	let freitextQuery = $state('');
 
 	/**
 	 * Baut eine Landing-Page-URL, die die aktuellen Query-Parameter beibehält
@@ -104,6 +105,15 @@
 		// wird im Hero-Suchformular bewusst nicht angeboten (zu granular für den Einstieg).
 		const segments = [bundeslandSlug, artSlug].filter(Boolean).join('/');
 		goto(resolve('/[country]/[...segments]', { country, segments }));
+	}
+
+	// Freitextsuche im Hero (zusätzlich zu den Bundesland-/Art-Dropdowns oben) -
+	// eigener Eingabepfad, landet analog zur Navbar-Lupe (NavSearch.svelte) auf
+	// der vollen Ergebnisseite /suche?q=..., nicht auf einer Filter-URL.
+	function handleFreitextSearch(value: string) {
+		const trimmed = value.trim();
+		if (trimmed.length < 1) return;
+		goto(resolve(`/suche?q=${encodeURIComponent(trimmed)}`));
 	}
 
 	// Interne Verlinkung zu den wichtigsten Party-Art- und Regions-Hub-Seiten -
@@ -211,6 +221,18 @@
 			Die umfassendste kostenlose Liste für Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten
 			im ganzen DACH-Raum - filterbar nach Land, Bundesland, Art und Monat. Jede:r kann kostenlos
 			eine Veranstaltung eintragen.
+		</p>
+
+		<div class="border border-border bg-bg-alt p-4 sm:p-5">
+			<SearchAutocomplete
+				bind:value={freitextQuery}
+				placeholder="Direkt nach Titel oder Ort suchen…"
+				onSubmit={handleFreitextSearch}
+			/>
+		</div>
+
+		<p class="my-3 text-center text-[0.78rem] font-bold tracking-[0.03em] text-muted">
+			oder gezielt filtern
 		</p>
 
 		<form

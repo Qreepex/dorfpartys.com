@@ -58,6 +58,12 @@
 	function monthAbbr(iso: string | null) {
 		return iso ? MONTH_ABBR[new Date(iso).getMonth()] : 'TBA';
 	}
+	function yearSuffix(iso: string | null) {
+		if (!iso) return '';
+		const year = new Date(iso).getFullYear();
+		const currentYear = new Date().getFullYear();
+		return year !== currentYear ? ` ${year.toString().slice(-2)}` : '';
+	}
 </script>
 
 {#if events.length === 0}
@@ -67,7 +73,9 @@
 		{#each events as item (item.slug ?? item.title)}
 			<li class="event-row">
 				<span class="event-date"
-					>{day(item.startDate)}<small>{monthAbbr(item.startDate)}</small></span
+					>{day(item.startDate)}<small
+						>{monthAbbr(item.startDate)}{yearSuffix(item.startDate)}</small
+					></span
 				>
 				<span class="event-info">
 					{#if eventHref(item)}

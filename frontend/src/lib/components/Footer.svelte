@@ -8,7 +8,11 @@
 <footer class="mt-16 border-t border-border">
 	<div class="mx-auto max-w-240 px-5 pt-8 pb-12 text-[0.85rem] text-muted">
 		<div class="flex flex-wrap justify-between gap-3">
-			<span>© {year} dorfpartys.com</span>
+			<span
+				>© {year}
+				<a class="text-muted no-underline hover:text-primary" href={resolve('/')}>dorfpartys.com</a
+				></span
+			>
 			<span class="flex flex-wrap gap-x-1.5">
 				<a class="text-muted no-underline hover:text-primary" href={resolve('/faq')}>FAQ</a>
 				·
