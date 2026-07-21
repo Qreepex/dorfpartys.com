@@ -91,8 +91,8 @@ const HOUR_MS = 60 * 60 * 1000;
  * zentral nachjustieren (Production-Tuning nach echten Nutzungsdaten nötig).
  */
 export const RATE_LIMITS = {
-  eventCreatePerUser: { limit: 5, windowMs: HOUR_MS } satisfies RateLimitRule,
-  eventCreatePerIp: { limit: 10, windowMs: HOUR_MS } satisfies RateLimitRule,
+  eventCreatePerUser: { limit: 10, windowMs: HOUR_MS } satisfies RateLimitRule,
+  eventCreatePerIp: { limit: 25, windowMs: HOUR_MS } satisfies RateLimitRule,
   uploadPerUser: { limit: 20, windowMs: HOUR_MS } satisfies RateLimitRule,
   uploadPerIp: { limit: 40, windowMs: HOUR_MS } satisfies RateLimitRule,
 } as const;
@@ -102,9 +102,12 @@ export const RATE_LIMITS = {
  * clusterintern erreichbar (AGENTS.md Abschnitt 0/7, kein Ingress-Pfad,
  * siehe infra/k8s/ingress/ingress.yaml) - der einzige Aufrufer ist das
  * Frontend, das die tatsächliche Client-IP im `x-forwarded-for`-Header
- * durchreicht (frontend/src/lib/trpc-client/index.ts). Mit `trustProxy: true`
- * in der Fastify-Bootstrap (backend/src/index.ts) löst Fastify `request.ip`
- * bereits korrekt aus diesem Header auf.
+ * durchreicht (frontend/src/lib/trpc-client/index.ts), primär aus Cloudflares
+ * `cf-connecting-ip`-Header ermittelt (frontend/src/hooks.server.ts) - nicht
+ * mehr aus der reinen x-forwarded-for-Hop-Zählung, die bei Requests über
+ * Cloudflare fälschlich interne Ingress-/LB-IPs statt der Browser-IP lieferte.
+ * Mit `trustProxy: true` in der Fastify-Bootstrap (backend/src/index.ts) löst
+ * Fastify `request.ip` bereits korrekt aus diesem Header auf.
  */
 export function getClientIp(req: FastifyRequest): string {
   return req.ip || "unknown";

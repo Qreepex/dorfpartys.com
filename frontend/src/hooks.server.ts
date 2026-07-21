@@ -5,16 +5,27 @@ import { createBackendClient } from '$lib/trpc-client/index.js';
 const COUNTRY_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// getClientAddress() liefert die echte Browser-IP nur korrekt, wenn der
-	// Node-Adapter per ADDRESS_HEADER/XFF_DEPTH auf den von ingress-nginx
-	// gesetzten x-forwarded-for-Header vertraut (infra/k8s/frontend/configmap.yaml) -
-	// wird ans Backend fürs IP-basierte Ratelimiting durchgereicht
-	// (backend/src/rate-limit/index.ts).
-	let clientIp: string | null = null;
-	try {
-		clientIp = event.getClientAddress();
-	} catch {
-		// z.B. bei lokalen/synthetischen Requests ohne Socket-Adresse
+	// Die Domain läuft hinter Cloudflare (Proxy-Modus) - Cloudflare setzt
+	// `cf-connecting-ip` am Edge immer auf die echte Besucher-IP, unabhängig
+	// davon, wie viele Hops zwischen Cloudflare und diesem Pod liegen. Das ist
+	// robuster als getClientAddress()/x-forwarded-for-Depth-Zählung (die nur
+	// den einen ingress-nginx-Hop annimmt und dadurch bei Requests über
+	// Cloudflare die interne Ingress-/LB-IP statt der Browser-IP lieferte).
+	// Fällt auf getClientAddress() zurück für Requests ohne Cloudflare davor
+	// (z.B. lokale Entwicklung, direkter Cluster-Zugriff).
+	//
+	// Wichtig: Damit dieser Header nicht spoofbar ist, muss der Origin (bzw.
+	// ingress-nginx/Firewall) so konfiguriert sein, dass er nur Traffic aus
+	// den Cloudflare-IP-Ranges annimmt - sonst kann jeder, der den Origin
+	// direkt anspricht, `cf-connecting-ip` frei setzen und damit das
+	// IP-basierte Ratelimiting (backend/src/rate-limit/index.ts) umgehen.
+	let clientIp: string | null = event.request.headers.get('cf-connecting-ip');
+	if (!clientIp) {
+		try {
+			clientIp = event.getClientAddress();
+		} catch {
+			// z.B. bei lokalen/synthetischen Requests ohne Socket-Adresse
+		}
 	}
 	event.locals.trpc = createBackendClient(event.request.headers.get('cookie'), clientIp);
 

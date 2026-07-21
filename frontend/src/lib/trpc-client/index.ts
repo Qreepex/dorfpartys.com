@@ -13,8 +13,9 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client';
  * infra/k8s/ingress/ingress.yaml) und sieht ohne diesen Header nur die
  * interne Pod-IP dieses Frontend-Replicas, nicht die echte Browser-IP - für
  * IP-basiertes Ratelimiting im Backend (backend/src/rate-limit/index.ts)
- * sonst unbrauchbar. Der Aufrufer ermittelt `clientIp` üblicherweise über
- * SvelteKits `event.getClientAddress()`.
+ * sonst unbrauchbar. Der Aufrufer ermittelt `clientIp` primär aus dem von
+ * Cloudflare gesetzten `cf-connecting-ip`-Header, mit `event.getClientAddress()`
+ * als Fallback (frontend/src/hooks.server.ts).
  */
 export function createBackendClient(cookieHeader: string | null, clientIp?: string | null) {
 	return createTRPCClient<AppRouter>({

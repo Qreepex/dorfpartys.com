@@ -24,10 +24,11 @@ await verifyDatabaseConnection();
 // Abschnitt 0/7 - kein Ingress-Pfad, siehe infra/k8s/ingress/ingress.yaml),
 // der einzige Aufrufer ist das Frontend. Das Frontend reicht die tatsächliche
 // Browser-IP im `x-forwarded-for`-Header durch (frontend/src/lib/trpc-client),
-// nachdem es sie selbst aus dem von ingress-nginx gesetzten Header gelesen
-// hat. Ohne trustProxy würde Fastifys `request.ip` stattdessen immer nur die
-// interne Pod-IP des aufrufenden Frontend-Replicas liefern - für IP-basiertes
-// Ratelimiting (backend/src/rate-limit/index.ts) unbrauchbar, da dadurch alle
+// nachdem es sie selbst primär aus Cloudflares `cf-connecting-ip`-Header
+// gelesen hat (frontend/src/hooks.server.ts). Ohne trustProxy würde Fastifys
+// `request.ip` stattdessen immer nur die interne Pod-IP des aufrufenden
+// Frontend-Replicas liefern - für IP-basiertes Ratelimiting
+// (backend/src/rate-limit/index.ts) unbrauchbar, da dadurch alle
 // Nutzer:innen hinter demselben Frontend-Pod zusammengefasst würden.
 // bodyLimit angehoben: Foto-Uploads (uploads.uploadEventPhoto/uploadAvatarPhoto,
 // siehe backend/src/routers/uploads.ts) laufen als base64-String durch den
