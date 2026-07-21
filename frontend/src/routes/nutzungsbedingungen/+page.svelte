@@ -36,6 +36,18 @@
 				insbesondere nicht für Ticket-Shops oder die Datenschutzpraktiken der Veranstalter.
 			</li>
 			<li>
+				<strong>Rein informative Nennung, keine Affiliation:</strong> Wir tragen teilweise auch selbst
+				recherchierte Events ein und bündeln extern verfügbare Informationen. Die Nennung eines Events oder
+				Veranstalters ist rein informativ (beschreibende Nutzung) und bedeutet keine Kooperation mit oder
+				Billigung durch dorfpartys.com. Für Absagen, Terminverschiebungen oder falsche Preisangaben
+				übernehmen wir keine Verantwortung.
+			</li>
+			<li>
+				<strong>Verifizierte Veranstalter:</strong> Veranstalter können sich verifizieren lassen und erhalten
+				dann ein Badge. Das Badge zeigt nur unsere Prüfung von Identität/Berechtigung an, begründet aber
+				keine Gewährleistung für die Richtigkeit der von diesem Veranstalter eingetragenen Inhalte.
+			</li>
+			<li>
 				<strong>Technische Integrität:</strong> Jegliche Angriffe auf unsere Infrastruktur (z. B. DDoS,
 				Scraping, automatisierte Bot-Zugriffe) sind strengstens untersagt und führen zur sofortigen Sperrung
 				sowie ggf. zur Anzeige.
@@ -73,9 +85,36 @@
 		sind ausschließlich an den jeweiligen Veranstalter zu richten.
 	</p>
 	<p>
-		(3) Wir übernehmen keine Gewähr dafür, dass die eingetragenen Veranstaltungen tatsächlich
-		stattfinden, die Preisangaben stimmen oder die Rahmenbedingungen den Angaben auf unserer
-		Plattform entsprechen.
+		(3) Wir bündeln und veröffentlichen Veranstaltungsdaten, die teils von Nutzern, teils von uns
+		selbst aus externen, öffentlich zugänglichen Quellen recherchiert werden. Wir übernehmen keine
+		Gewähr dafür, dass die eingetragenen Veranstaltungen tatsächlich wie angegeben stattfinden.
+		Insbesondere übernehmen wir keine Verantwortung für kurzfristige Absagen, Terminverschiebungen,
+		Programmänderungen oder unzutreffende bzw. veraltete Preisangaben. Maßgeblich sind stets die
+		Angaben des jeweiligen Veranstalters direkt (z. B. dessen eigene Website).
+	</p>
+	<p>
+		(4) Neben nutzergenerierten Einträgen tragen wir nach bestem Wissen und Gewissen auch selbst
+		Veranstaltungen ein, die wir aus öffentlich zugänglichen Quellen recherchiert haben. Auch in
+		diesen Fällen werden wir nicht zum Veranstalter der jeweiligen Veranstaltung; es gelten
+		dieselben Haftungsausschlüsse wie für nutzergenerierte Einträge.
+	</p>
+	<p>
+		(5) Die Nennung eines Events oder Veranstalters auf dorfpartys.com dient ausschließlich der
+		Information der Nutzer (sog. beschreibende bzw. nominative Nutzung) und stellt keine
+		Kooperation, Empfehlung, Billigung oder sonstige Verbindung ("Affiliation") zwischen
+		dorfpartys.com und dem genannten Veranstalter dar – auch nicht bei verifizierten Profilen gemäß
+		Abs. 6. Namen von Events, Marken, Logos und sonstige Kennzeichen Dritter, die auf der Plattform
+		genannt werden, können marken- oder namensrechtlich geschützt sein und verbleiben im Eigentum
+		der jeweiligen Rechteinhaber; ihre Nennung erfolgt ausschließlich zur Identifikation der
+		jeweiligen Veranstaltung.
+	</p>
+	<p>
+		(6) Veranstalter können sich verifizieren lassen. Ein verifiziertes Profil (erkennbar an einem
+		Badge) zeigt an, dass wir Identität und Berechtigung des Veranstalters nach unserem Ermessen
+		geprüft haben; es begründet jedoch keine Garantie oder Gewährleistung für die Richtigkeit der
+		von diesem Veranstalter eingetragenen Inhalte und keine Vertragsbeziehung zwischen
+		dorfpartys.com und dem Veranstalter. Nicht verifizierte Einträge können von berechtigten,
+		verifizierten Veranstaltern über unser Claim-Verfahren übernommen werden.
 	</p>
 
 	<h2>§ 3 Registrierung, Account und Single-Sign-On (SSO)</h2>
@@ -84,12 +123,10 @@
 		von Nutzerprofilen) ist eine Registrierung erforderlich.
 	</p>
 	<p>
-		(2) Die Registrierung erfolgt über Drittanbieter-Dienste ("Single-Sign-On" / SSO), namentlich <strong
-			>Discord, Google oder Facebook</strong
-		>. Mit der Nutzung dieser SSO-Dienste stimmst du zu, dass die zur Identifikation notwendigen
-		Daten (z. B. E-Mail-Adresse, Name, Profilbild) vom jeweiligen Anbieter an uns übermittelt
-		werden. Die Verantwortung für die Sicherheit der Zugangsdaten bei diesen Drittanbietern liegt
-		allein beim Nutzer.
+		(2) Die Registrierung erfolgt über unseren Single-Sign-On-Dienst (SSO) via OpenID Connect. Mit
+		der Nutzung dieses SSO-Verfahrens stimmst du zu, dass die zur Identifikation notwendigen Daten
+		(z. B. E-Mail-Adresse, Name) an uns übermittelt werden. Die Verantwortung für die Sicherheit
+		der Zugangsdaten beim SSO-Anbieter liegt allein beim Nutzer.
 	</p>
 	<p>
 		(3) Jeder Nutzer darf nur ein Profil anlegen. Die im Profil hinterlegten Daten müssen der
@@ -176,6 +213,14 @@
 		der Plattform selbst auf Social-Media-Kanälen (z. B. Instagram, Facebook, TikTok) und in
 		Newslettern verwenden darf.
 	</p>
+	<p>
+		(4) Für Veranstaltungen, die wir selbst (ohne Einreichung durch einen Nutzer) aus öffentlich
+		zugänglichen Quellen recherchieren und eintragen, verzichten wir bewusst auf die Übernahme von
+		Fotos Dritter, um Urheberrechtsverletzungen zu vermeiden. In diesen Fällen beschränken wir uns
+		auf rein textbasierte Informationen (z. B. Name, Termin, Ort, Veranstaltungsart). Fotos auf der
+		Plattform stammen daher ausschließlich aus Uploads von Nutzern gemäß den Absätzen (1) bis (3)
+		dieses Paragraphen.
+	</p>
 
 	<h2>§ 7 Externe Links, Dritt&shy;anbieter und Datenschutz</h2>
 	<p>
@@ -210,6 +255,15 @@
 		Rechts, die genaue URL des beanstandeten Inhalts, Kontaktdaten des Meldenden sowie eine formlose
 		Erklärung, dass die Nutzung nicht durch den Rechteinhaber autorisiert wurde. Nach Prüfung werden
 		wir betroffene Inhalte umgehend sperren oder löschen.
+	</p>
+	<p>
+		(4) Unabhängig von einer Rechtsverletzung im Sinne dieses Paragraphen kann jeder Veranstalter
+		jederzeit die Löschung, Korrektur oder Anpassung des ihn betreffenden Eintrags verlangen
+		(Notice-and-Takedown für Veranstalter) – etwa wenn die Veranstaltung nicht stattfindet, sich
+		Angaben geändert haben oder er mit der Nennung nicht einverstanden ist. Die entsprechende
+		Anfrage richtet sich ebenfalls an <a href="mailto:kontakt@dorfpartys.com"
+			>kontakt@dorfpartys.com</a
+		>. Verifizierte Veranstalter können ihre Einträge zudem direkt über ihr Profil verwalten.
 	</p>
 
 	<h2>§ 9 Haftungs&shy;ausschluss und Gewähr&shy;leistung</h2>
