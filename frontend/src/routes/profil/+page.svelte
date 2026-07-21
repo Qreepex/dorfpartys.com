@@ -17,9 +17,9 @@
 
 	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
 	// Bewusster Einmal-Snapshot, keine `$derived`: `form` wird danach lokal
-	// verwaltet (handleProfileSubmit setzt es direkt nach dem fetch-basierten
-	// Submit, siehe unten). Die übrigen Forms auf dieser Seite
-	// (confirmNomination/rejectNomination/requestVerification) sind normale
+	// verwaltet (handleProfileSubmit/handleVerificationSubmit setzen es direkt
+	// nach dem fetch-basierten Submit, siehe unten). Die übrigen Forms auf
+	// dieser Seite (confirmNomination/rejectNomination) sind normale
 	// POST-Forms ohne `use:enhance` und lösen daher einen vollen
 	// Seiten-Reload (= Remount, frischer Prop-Wert) aus - `initialForm` ist
 	// also bei jedem Mount bereits aktuell.
@@ -38,6 +38,7 @@
 	let dirty = $state(false);
 	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
 	let feedbackDismissed = $state(false);
+	let verificationSubmitting = $state(false);
 
 	const organizerHref = $derived(
 		data.profile?.slug ? resolve('/veranstalter/[slug]', { slug: data.profile.slug }) : null
@@ -53,6 +54,27 @@
 	$effect(() => {
 		handleVerificationResponse();
 	});
+
+	// Analog zu handleProfileSubmit/confirmMakeProfilePublic - per fetch statt
+	// normalem Form-POST, damit die Seite bei der Verifizierungsanfrage nicht
+	// neu geladen wird. `form` wird direkt gesetzt statt `applyAction()`s
+	// Navigation abzuwarten; der bestehende `handleVerificationResponse`-Effect
+	// oben reagiert darauf unverändert (zeigt Code/Fehlermeldung an).
+	async function handleVerificationSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		const formEl = event.currentTarget as HTMLFormElement;
+		verificationSubmitting = true;
+
+		const outcome = await callAction(formEl.action, new FormData(formEl));
+
+		if (outcome.ok) {
+			form = { verificationRequested: true, ...outcome.data } as ActionData;
+		} else {
+			form = (outcome.data ?? { verificationError: outcome.error }) as ActionData;
+		}
+
+		verificationSubmitting = false;
+	}
 
 	async function handleProfileSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -312,8 +334,15 @@
 					dass deine Veranstaltungen wirklich von dir kommen.
 				</p>
 
-				<form method="POST" action="?/requestVerification" class="mb-4">
-					<Button type="submit" variant="secondary">Verifizierung beantragen</Button>
+				<form
+					method="POST"
+					action="?/requestVerification"
+					class="mb-4"
+					onsubmit={handleVerificationSubmit}
+				>
+					<Button type="submit" variant="secondary" disabled={verificationSubmitting}>
+						{verificationSubmitting ? 'Wird angefordert...' : 'Verifizierung beantragen'}
+					</Button>
 				</form>
 
 				{#if form?.verificationError}
