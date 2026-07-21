@@ -18,6 +18,13 @@ export interface EventJsonLdInput {
   priceInfo?: string | null;
   url: string;
   photoUrls: string[];
+  // Externe Links, die der Veranstalter beim Einreichen/Bearbeiten für DIESE
+  // Veranstaltung hinterlegt hat (`event_link`, AGENTS.md Abschnitt 2). Werden
+  // als `sameAs` ausgegeben - das behauptet nur "diese externe Seite
+  // repräsentiert dieselbe Veranstaltung", NICHT dass dorfpartys.com die
+  // offizielle Seite der Veranstaltung ist (`url` bleibt die eigene
+  // kanonische URL, s.u.).
+  linkUrls?: string[];
 }
 
 /**
@@ -31,6 +38,7 @@ export interface EventJsonLdInput {
  */
 export function buildEventJsonLd(input: EventJsonLdInput) {
   if (!input.startDate) return null;
+  const sameAs = Array.from(new Set((input.linkUrls ?? []).filter(Boolean)));
   return {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -64,6 +72,7 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
       : {}),
     image: input.photoUrls,
     url: `${SITE_URL}${input.url}`,
+    ...(sameAs.length > 0 ? { sameAs } : {}),
   };
 }
 

@@ -709,6 +709,7 @@ export const eventsRouter = router({
         priceInfo: row.priceInfo,
         url: eventUrl,
         photoUrls: photosWithUrl.map((p) => p.url),
+        linkUrls: links.map((l) => l.url),
       });
 
       const breadcrumbJsonLd = buildBreadcrumbJsonLd([

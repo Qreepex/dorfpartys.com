@@ -26,6 +26,25 @@
 			: `${displayName} auf dorfpartys.com - ${upcoming.length} kommende Veranstaltung${upcoming.length === 1 ? '' : 'en'}. Kostenlos, werbefrei, DACH-weit.`
 	);
 
+	// `sameAs` behauptet nur "diese externen Profile sind derselbe Veranstalter",
+	// NICHT dass sie die offizielle Seite dieses Profils sind - `url` bleibt
+	// die eigene kanonische dorfpartys.com-URL (s.o.). Quelle: website/instagram/
+	// facebook/tiktok aus dem Profil (`user_profile`) plus frei gepflegte
+	// `user_link`-Einträge, dedupliziert.
+	const sameAs = $derived(
+		Array.from(
+			new Set(
+				[
+					profile.websiteUrl,
+					profile.instagramUrl,
+					profile.facebookUrl,
+					profile.tiktokUrl,
+					...links.map((l) => l.url)
+				].filter((url): url is string => !!url)
+			)
+		)
+	);
+
 	const jsonLd = $derived({
 		'@context': 'https://schema.org',
 		'@type': 'ProfilePage',
@@ -35,7 +54,7 @@
 			description: profile.bio ?? undefined,
 			image: profile.avatarUrl ?? undefined,
 			url: canonical,
-			sameAs: [profile.websiteUrl, profile.instagramUrl, ...links.map((l) => l.url)].filter(Boolean)
+			...(sameAs.length > 0 ? { sameAs } : {})
 		}
 	});
 </script>
