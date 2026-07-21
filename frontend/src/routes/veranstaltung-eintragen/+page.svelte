@@ -48,6 +48,23 @@
 	// svelte-ignore state_referenced_locally
 	let isProfilePublic = $state(data.isProfilePublic);
 
+	// Wandelt einen `datetime-local`-Wert (z.B. "2026-08-15T20:00", ohne
+	// Timezone-Information) in einen vollständigen UTC-ISO-String um - MUSS im
+	// Browser laufen, nicht serverseitig: `new Date(str)` interpretiert einen
+	// String ohne Timezone-Angabe in der Timezone des ausführenden Prozesses.
+	// Im Browser ist das korrekterweise die echte Timezone des Nutzers (z.B.
+	// Europe/Berlin); würde dieselbe Umwandlung stattdessen serverseitig in
+	// Node passieren, würde sie in der Timezone des Servers/Containers
+	// interpretiert (häufig UTC), unabhängig davon, wo der Nutzer tatsächlich
+	// ist - das war der ursprüngliche Bug (Uhrzeit um die Server/User-
+	// Timezone-Differenz verschoben gespeichert). Siehe auch der ausführliche
+	// Kommentar bei `toIsoStringOrNull` in +page.server.ts.
+	function datetimeLocalToIsoOrEmpty(value: FormDataEntryValue | null): string {
+		if (!value) return '';
+		const date = new Date(String(value));
+		return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -64,7 +81,17 @@
 		submitStatus = 'submitting';
 		feedbackDismissed = false;
 
-		const outcome = await callAction(formEl.action, new FormData(formEl));
+		// Start-/Enddatum hier im Browser (mit der echten Timezone des Nutzers)
+		// von `datetime-local`-Rohwert zu einem UTC-ISO-String konvertieren, BEVOR
+		// die Daten den Browser verlassen - siehe datetimeLocalToIsoOrEmpty oben.
+		// Die Server-Action (+page.server.ts, `toIsoStringOrNull`) erhält dadurch
+		// bereits einen timezone-eindeutigen String und muss ihn nur noch
+		// validieren/durchreichen, statt ihn selbst timezone-abhängig zu parsen.
+		const formData = new FormData(formEl);
+		formData.set('startDate', datetimeLocalToIsoOrEmpty(formData.get('startDate')));
+		formData.set('endDate', datetimeLocalToIsoOrEmpty(formData.get('endDate')));
+
+		const outcome = await callAction(formEl.action, formData);
 
 		if (outcome.ok) {
 			submitStatus = 'success';
@@ -107,8 +134,16 @@
 	const isEditing = !!editingEvent;
 
 	// Wandelt ein ISO-Datum in den lokalen `datetime-local`-Wert um (Gegenstück
-	// zu toIsoStringOrNull im Load) - `.toISOString()` allein wäre UTC und
-	// würde beim erneuten Öffnen des Formulars eine falsche Uhrzeit anzeigen.
+	// zu toIsoStringOrNull in +page.server.ts) - `.toISOString()` allein wäre UTC
+	// und würde beim erneuten Öffnen des Formulars eine falsche Uhrzeit anzeigen.
+	// Läuft bewusst über `getTimezoneOffset()`/`Date`, nicht `Intl`, um die
+	// Timezone des AUSFÜHRENDEN Prozesses zu nutzen: dieselbe Komponenten-Logik
+	// wird zwar auch einmal serverseitig beim SSR-Rendern ausgeführt (in Node,
+	// mit Server-Timezone), aber beim Hydrieren im Browser erneut mit der
+	// echten Timezone des Nutzers - der clientseitig berechnete Wert gewinnt
+	// dadurch, sobald die Seite interaktiv ist. Ein rein serverseitig
+	// finaler Wert (z.B. aus einer Server-`load`-Funktion) wäre hier falsch,
+	// weil er die Timezone des Servers statt der des Nutzers einfrieren würde.
 	function toDatetimeLocalValue(iso: string): string {
 		const date = new Date(iso);
 		const offsetMs = date.getTimezoneOffset() * 60_000;

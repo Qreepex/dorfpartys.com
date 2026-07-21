@@ -10,13 +10,13 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
 
-// Wandelt einen datetime-local-Wert sicher in ein ISO-Datum um (oder `null`,
-// wenn das Feld leer gelassen wurde - start_date/end_date sind optional,
-// AGENTS.md 5 "Quantität über Qualität": Titel, Bundesland, Kreis und Art
-// reichen zum Einreichen). `new Date(...).toISOString()` wirft bei einem
-// ungültigen Datum (z.B. wenn die clientseitige HTML5-Validierung umgangen
-// wurde) eine RangeError, die sonst unbehandelt durch die Action durchschlägt
-// und beim Nutzer als generischer 500-Fehler statt einer verständlichen
+// Wandelt einen Datums-Wert sicher in ein ISO-Datum um (oder `null`, wenn das
+// Feld leer gelassen wurde - start_date/end_date sind optional, AGENTS.md 5
+// "Quantität über Qualität": Titel, Bundesland, Kreis und Art reichen zum
+// Einreichen). `new Date(...).toISOString()` wirft bei einem ungültigen Datum
+// (z.B. wenn die clientseitige HTML5-Validierung umgangen wurde) eine
+// RangeError, die sonst unbehandelt durch die Action durchschlägt und beim
+// Nutzer als generischer 500-Fehler statt einer verständlichen
 // Validierungsmeldung landet - in dem Fall wird `null` zurückgegeben und die
 // Zod-Validierung (submitEventInputSchema, ein leeres Feld ist gültig) greift
 // nicht mehr dafür; ein tatsächlich ungültiger, nicht-leerer Wert würde im
@@ -25,6 +25,21 @@ import type { Actions, PageServerLoad } from './$types.js';
 // durch Leeren des Feldes auch wieder explizit entfernt werden kann (die
 // Zod-Schemas erwarten hier bewusst einen Pflicht-Key mit nullable Value,
 // nicht einen optionalen Key - siehe shared/src/schemas/event.ts).
+//
+// WICHTIG (Timezone-Bug, siehe +page.svelte handleSubmit): dieser Code läuft
+// serverseitig in Node - `new Date(str)` interpretiert einen String OHNE
+// Timezone-Angabe (z.B. das rohe `datetime-local`-Format "2026-08-15T20:00")
+// in der Timezone des AUSFÜHRENDEN Prozesses, hier also die des Servers/
+// Containers (häufig UTC), NICHT die des einreichenden Nutzers - das hätte
+// bei einem User in Deutschland (UTC+1/+2) die eingetragene Uhrzeit um 1-2h
+// verschoben gespeichert. Deshalb konvertiert das Frontend datetime-local-Werte
+// bereits VOR dem Absenden im Browser (mit der echten Timezone des Nutzers) zu
+// einem vollständigen ISO-String inkl. "Z"/Offset - ein solcher String wird von
+// `new Date(...)` timezone-UNABHÄNGIG geparst, das erneute Parsen hier ist für
+// diesen Fall also unkritisch. Nur der No-JS-Fallback (Formular-POST ohne
+// clientseitiges JavaScript, siehe +page.svelte Kommentar zu Teil E) durchläuft
+// weiterhin den alten, timezone-abhängigen Pfad - ohne JavaScript kennt der
+// Server die Timezone des Nutzers grundsätzlich nicht, das ist unvermeidbar.
 function toIsoStringOrNull(raw: FormDataEntryValue | null): string | null {
 	if (!raw) return null;
 	const date = new Date(String(raw));
