@@ -35,7 +35,6 @@ interface DemoEventInput {
   priceInfo?: string;
   minAge?: number;
   allowsMuttizettel?: boolean;
-  isOutdoor?: boolean;
   linkLabel?: string;
   linkUrl?: string;
 }
@@ -53,7 +52,6 @@ const DEMO_EVENTS: DemoEventInput[] = [
     addressDescription: "Dorfplatz, 23845 Steinhorst",
     customColor: "#39e67a",
     priceInfo: "Eintritt frei, Festzelt 5€ AK",
-    isOutdoor: true,
     linkLabel: "Schützenverein Steinhorst",
     linkUrl: "https://example.org/schuetzenverein-steinhorst",
   },
@@ -71,7 +69,6 @@ const DEMO_EVENTS: DemoEventInput[] = [
     priceInfo: "8€ Abendkasse",
     minAge: 16,
     allowsMuttizettel: true,
-    isOutdoor: true,
   },
   {
     title: "Scheunenfete Hofgut Bergmann",
@@ -100,7 +97,6 @@ const DEMO_EVENTS: DemoEventInput[] = [
     partyArtSlug: "stoppelfeten",
     addressDescription: "Wiesenhof, Feldweg 7, 48653 Coesfeld",
     customColor: "#39e67a",
-    isOutdoor: true,
   },
   {
     title: "Bergfest Innsbruck-Land",
@@ -114,7 +110,6 @@ const DEMO_EVENTS: DemoEventInput[] = [
     addressDescription: "Dorfplatz, 6094 Axams",
     customColor: "#ff4b3e",
     priceInfo: "Eintritt frei",
-    isOutdoor: true,
   },
 ];
 
@@ -214,7 +209,6 @@ async function seedDemoEvents() {
         priceInfo: demo.priceInfo ?? null,
         minAge: demo.minAge ?? null,
         allowsMuttizettel: demo.allowsMuttizettel ?? false,
-        isOutdoor: demo.isOutdoor ?? false,
         createdBy: organizerId,
         approvedBy: organizerId,
         approvedAt: new Date(),

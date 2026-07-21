@@ -78,6 +78,13 @@
       "when": 1784648658121,
       "tag": "0010_fresh_steel_serpent",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784665724569,
+      "tag": "0011_luxuriant_mimic",
+      "breakpoints": true
     }
   ]
 }

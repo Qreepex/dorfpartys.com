@@ -342,7 +342,6 @@ export const eventsRouter = router({
           priceInfo: sanitized.priceInfo ?? null,
           minAge: input.minAge ?? null,
           allowsMuttizettel: input.allowsMuttizettel ?? false,
-          isOutdoor: input.isOutdoor ?? false,
           tags: sanitized.tags ?? [],
           customFields: input.customFields ?? {},
           createdBy: ctx.user.id,
@@ -419,7 +418,6 @@ export const eventsRouter = router({
           priceInfo: sanitized.priceInfo ?? null,
           minAge: input.minAge ?? null,
           allowsMuttizettel: input.allowsMuttizettel ?? false,
-          isOutdoor: input.isOutdoor ?? false,
           // Anders als bei `create`: das Bearbeiten-Formular hat (noch) keine
           // Tags-/Custom-Fields-UI, sendet diese Felder also nie mit. Ohne
           // Fallback auf die bestehenden Werte würde jedes Speichern über das
@@ -491,7 +489,6 @@ export const eventsRouter = router({
         priceInfo: event.priceInfo,
         minAge: event.minAge,
         allowsMuttizettel: event.allowsMuttizettel,
-        isOutdoor: event.isOutdoor,
         tags: event.tags,
         customFields: event.customFields,
         createdBy: event.createdBy,
@@ -853,7 +850,6 @@ export const eventsRouter = router({
         priceInfo: event.priceInfo,
         minAge: event.minAge,
         allowsMuttizettel: event.allowsMuttizettel,
-        isOutdoor: event.isOutdoor,
         tags: event.tags,
         customFields: event.customFields,
         createdAt: event.createdAt,

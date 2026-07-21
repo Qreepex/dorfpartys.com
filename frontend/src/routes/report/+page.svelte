@@ -108,8 +108,8 @@
 							beliebigen Party zu sein, reicht das Absenden dieses Berichts <strong
 								>nicht automatisch</strong
 							>
-							zur Löschung aus. Bitte bestätigen Sie zusätzlich außerhalb dieses Formulars, dass Sie
-							wirklich der/die Veranstalter:in sind - entweder per kurzer Nachricht auf
+							zur Löschung aus. Bitte bestätigen Sie zusätzlich außerhalb dieses Formulars, dass Sie wirklich
+							der/die Veranstalter:in sind - entweder per kurzer Nachricht auf
 							<a
 								href="https://www.instagram.com/dorfpartys"
 								target="_blank"

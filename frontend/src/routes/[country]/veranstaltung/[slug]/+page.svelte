@@ -10,7 +10,12 @@
 		VerifiedBadge
 	} from '$lib/components/index.js';
 	import { jsonLdScriptTag } from '$lib/seo.js';
-	import { SITE_URL, buildEventUrl, detectEventLinkType } from '@dorfpartys/shared';
+	import {
+		SITE_URL,
+		buildEventSeoSentence,
+		buildEventUrl,
+		detectEventLinkType
+	} from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -87,10 +92,22 @@
 			href: resolve('/[country]/veranstaltung/[slug]', { country, slug: event.slug ?? '' })
 		}
 	]);
+	// Landkreis-Fallback wird um Bundesland + Ländercode ergänzt (z.B.
+	// "Ostholstein, Schleswig-Holstein, DE"), damit der Ort auch ohne
+	// Adress-Angabe eindeutig ist. Wird sowohl für den SEO-Satz unter dem
+	// Titel als auch für die Meta-/OG-Description genutzt (siehe unten).
+	const locationFallback = $derived(
+		event.kreisName
+			? [event.kreisName, event.bundeslandName, country.toUpperCase()].filter(Boolean).join(', ')
+			: event.bundeslandName
+	);
+	const metaLocation = $derived(event.addressDescription ?? locationFallback);
 	// Sowohl startDate als auch addressDescription sind optional (AGENTS.md 5,
 	// "Quantität über Qualität") - die Meta-Description baut sich daher aus den
 	// tatsächlich vorhandenen Teilen zusammen, statt ein Datum/eine Adresse
-	// anzunehmen, die es vielleicht gar nicht gibt.
+	// anzunehmen, die es vielleicht gar nicht gibt. Fehlt addressDescription,
+	// greift der Kreis-/Bundesland-Fallback (metaLocation) statt die Ortsangabe
+	// ganz wegzulassen.
 	const metaDescription = $derived(
 		[
 			event.startDate
@@ -98,8 +115,8 @@
 						day: '2-digit',
 						month: 'long',
 						year: 'numeric'
-					})}${event.addressDescription ? ` in ${event.addressDescription}.` : '.'}`
-				: `${event.title}${event.addressDescription ? ` in ${event.addressDescription}.` : '.'}`,
+					})}${metaLocation ? ` in ${metaLocation}.` : '.'}`
+				: `${event.title}${metaLocation ? ` in ${metaLocation}.` : '.'}`,
 			event.description
 				? `${event.description.slice(0, 130)}${event.description.length > 130 ? '…' : ''}`
 				: ''
@@ -107,6 +124,20 @@
 			.filter(Boolean)
 			.join(' ')
 	);
+	// SEO-Einleitungssatz direkt unterm Titel ("XXX findet am XXX um XX in XX
+	// statt") - siehe shared/src/seo/event-sentence.ts. Nutzt die Event-ID als
+	// Seed, damit derselbe Satz bei jedem Aufruf gleich bleibt, aber sich
+	// zwischen Events strukturell unterscheidet (Duplicate-Content-Vermeidung).
+	const seoSentence = $derived(
+		buildEventSeoSentence({
+			id: event.id,
+			title: event.title,
+			startDate: event.startDate,
+			addressDescription: event.addressDescription,
+			locationFallback
+		})
+	);
+
 	const ogImage = $derived(event.photos[0]?.url);
 	// HTML-<title> ergänzt Kreis + Bundesland (z.B. "... in Ostholstein,
 	// Schleswig-Holstein"), analog zur Titel-Erweiterung auf Kreis-Filterseiten
@@ -161,7 +192,10 @@
 	<!-- Main Content -->
 	<article class="md:col-start-2 md:row-start-2">
 		<div class="flex items-start justify-between gap-4">
-			<h1>{event.title}</h1>
+			<div>
+				<h1>{event.title}</h1>
+				<p class="mt-1 text-[0.95rem] text-muted">{seoSentence}</p>
+			</div>
 			<div class="flex shrink-0 items-start gap-2">
 				<form method="POST" action="?/toggleSave">
 					<input type="hidden" name="eventId" value={event.id} />
@@ -346,12 +380,6 @@
 					<div>
 						<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Muttizettel</dt>
 						<dd class="mt-0.5 font-semibold">erforderlich</dd>
-					</div>
-				{/if}
-				{#if event.isOutdoor}
-					<div>
-						<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Location</dt>
-						<dd class="mt-0.5 font-semibold">Open Air</dd>
 					</div>
 				{/if}
 			</dl>

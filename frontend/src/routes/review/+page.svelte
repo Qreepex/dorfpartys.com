@@ -207,12 +207,6 @@
 										<dd class="mt-0.5 font-semibold">erforderlich</dd>
 									</div>
 								{/if}
-								{#if event.isOutdoor}
-									<div>
-										<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Location</dt>
-										<dd class="mt-0.5 font-semibold">Open Air</dd>
-									</div>
-								{/if}
 								<div>
 									<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Farbe</dt>
 									<dd class="mt-0.5 flex items-center gap-2">

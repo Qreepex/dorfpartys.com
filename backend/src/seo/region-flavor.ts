@@ -192,6 +192,12 @@ export const PARTY_ART_FLAVOR_TEMPLATE: Record<
 
   "trecker-treck-tractorplling": (region) =>
     `Bei einem Trecker-Treck (auch Tractorpulling) treten umgebaute, oft brachial aufgemotzte Traktoren gegeneinander an, um einen immer schwerer werdenden Schlitten möglichst weit zu ziehen - laut, staubig und bei Landwirten und Motorsportfans gleichermaßen beliebt. In ${region} ist das Trecker-Treck meist mit Festzelt und Party danach verbunden, nicht nur reiner Wettkampf.`,
+
+  "open-air": (region) =>
+    `Eine Open-Air-Party findet unter freiem Himmel statt - auf einer Wiese, einem Hof oder direkt am Waldrand, meist mit Bühne oder DJ-Pult, Bar und viel Platz zum Feiern ohne Zeltdach über dem Kopf. In ${region} sind Open-Air-Partys oft die Gelegenheit, bei gutem Wetter draußen bis spät in die Nacht zu tanzen.`,
+
+  sonstiges: (region) =>
+    `Nicht jede Dorfparty passt in eine feste Kategorie - hier findest du die Veranstaltungen, die keinem der anderen Formate eindeutig zuzuordnen sind, von der spontanen Hofparty bis zum ungewöhnlichen Vereinsfest. Auch in ${region} lohnt sich ein Blick auf diese Termine abseits des Üblichen.`,
 };
 
 /**

@@ -207,7 +207,6 @@
 	// Number (nicht String) - siehe <input type="number" bind:value={minAge}> unten.
 	let minAge = $state<number | undefined>(editingEvent?.minAge ?? undefined);
 	let allowsMuttizettel = $state(editingEvent?.allowsMuttizettel ?? false);
-	let isOutdoor = $state(editingEvent?.isOutdoor ?? false);
 	let customColor = $state(editingEvent?.customColor ?? '#ff6b35');
 
 	// Organizer selection state - beim Bearbeiten aus editingEvent hergeleitet:
@@ -325,7 +324,6 @@
 		priceInfo = '';
 		minAge = undefined;
 		allowsMuttizettel = false;
-		isOutdoor = false;
 		customColor = '#ff6b35';
 		organizerMode = 'myself';
 		organizerUserId = '';
@@ -733,7 +731,7 @@
 			/>
 
 			<!--
-				Teil C.1: Farbe/Preis/Mindestalter/Muttizettel/Open-Air sind rein
+				Teil C.1: Farbe/Preis/Mindestalter/Muttizettel sind rein
 				"Qualitäts"-Angaben ohne Einfluss auf Auffindbarkeit - hinter einem
 				standardmäßig eingeklappten <details> versteckt, damit das Formular auf
 				den ersten Blick kürzer und weniger einschüchternd wirkt (Produktvorgabe
@@ -788,7 +786,6 @@
 							name="allowsMuttizettel"
 							bind:checked={allowsMuttizettel}
 						/>
-						<Toggle label="Open Air" name="isOutdoor" bind:checked={isOutdoor} />
 					</FormGrid>
 				</div>
 			</details>

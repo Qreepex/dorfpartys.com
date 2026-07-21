@@ -9,6 +9,7 @@ import { organizerNominationsRouter } from "./organizer-nominations.js";
 import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
 import { savedEventsRouter } from "./saved-events.js";
+import { searchRouter } from "./search.js";
 import { sitemapRouter } from "./sitemap.js";
 import { statsRouter } from "./stats.js";
 import { taxonomyRouter } from "./taxonomy.js";
@@ -26,6 +27,7 @@ export const appRouter = router({
   users: usersRouter,
   uploads: uploadsRouter,
   reports: reportsRouter,
+  search: searchRouter,
   sitemap: sitemapRouter,
   stats: statsRouter,
   savedEvents: savedEventsRouter,

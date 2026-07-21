@@ -65,6 +65,8 @@ export const PARTY_ART_SEED: Array<{ slug: string; name: string }> = [
 	{ slug: 'erntefeste', name: 'Erntefeste' },
 	{ slug: 'maifeste', name: 'Maifeste' },
 	{ slug: 'trecker-treck-tractorplling', name: 'Trecker-Treck / Tractorpulling' },
+	{ slug: 'open-air', name: 'Open Air' },
+	{ slug: 'sonstiges', name: 'Sonstiges' },
 ];
 
 export const SITE_URL = 'https://www.dorfpartys.com';

@@ -234,7 +234,6 @@ event (
   price_info,                      -- Freitext, z.B. "5€ VVK / 8€ AK", nullable
   min_age,                         -- int, nullable
   allows_muttizettel,            -- boolean, nullable, default false
-  is_outdoor,                      -- boolean, nullable, default false
   tags,                            -- array, freeform
   custom_fields,                   -- jsonb, Catch-all für künftige Ad-hoc-Felder ohne Migration
 

@@ -14,3 +14,5 @@ export * from './schemas/reports.js';
 export * from './schemas/ghost-accounts.js';
 
 export * from './url/index.js';
+
+export * from './seo/event-sentence.js';

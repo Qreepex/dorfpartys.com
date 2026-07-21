@@ -324,7 +324,6 @@ export const actions: Actions = {
 			priceInfo: formData.get('priceInfo') || undefined,
 			minAge: minAgeRaw ? Number(minAgeRaw) : undefined,
 			allowsMuttizettel: formData.get('allowsMuttizettel') === 'on',
-			isOutdoor: formData.get('isOutdoor') === 'on',
 			...(organizerUserId ? { organizerUserId: String(organizerUserId) } : {}),
 			...(organizerName ? { organizerName: String(organizerName) } : {}),
 			...(photoS3Key

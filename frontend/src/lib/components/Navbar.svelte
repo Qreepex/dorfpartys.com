@@ -5,6 +5,7 @@
 	import { callAction } from '$lib/utils/form-action.js';
 	import type { Country } from '@dorfpartys/shared';
 	import { onMount } from 'svelte';
+	import NavSearch from './NavSearch.svelte';
 
 	const user = $derived.by(() => $userStore);
 	const notifications = $derived.by(() => $notificationsStore);
@@ -190,7 +191,7 @@
 				<div class="relative" bind:this={userMenuEl}>
 					<button
 						type="button"
-						class="flex cursor-pointer items-center gap-2 border border-border bg-transparent px-2 py-1.5 text-text"
+						class="flex h-11 cursor-pointer items-center gap-2 border border-border bg-transparent px-2 py-1.5 text-text hover:border-primary"
 						onclick={() => (userMenuOpen = !userMenuOpen)}
 						aria-haspopup="menu"
 						aria-expanded={userMenuOpen}
@@ -249,6 +250,7 @@
 			{:else}
 				<a class="text-muted no-underline hover:text-text" href={resolve('/auth/login')}>Login</a>
 			{/if}
+			<NavSearch />
 			<button
 				type="button"
 				class="flex h-11 w-11 items-center justify-center border border-border text-text hover:border-primary hover:text-primary"
