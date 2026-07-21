@@ -431,14 +431,14 @@
 			{/if}
 		</div>
 		{#if data.upcoming.length === 0}
-			<p class="mb-6 text-[0.9rem] text-muted">
+			<p class="mb-6 text-muted">
 				Noch keine Termine{#if !data.showAllCountries}
 					in {COUNTRY_LABELS[country]}{/if}?
 				<a class="text-primary" href={veranstaltungEintragenHref}>Trag die erste Party ein</a> - dauert
 				2 Minuten.
 			</p>
 		{:else}
-			<p class="mb-6 text-[0.9rem] text-muted">{data.upcoming.length} kommende Termine</p>
+			<p class="mb-6 text-muted">{data.upcoming.length} kommende Termine</p>
 			<EventList events={data.upcoming} {country} />
 		{/if}
 	</section>
