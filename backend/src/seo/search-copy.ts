@@ -1,8 +1,11 @@
 import type { Country, ResolvedSeoCopy } from "@dorfpartys/shared";
-import { buildInCountryTag, COUNTRY_NAMES, COUNTRY_NAMES_NOMINATIVE, SITE_NAME } from "@dorfpartys/shared";
+import {
+  buildInCountryTag,
+  COUNTRY_NAMES,
+  COUNTRY_NAMES_NOMINATIVE,
+  SITE_NAME,
+} from "@dorfpartys/shared";
 import { getRegionFlavorParagraphs } from "./region-flavor.js";
-
-
 
 export interface SearchCopyInput {
   country: Country;

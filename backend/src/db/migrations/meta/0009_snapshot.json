@@ -90,12 +90,8 @@
           "name": "account_claim_ghost_user_id_user_id_fk",
           "tableFrom": "account_claim",
           "tableTo": "user",
-          "columnsFrom": [
-            "ghost_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ghost_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -103,12 +99,8 @@
           "name": "account_claim_claimed_by_user_id_user_id_fk",
           "tableFrom": "account_claim",
           "tableTo": "user",
-          "columnsFrom": [
-            "claimed_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["claimed_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -116,12 +108,8 @@
           "name": "account_claim_reviewed_by_user_id_fk",
           "tableFrom": "account_claim",
           "tableTo": "user",
-          "columnsFrom": [
-            "reviewed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -170,9 +158,7 @@
         "bundesland_slug_unique": {
           "name": "bundesland_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -364,12 +350,8 @@
           "name": "event_organizer_user_id_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "organizer_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organizer_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -377,12 +359,8 @@
           "name": "event_bundesland_id_bundesland_id_fk",
           "tableFrom": "event",
           "tableTo": "bundesland",
-          "columnsFrom": [
-            "bundesland_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bundesland_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -390,12 +368,8 @@
           "name": "event_kreis_id_kreis_id_fk",
           "tableFrom": "event",
           "tableTo": "kreis",
-          "columnsFrom": [
-            "kreis_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["kreis_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -403,12 +377,8 @@
           "name": "event_party_art_id_party_art_id_fk",
           "tableFrom": "event",
           "tableTo": "party_art",
-          "columnsFrom": [
-            "party_art_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["party_art_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -416,12 +386,8 @@
           "name": "event_created_by_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -429,12 +395,8 @@
           "name": "event_approved_by_user_id_fk",
           "tableFrom": "event",
           "tableTo": "user",
-          "columnsFrom": [
-            "approved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -444,9 +406,7 @@
         "event_slug_unique": {
           "name": "event_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -539,12 +499,8 @@
           "name": "event_claim_event_id_event_id_fk",
           "tableFrom": "event_claim",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -552,12 +508,8 @@
           "name": "event_claim_claimed_by_user_id_user_id_fk",
           "tableFrom": "event_claim",
           "tableTo": "user",
-          "columnsFrom": [
-            "claimed_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["claimed_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -565,12 +517,8 @@
           "name": "event_claim_reviewed_by_user_id_fk",
           "tableFrom": "event_claim",
           "tableTo": "user",
-          "columnsFrom": [
-            "reviewed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -645,12 +593,8 @@
           "name": "event_link_event_id_event_id_fk",
           "tableFrom": "event_link",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -719,12 +663,8 @@
           "name": "event_photo_event_id_event_id_fk",
           "tableFrom": "event_photo",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -771,12 +711,8 @@
           "name": "kreis_bundesland_id_bundesland_id_fk",
           "tableFrom": "kreis",
           "tableTo": "bundesland",
-          "columnsFrom": [
-            "bundesland_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bundesland_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -786,9 +722,7 @@
         "kreis_slug_unique": {
           "name": "kreis_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -850,12 +784,8 @@
           "name": "organizer_invite_code_ghost_user_id_user_id_fk",
           "tableFrom": "organizer_invite_code",
           "tableTo": "user",
-          "columnsFrom": [
-            "ghost_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ghost_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -863,12 +793,8 @@
           "name": "organizer_invite_code_created_by_user_id_fk",
           "tableFrom": "organizer_invite_code",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -876,12 +802,8 @@
           "name": "organizer_invite_code_used_by_user_id_user_id_fk",
           "tableFrom": "organizer_invite_code",
           "tableTo": "user",
-          "columnsFrom": [
-            "used_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["used_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -891,9 +813,7 @@
         "organizer_invite_code_code_unique": {
           "name": "organizer_invite_code_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -986,12 +906,8 @@
           "name": "organizer_nomination_event_id_event_id_fk",
           "tableFrom": "organizer_nomination",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -999,12 +915,8 @@
           "name": "organizer_nomination_nominated_user_id_user_id_fk",
           "tableFrom": "organizer_nomination",
           "tableTo": "user",
-          "columnsFrom": [
-            "nominated_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["nominated_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1012,12 +924,8 @@
           "name": "organizer_nomination_nominated_by_user_id_user_id_fk",
           "tableFrom": "organizer_nomination",
           "tableTo": "user",
-          "columnsFrom": [
-            "nominated_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["nominated_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1025,12 +933,8 @@
           "name": "organizer_nomination_reviewed_by_user_id_fk",
           "tableFrom": "organizer_nomination",
           "tableTo": "user",
-          "columnsFrom": [
-            "reviewed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewed_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1079,9 +983,7 @@
         "party_art_slug_unique": {
           "name": "party_art_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1125,12 +1027,8 @@
           "name": "pending_upload_uploaded_by_user_id_user_id_fk",
           "tableFrom": "pending_upload",
           "tableTo": "user",
-          "columnsFrom": [
-            "uploaded_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1140,9 +1038,7 @@
         "pending_upload_s3_key_unique": {
           "name": "pending_upload_s3_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "s3_key"
-          ]
+          "columns": ["s3_key"]
         }
       },
       "policies": {},
@@ -1406,12 +1302,8 @@
           "name": "saved_event_user_id_user_id_fk",
           "tableFrom": "saved_event",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1419,12 +1311,8 @@
           "name": "saved_event_event_id_event_id_fk",
           "tableFrom": "saved_event",
           "tableTo": "event",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1526,16 +1414,12 @@
         "user_authentik_subject_unique": {
           "name": "user_authentik_subject_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "authentik_subject"
-          ]
+          "columns": ["authentik_subject"]
         },
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1584,12 +1468,8 @@
           "name": "user_link_user_id_user_id_fk",
           "tableFrom": "user_link",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1753,12 +1633,8 @@
           "name": "user_profile_user_id_user_id_fk",
           "tableFrom": "user_profile",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1766,12 +1642,8 @@
           "name": "user_profile_merged_into_user_id_user_id_fk",
           "tableFrom": "user_profile",
           "tableTo": "user",
-          "columnsFrom": [
-            "merged_into_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["merged_into_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1781,9 +1653,7 @@
         "user_profile_slug_unique": {
           "name": "user_profile_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1795,39 +1665,22 @@
     "public.country": {
       "name": "country",
       "schema": "public",
-      "values": [
-        "de",
-        "at",
-        "ch"
-      ]
+      "values": ["de", "at", "ch"]
     },
     "public.event_claim_status": {
       "name": "event_claim_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "approved",
-        "rejected"
-      ]
+      "values": ["pending", "approved", "rejected"]
     },
     "public.event_status": {
       "name": "event_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "in_review",
-        "approved",
-        "rejected"
-      ]
+      "values": ["draft", "in_review", "approved", "rejected"]
     },
     "public.report_status": {
       "name": "report_status",
       "schema": "public",
-      "values": [
-        "open",
-        "reviewed",
-        "resolved"
-      ]
+      "values": ["open", "reviewed", "resolved"]
     },
     "public.report_type": {
       "name": "report_type",
@@ -1846,30 +1699,17 @@
     "public.slug_type": {
       "name": "slug_type",
       "schema": "public",
-      "values": [
-        "bundesland",
-        "kreis",
-        "party_art"
-      ]
+      "values": ["bundesland", "kreis", "party_art"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "user",
-        "moderator",
-        "admin"
-      ]
+      "values": ["user", "moderator", "admin"]
     },
     "public.verification_method": {
       "name": "verification_method",
       "schema": "public",
-      "values": [
-        "email",
-        "instagram",
-        "tiktok",
-        "invite_code"
-      ]
+      "values": ["email", "instagram", "tiktok", "invite_code"]
     }
   },
   "schemas": {},

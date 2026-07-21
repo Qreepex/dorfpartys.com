@@ -131,7 +131,12 @@ export const uploadsRouter = router({
         });
       }
 
-      return uploadValidatedImage(ctx.db, validatedImage, ctx.user.id, ctx.req.log);
+      return uploadValidatedImage(
+        ctx.db,
+        validatedImage,
+        ctx.user.id,
+        ctx.req.log,
+      );
     }),
 
   uploadAvatarPhoto: protectedProcedure
@@ -174,7 +179,12 @@ export const uploadsRouter = router({
         });
       }
 
-      return uploadValidatedImage(ctx.db, validatedImage, ctx.user.id, ctx.req.log);
+      return uploadValidatedImage(
+        ctx.db,
+        validatedImage,
+        ctx.user.id,
+        ctx.req.log,
+      );
     }),
 
   // Sofort-Löschung eines noch nicht bestätigten Uploads - z.B. wenn im

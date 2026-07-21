@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import favicon from '$lib/assets/favicon.svg';
 	import { notificationsStore, userStore } from '$lib/stores.js';
 	import { callAction } from '$lib/utils/form-action.js';
 	import type { Country } from '@dorfpartys/shared';
@@ -98,7 +99,7 @@
 <header class="border-b border-border">
 	<div class="mx-auto flex max-w-240 flex-wrap items-center justify-between gap-4 px-5 py-4">
 		<a class="flex items-center gap-2.5 no-underline" href={resolve('/')}>
-			<img src="/favicon.svg" alt="" width="32" height="32" />
+			<img src={favicon} alt="Favicon" width="32" height="32" />
 			<span class="font-display text-lg font-black tracking-[-0.02em] text-text">
 				dorfpartys<em class="text-[0.85em] font-normal text-muted not-italic">.com</em>
 			</span>

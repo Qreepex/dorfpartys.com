@@ -552,7 +552,9 @@ export const eventsRouter = router({
         .from(eventPhoto)
         .where(eq(eventPhoto.eventId, input.id));
 
-      await Promise.all(photos.map((p) => deleteS3Object(p.s3Key, ctx.req.log)));
+      await Promise.all(
+        photos.map((p) => deleteS3Object(p.s3Key, ctx.req.log)),
+      );
 
       // Event löschen (DB-seitige onDelete: "cascade" für event_photo,
       // event_link, event_claim, organizer_nomination, saved_event -

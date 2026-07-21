@@ -26,7 +26,10 @@ export async function trackPendingUpload(
  * einfach aus dem Pending-Tracking, damit der Sweep ihn nicht später löscht.
  * No-op (kein Fehler), wenn der Key gar nicht (mehr) getrackt ist.
  */
-export async function confirmUpload(db: Database, s3Key: string): Promise<void> {
+export async function confirmUpload(
+  db: Database,
+  s3Key: string,
+): Promise<void> {
   await db.delete(pendingUpload).where(eq(pendingUpload.s3Key, s3Key));
 }
 

@@ -37,9 +37,9 @@
 			</li>
 			<li>
 				<strong>Rein informative Nennung, keine Affiliation:</strong> Wir tragen teilweise auch selbst
-				recherchierte Events ein und bündeln extern verfügbare Informationen. Die Nennung eines Events oder
-				Veranstalters ist rein informativ (beschreibende Nutzung) und bedeutet keine Kooperation mit oder
-				Billigung durch dorfpartys.com. Für Absagen, Terminverschiebungen oder falsche Preisangaben
+				recherchierte Events ein und bündeln extern verfügbare Informationen. Die Nennung eines Events
+				oder Veranstalters ist rein informativ (beschreibende Nutzung) und bedeutet keine Kooperation
+				mit oder Billigung durch dorfpartys.com. Für Absagen, Terminverschiebungen oder falsche Preisangaben
 				übernehmen wir keine Verantwortung.
 			</li>
 			<li>
@@ -125,8 +125,8 @@
 	<p>
 		(2) Die Registrierung erfolgt über unseren Single-Sign-On-Dienst (SSO) via OpenID Connect. Mit
 		der Nutzung dieses SSO-Verfahrens stimmst du zu, dass die zur Identifikation notwendigen Daten
-		(z. B. E-Mail-Adresse, Name) an uns übermittelt werden. Die Verantwortung für die Sicherheit
-		der Zugangsdaten beim SSO-Anbieter liegt allein beim Nutzer.
+		(z. B. E-Mail-Adresse, Name) an uns übermittelt werden. Die Verantwortung für die Sicherheit der
+		Zugangsdaten beim SSO-Anbieter liegt allein beim Nutzer.
 	</p>
 	<p>
 		(3) Jeder Nutzer darf nur ein Profil anlegen. Die im Profil hinterlegten Daten müssen der

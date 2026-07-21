@@ -49,8 +49,8 @@
 
 	<h2>Gemeldete Inhalte</h2>
 	<p class="mb-4 text-sm text-muted">
-		Alle über "Inhalte melden" eingereichten Berichte, neueste zuerst. Rein informativ - Bearbeitung/
-		Freigabe erfolgt individuell außerhalb dieses Dashboards.
+		Alle über "Inhalte melden" eingereichten Berichte, neueste zuerst. Rein informativ -
+		Bearbeitung/ Freigabe erfolgt individuell außerhalb dieses Dashboards.
 	</p>
 
 	{#if reports.length === 0}
@@ -70,7 +70,7 @@
 				</thead>
 				<tbody>
 					{#each reports as r (r.id)}
-						<tr class="border-b border-border hover:bg-bg-alt align-top">
+						<tr class="border-b border-border align-top hover:bg-bg-alt">
 							<td class="px-4 py-3">
 								<span class="font-semibold">{typeLabel(r.type)}</span>
 								<div class="text-xs text-muted">{subjectTypeLabel(r.subjectType)}</div>

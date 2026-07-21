@@ -65,7 +65,8 @@ export const eventClaimsRouter = router({
           .select({ verifiedAt: userProfile.verifiedAt })
           .from(userProfile)
           .where(eq(userProfile.userId, existing.organizerUserId));
-        currentOrganizerVerifiedAt = currentOrganizerProfile?.verifiedAt ?? null;
+        currentOrganizerVerifiedAt =
+          currentOrganizerProfile?.verifiedAt ?? null;
       }
       if (
         isOrganizerCurrentlyVerified({
@@ -215,7 +216,11 @@ export const eventClaimsRouter = router({
         .where(eq(event.id, claim.eventId));
 
       const [claimedEvent] = await ctx.db
-        .select({ title: event.title, slug: event.slug, country: bundeslandTable.country })
+        .select({
+          title: event.title,
+          slug: event.slug,
+          country: bundeslandTable.country,
+        })
         .from(event)
         .innerJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
         .where(eq(event.id, claim.eventId));
@@ -260,7 +265,11 @@ export const eventClaimsRouter = router({
         .where(eq(eventClaim.id, input.id));
 
       const [claimedEvent] = await ctx.db
-        .select({ title: event.title, slug: event.slug, country: bundeslandTable.country })
+        .select({
+          title: event.title,
+          slug: event.slug,
+          country: bundeslandTable.country,
+        })
         .from(event)
         .innerJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
         .where(eq(event.id, claim.eventId));

@@ -107,8 +107,9 @@
 							Da über dieses Formular allein jede Person behaupten könnte, Veranstalter:in einer
 							beliebigen Party zu sein, reicht das Absenden dieses Berichts <strong
 								>nicht automatisch</strong
-							> zur Löschung aus. Bitte bestätigen Sie zusätzlich außerhalb dieses Formulars, dass
-							Sie wirklich der/die Veranstalter:in sind - entweder per kurzer Nachricht auf
+							>
+							zur Löschung aus. Bitte bestätigen Sie zusätzlich außerhalb dieses Formulars, dass Sie
+							wirklich der/die Veranstalter:in sind - entweder per kurzer Nachricht auf
 							<a
 								href="https://www.instagram.com/dorfpartys"
 								target="_blank"
@@ -118,8 +119,8 @@
 							oder per E-Mail an
 							<a href="mailto:report@dorfpartys.com" class="text-primary underline"
 								>report@dorfpartys.com</a
-							>, jeweils mit Bezug auf die betroffene Veranstaltung (z.B. Link/URL). Erst nach dieser
-							Bestätigung können wir den Eintrag entfernen.
+							>, jeweils mit Bezug auf die betroffene Veranstaltung (z.B. Link/URL). Erst nach
+							dieser Bestätigung können wir den Eintrag entfernen.
 						</p>
 					</div>
 				{/if}

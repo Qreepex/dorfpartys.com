@@ -264,8 +264,7 @@ export const reportsRouter = router({
           ? (eventById.get(r.subjectId) ?? null)
           : null,
       subjectProfile:
-        (r.subjectType === "user" || r.subjectType === "profile") &&
-        r.subjectId
+        (r.subjectType === "user" || r.subjectType === "profile") && r.subjectId
           ? (profileByUserId.get(r.subjectId) ?? null)
           : null,
     }));

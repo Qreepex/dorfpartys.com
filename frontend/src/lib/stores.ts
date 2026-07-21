@@ -22,7 +22,10 @@ export const notificationsStore = writable<Notification[]>([]);
 // `url.searchParams` liest - das IST ein von SvelteKit getrackter Dependency,
 // wird also bei jeder Client-Navigation zuverlässig neu geladen. Der Country
 // kommt jetzt direkt aus `data.country` (Page-Load), nicht mehr aus einem Store.
-export function initializeStores(initialUser: User | null, initialNotifications: Notification[] = []) {
+export function initializeStores(
+	initialUser: User | null,
+	initialNotifications: Notification[] = []
+) {
 	userStore.set(initialUser);
 	notificationsStore.set(initialNotifications);
 }

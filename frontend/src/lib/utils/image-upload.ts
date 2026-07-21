@@ -45,8 +45,7 @@ export interface OptimizeImageOptions {
 }
 
 export type OptimizeImageResult =
-	| { blob: Blob; type: 'image/jpeg' | 'image/png' }
-	| ImageProcessingError;
+	{ blob: Blob; type: 'image/jpeg' | 'image/png' } | ImageProcessingError;
 
 /**
  * Client-seitige Bildverarbeitung - Resize, optionaler Center-Crop, iterative

@@ -150,7 +150,10 @@ export const BUNDESLAND_FLAVOR_PARAGRAPH: Record<string, string> = {
  *
  * Keyed by `partyArt.slug` aus `PARTY_ART_SEED` (`shared/src/constants/index.ts`).
  */
-export const PARTY_ART_FLAVOR_TEMPLATE: Record<string, (regionName: string) => string> = {
+export const PARTY_ART_FLAVOR_TEMPLATE: Record<
+  string,
+  (regionName: string) => string
+> = {
   schuetzenfeste: (region) =>
     `Ein Schützenfest dreht sich um den örtlichen Schützenverein: Beim Königsschießen wird der neue Schützenkönig oder die Schützenkönigin ermittelt, dazu gibt es einen Festumzug mit Musikkapelle durchs Dorf und abends Tanz im Festzelt. Auch in ${region} reicht diese Tradition oft Generationen zurück - das Schützenfest ist vielerorts bis heute der wichtigste Termin im Vereinskalender.`,
 

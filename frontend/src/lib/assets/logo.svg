@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0A0B09" />
+  <g filter="url(#glow)">
+    <!-- Dachgiebel als Kontext-Linie -->
+    <!-- <path d="M20,265 L256,120 L492,265" fill="none" stroke="#4A4E3E" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/> -->
+    <!-- grünes Segel: vom Giebel-Mittelpunkt zur linken Seitenwand, leicht durchhängend -->
+    <path d="M256,160 Q120,385 43,300" fill="none" stroke="#39E67A" stroke-width="62" stroke-linecap="round" />
+    <!-- rotes Segel: vom Giebel-Mittelpunkt zur rechten Seitenwand -->
+    <path d="M256,160 Q392,385 469,300" fill="none" stroke="#FF4B3E" stroke-width="62" stroke-linecap="round" />
+    <!-- Aufhängepunkt am First -->
+    <!-- <circle cx="256" cy="160" r="13" fill="#FFC93D"/> -->
+  </g>
+</svg>
