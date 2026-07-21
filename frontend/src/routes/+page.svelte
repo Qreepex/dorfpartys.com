@@ -153,7 +153,7 @@
 		name: 'dorfpartys.com',
 		url: SITE_URL,
 		description:
-			'Die größte kostenlose Plattform für Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und weitere lokale Feste in Deutschland, Österreich und der Schweiz.',
+			'Die umfassendste kostenlose Plattform für Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten und weitere lokale Feste in Deutschland, Österreich und der Schweiz.',
 		sameAs: ['https://instagram.com/dorfpartys']
 	};
 	const faqJsonLd = buildFaqJsonLd(FAQ_ENTRIES.slice(0, 6));
@@ -167,8 +167,8 @@
 	// zusammenzufassen.
 	const pageTitle = $derived(
 		data.explicitCountry
-			? `dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in ${COUNTRY_LABELS[data.explicitCountry]}`
-			: 'dorfpartys.com - Die größte kostenlose Liste für Dorfpartys in DACH'
+			? `dorfpartys.com - Die umfassendste Liste für Dorfpartys in ${COUNTRY_LABELS[data.explicitCountry]}`
+			: 'dorfpartys.com - Die umfassendste Liste für Dorfpartys in DACH'
 	);
 	const pageDescription = $derived(
 		data.explicitCountry
@@ -208,9 +208,9 @@
 			Wo geht's<br />diesen Sommer <span class="bg-primary px-1 text-ink">ab?</span>
 		</h1>
 		<p class="mt-0 mb-8 max-w-[46ch] text-[clamp(1rem,2vw,1.2rem)] text-muted">
-			Die größte kostenlose Liste für Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten im
-			ganzen DACH-Raum - filterbar nach Land, Bundesland, Art und Monat. Jede:r kann kostenlos eine
-			Veranstaltung eintragen.
+			Die umfassendste kostenlose Liste für Schützenfeste, Zeltfeten, Scheunenfeten und Stoppelfeten
+			im ganzen DACH-Raum - filterbar nach Land, Bundesland, Art und Monat. Jede:r kann kostenlos
+			eine Veranstaltung eintragen.
 		</p>
 
 		<form
@@ -446,11 +446,11 @@
 	<section class="mt-16">
 		<h2>Was ist dorfpartys.com?</h2>
 		<p class="leading-relaxed text-muted">
-			dorfpartys.com ist die größte kostenlose Übersicht für Dorfpartys, Schützenfeste, Zeltfeten,
-			Scheunenfeten, Stoppelfeten, Kirmes und Dorffeste in Deutschland, Österreich und der Schweiz.
-			Statt zwischen Instagram-Storys, WhatsApp-Gruppen und Vereins-Websites zu suchen, findest du
-			hier alle lokalen Feste einer Region gebündelt an einem Ort - durchsuchbar nach Bundesland,
-			Kreis, Art der Veranstaltung und Monat.
+			dorfpartys.com ist die umfassendste kostenlose Übersicht für Dorfpartys, Schützenfeste,
+			Zeltfeten, Scheunenfeten, Stoppelfeten, Kirmes und Dorffeste in Deutschland, Österreich und
+			der Schweiz. Statt zwischen Instagram-Storys, WhatsApp-Gruppen und Vereins-Websites zu suchen,
+			findest du hier alle lokalen Feste einer Region gebündelt an einem Ort - durchsuchbar nach
+			Bundesland, Kreis, Art der Veranstaltung und Monat.
 		</p>
 		<p class="mt-3 leading-relaxed text-muted">
 			Jede Veranstaltung wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst kostenlos
@@ -463,7 +463,7 @@
 		<h2>Warum dein Event hier eintragen?</h2>
 		<ul class="my-0 grid list-none gap-4 p-0">
 			<li class="border-t border-border py-4 leading-relaxed">
-				<strong class="text-text">Die größte Liste im DACH-Raum.</strong> Alle 16 Bundesländer Deutschlands,
+				<strong class="text-text">Die umfassendste Liste im DACH-Raum.</strong> Alle 16 Bundesländer Deutschlands,
 				alle 9 Bundesländer Österreichs und alle 26 Kantone der Schweiz sind abgedeckt - dein Event erscheint
 				in seiner Region sofort neben allen anderen.
 			</li>

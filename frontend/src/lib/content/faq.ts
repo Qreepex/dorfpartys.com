@@ -11,7 +11,7 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 	{
 		question: 'Was ist dorfpartys.com?',
 		answer:
-			'dorfpartys.com ist die größte kostenlose Übersicht für Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten, Kirmes, Dorffeste und ähnliche lokale Feste in Deutschland, Österreich und der Schweiz. Jede Veranstaltung wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst eingetragen und ist nach Bundesland, Kreis, Party-Art und Monat durchsuchbar.'
+			'dorfpartys.com ist die umfassendste kostenlose Übersicht für Dorfpartys, Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten, Kirmes, Dorffeste und ähnliche lokale Feste in Deutschland, Österreich und der Schweiz. Jede Veranstaltung wurde von Veranstalter:innen, Vereinen oder Besucher:innen selbst eingetragen und ist nach Bundesland, Kreis, Party-Art und Monat durchsuchbar.'
 	},
 	{
 		question: 'Ist dorfpartys.com wirklich kostenlos?',

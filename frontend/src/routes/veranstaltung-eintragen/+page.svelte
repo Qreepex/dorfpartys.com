@@ -462,7 +462,7 @@
 	<meta property="og:title" content="Veranstaltung kostenlos eintragen - dorfpartys.com" />
 	<meta
 		property="og:description"
-		content="Die größte kostenlose Übersicht für Dorfpartys im DACH-Raum - trag deine Veranstaltung in wenigen Minuten ein."
+		content="Die umfassendste kostenlose Übersicht für Dorfpartys im DACH-Raum - trag deine Veranstaltung in wenigen Minuten ein."
 	/>
 	<meta property="og:url" content={canonical} />
 </svelte:head>
@@ -496,9 +496,9 @@
 			</h1>
 			<p class="mt-4 max-w-[60ch] text-lg text-muted">
 				Egal ob Schützenfest, Zeltfete, Scheunenfete, Stoppelfete oder Dorffest: dorfpartys.com ist
-				die größte kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform, die
-				für genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht, findet
-				dich hier.
+				die umfassendste kostenlose Liste für lokale Feste im DACH-Raum - und die einzige Plattform,
+				die für genau diese Suchanfragen optimiert ist. Wer nach Partys in deiner Region sucht,
+				findet dich hier.
 			</p>
 		</header>
 
