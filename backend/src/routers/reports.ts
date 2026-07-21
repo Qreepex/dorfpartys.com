@@ -1,13 +1,22 @@
 import { submitReportSchema } from "@dorfpartys/shared";
-import { and, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import type { Database } from "../db/index.js";
-import { report, reportRateLimit } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  report,
+  reportRateLimit,
+  userProfile,
+} from "../db/schema.js";
 import {
   sendReportConfirmation,
   sendReportNotification,
 } from "../email/service.js";
 import { sanitizeText } from "../sanitization/index.js";
-import { publicProcedure, router } from "../trpc/trpc.js";
+import { moderatorProcedure, publicProcedure, router } from "../trpc/trpc.js";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Rate limiting: 5 reports per IP per hour
 const RATE_LIMIT_REPORTS = 5;
@@ -186,4 +195,79 @@ export const reportsRouter = router({
         throw new Error("Failed to submit report. Please try again later.");
       }
     }),
+
+  // Read-only Liste für /review/reports (AGENTS.md Abschnitt 0: Review-Dashboard).
+  // Bewusst ohne Bearbeiten/Dismiss-Workflow - laut Produktvorgabe zu individuell,
+  // um sinnvoll zu standardisieren; hier soll nur Sichtbarkeit hergestellt werden.
+  // Gleiche Berechtigungsstufe wie die übrigen /review/*-Unterseiten (moderator/admin),
+  // keine Sonderrolle wie /review/ghost-accounts.
+  list: moderatorProcedure.query(async ({ ctx }) => {
+    const reports = await ctx.db
+      .select()
+      .from(report)
+      .orderBy(desc(report.createdAt));
+
+    if (reports.length === 0) return [];
+
+    // subjectId ist Freitext aus einem öffentlichen Formular (nicht zwingend
+    // eine gültige UUID) - nur plausible IDs gegen event/user_profile auflösen,
+    // damit ein ungültiger Wert nicht zu einem DB-Fehler führt.
+    const eventIds = reports
+      .filter(
+        (r): r is typeof r & { subjectId: string } =>
+          r.subjectType === "event" &&
+          !!r.subjectId &&
+          UUID_RE.test(r.subjectId),
+      )
+      .map((r) => r.subjectId);
+    const profileIds = reports
+      .filter(
+        (r): r is typeof r & { subjectId: string } =>
+          (r.subjectType === "user" || r.subjectType === "profile") &&
+          !!r.subjectId &&
+          UUID_RE.test(r.subjectId),
+      )
+      .map((r) => r.subjectId);
+
+    const [events, profiles] = await Promise.all([
+      eventIds.length
+        ? ctx.db
+            .select({
+              id: event.id,
+              title: event.title,
+              slug: event.slug,
+              country: bundesland.country,
+            })
+            .from(event)
+            .innerJoin(bundesland, eq(bundesland.id, event.bundeslandId))
+            .where(inArray(event.id, eventIds))
+        : Promise.resolve([]),
+      profileIds.length
+        ? ctx.db
+            .select({
+              userId: userProfile.userId,
+              displayName: userProfile.displayName,
+              slug: userProfile.slug,
+            })
+            .from(userProfile)
+            .where(inArray(userProfile.userId, profileIds))
+        : Promise.resolve([]),
+    ]);
+
+    const eventById = new Map(events.map((e) => [e.id, e]));
+    const profileByUserId = new Map(profiles.map((p) => [p.userId, p]));
+
+    return reports.map((r) => ({
+      ...r,
+      subjectEvent:
+        r.subjectType === "event" && r.subjectId
+          ? (eventById.get(r.subjectId) ?? null)
+          : null,
+      subjectProfile:
+        (r.subjectType === "user" || r.subjectType === "profile") &&
+        r.subjectId
+          ? (profileByUserId.get(r.subjectId) ?? null)
+          : null,
+    }));
+  }),
 });

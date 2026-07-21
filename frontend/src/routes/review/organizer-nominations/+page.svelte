@@ -33,6 +33,7 @@
 		<a href={resolve('/review/account-claims')} class="font-semibold text-primary">Profil-Claims</a>
 		<a href={resolve('/review/ghost-accounts')} class="font-semibold text-primary">Ghost-Accounts</a
 		>
+		<a href={resolve('/review/reports')} class="font-semibold text-primary">Reports</a>
 	</nav>
 
 	<h2>Ausstehende Organizer-Nominierungen</h2>

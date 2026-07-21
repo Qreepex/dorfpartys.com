@@ -49,6 +49,7 @@
 		<a href={resolve('/review/account-claims')} class="font-semibold text-primary">Profil-Claims</a>
 		<a href={resolve('/review/ghost-accounts')} class="font-semibold text-primary">Ghost-Accounts</a
 		>
+		<a href={resolve('/review/reports')} class="font-semibold text-primary">Reports</a>
 	</nav>
 
 	<h2>Zur Prüfung anstehende Veranstaltungen</h2>
