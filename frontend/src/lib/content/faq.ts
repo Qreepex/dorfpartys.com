@@ -21,7 +21,8 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 	{
 		question: 'Wie trage ich meine Veranstaltung ein?',
 		answer:
-			'Unter dorfpartys.com/veranstaltung-eintragen füllst du ein Formular mit Titel, Beschreibung, Datum, Ort (Bundesland, Kreis, Adresse) und Art der Veranstaltung aus. Du kannst bis zu drei Fotos und drei Links (z.B. zu Tickets oder deiner Website) hinzufügen. Nach dem Absenden prüft unser Team den Eintrag kurz redaktionell, danach ist er öffentlich sichtbar.'
+			'Unter dorfpartys.com/veranstaltung-eintragen füllst du ein Formular mit Titel, Beschreibung, Datum, Ort (Bundesland, Kreis, Adresse) und Art der Veranstaltung aus. Du kannst bis zu drei Fotos und drei Links (z.B. zu Tickets oder deiner Website) hinzufügen. Nach dem Absenden prüft unser Team den Eintrag kurz redaktionell, danach ist er öffentlich sichtbar.',
+		links: [{ text: 'dorfpartys.com/veranstaltung-eintragen', href: '/veranstaltung-eintragen' }]
 	},
 	{
 		question: 'Wie lange dauert die Freischaltung einer eingetragenen Veranstaltung?',
@@ -52,12 +53,14 @@ export const FAQ_ENTRIES: FaqEntry[] = [
 	{
 		question: 'Sammelt dorfpartys.com meine Daten oder zeigt Werbung?',
 		answer:
-			'Nein. dorfpartys.com ist werbefrei und verzichtet auf Tracking durch Dritte. Es werden nur die für den Betrieb notwendigen Daten verarbeitet (siehe Datenschutzerklärung) - keine Analyse-Cookies, kein Weiterverkauf von Daten, keine externen Tracking- oder Werbenetzwerke.'
+			'Nein. dorfpartys.com ist werbefrei und verzichtet auf Tracking durch Dritte. Es werden nur die für den Betrieb notwendigen Daten verarbeitet (siehe Datenschutzerklärung) - keine Analyse-Cookies, kein Weiterverkauf von Daten, keine externen Tracking- oder Werbenetzwerke.',
+		links: [{ text: 'Datenschutzerklärung', href: '/datenschutz' }]
 	},
 	{
 		question: 'Kann ich Veranstaltungen für später speichern?',
 		answer:
-			'Ja. Mit einem kostenlosen Account kannst du jede Veranstaltung über den "Merken"-Button speichern und findest sie danach gesammelt in deiner persönlichen Partyliste unter dorfpartys.com/partyliste wieder - praktisch, um mehrere Termine im Blick zu behalten.'
+			'Ja. Mit einem kostenlosen Account kannst du jede Veranstaltung über den "Merken"-Button speichern und findest sie danach gesammelt in deiner persönlichen Partyliste unter dorfpartys.com/partyliste wieder - praktisch, um mehrere Termine im Blick zu behalten.',
+		links: [{ text: 'dorfpartys.com/partyliste', href: '/partyliste' }]
 	},
 	{
 		question: 'Was ist eine Veranstalter-Seite?',

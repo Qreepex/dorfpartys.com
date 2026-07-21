@@ -13,9 +13,23 @@ export function jsonLdScriptTag(data: unknown): string {
 	return `<script type="application/ld+json">${json}</script>`;
 }
 
+/**
+ * Markiert eine exakte Teilzeichenkette innerhalb von `FaqEntry.answer`, die
+ * in der sichtbaren Darstellung als klickbarer Link gerendert werden soll
+ * (siehe FaqList.svelte). `answer` selbst bleibt ein reiner String, damit das
+ * schema.org/FAQPage JSON-LD (buildFaqJsonLd) unverändert reinen Text liefert.
+ */
+export interface FaqLink {
+	/** Exakte Teilzeichenkette in `answer`, die verlinkt werden soll. */
+	text: string;
+	/** Interner Routen-Pfad (wird über $app/paths resolve() aufgelöst) oder externe https://-URL. */
+	href: string;
+}
+
 export interface FaqEntry {
 	question: string;
 	answer: string;
+	links?: FaqLink[];
 }
 
 /**

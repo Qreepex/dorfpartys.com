@@ -281,7 +281,8 @@
 					<p class="mb-4 text-sm text-text">
 						Sende diesen Code an <strong>@dorfpartys</strong> auf
 						<strong>Instagram</strong> oder <strong>TikTok</strong>, oder schreib eine E-Mail an
-						<strong>verifizierung@dorfpartys.com</strong> (von einer der oben hinterlegten Adressen).
+						<a href="mailto:verifizierung@dorfpartys.com">verifizierung@dorfpartys.com</a> (von einer
+						der oben hinterlegten Adressen).
 					</p>
 					{#if data.profile.verificationRequestedAt}
 						<p class="text-xs text-blue-700">
@@ -318,7 +319,8 @@
 						<p class="text-sm text-text">
 							Sende diesen Code an <strong>@dorfpartys</strong> auf
 							<strong>Instagram</strong> oder <strong>TikTok</strong>, oder schreib eine E-Mail an
-							<strong>verifizierung@dorfpartys.com</strong> (von einer der oben hinterlegten Adressen).
+							<a href="mailto:verifizierung@dorfpartys.com">verifizierung@dorfpartys.com</a> (von
+							einer der oben hinterlegten Adressen).
 						</p>
 					</div>
 				{/if}
