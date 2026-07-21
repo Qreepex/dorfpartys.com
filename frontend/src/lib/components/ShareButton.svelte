@@ -50,7 +50,7 @@
 <div class="relative inline-block shrink-0">
 	<button
 		type="button"
-		class="flex h-10 w-10 cursor-pointer items-center justify-center border border-border bg-transparent text-text hover:border-primary hover:text-primary"
+		class="flex h-11 w-11 cursor-pointer items-center justify-center border border-border bg-transparent text-text hover:border-primary hover:text-primary"
 		onclick={handleShare}
 		aria-label={copied ? 'Link kopiert' : 'Seite teilen'}
 		title={copied ? 'Link kopiert' : 'Seite teilen'}
