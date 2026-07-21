@@ -20,3 +20,4 @@ export { default as ShareButton } from './ShareButton.svelte';
 export { default as PhotoUpload } from './PhotoUpload.svelte';
 export { default as FeedbackBanner } from './FeedbackBanner.svelte';
 export { default as Modal } from './Modal.svelte';
+export { default as LightboxImage } from './LightboxImage.svelte';

@@ -4,6 +4,7 @@
 	import {
 		Breadcrumbs,
 		LegalDisclaimer,
+		LightboxImage,
 		LinkTypeIcon,
 		ShareButton,
 		VerifiedBadge
@@ -191,14 +192,14 @@
 		</div>
 
 		{#if event.photos.length > 0}
-			<div class="my-6 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
+			<!-- Fotos werden groß angezeigt (nicht als kleine Grid-Thumbnails) und
+			     sind per Klick als Fullscreen-Lightbox aufrufbar, siehe
+			     $lib/components/LightboxImage.svelte. `event_photo` hat kein
+			     eigenes Alt-/Caption-Feld (backend/src/db/schema.ts), daher Fallback
+			     auf den Event-Titel. -->
+			<div class="my-6 flex flex-col gap-3">
 				{#each event.photos as photo (photo.id)}
-					<img
-						class="aspect-4/3 w-full object-cover"
-						src={photo.url}
-						alt={event.title}
-						loading="lazy"
-					/>
+					<LightboxImage src={photo.url} alt={event.title} />
 				{/each}
 			</div>
 		{/if}
