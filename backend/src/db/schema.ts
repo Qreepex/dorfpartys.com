@@ -62,6 +62,20 @@ export const eventClaimStatusEnum = pgEnum("event_claim_status", [
   "rejected",
 ]);
 
+// Notifications (Glocke in der Navbar): "gelesen" = Zeile wird gelöscht, es
+// gibt bewusst kein read-Boolean-Flag - die Existenz der Zeile IST der
+// ungelesen-Zustand (Produktvorgabe, siehe backend/src/notifications/index.ts).
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "verification_approved",
+  "verification_rejected",
+  "event_approved",
+  "event_rejected",
+  "account_claim_approved",
+  "account_claim_rejected",
+  "event_claim_approved",
+  "event_claim_rejected",
+]);
+
 // --- Taxonomie / Stammdaten ---------------------------------------------
 
 export const bundesland = pgTable("bundesland", {
@@ -419,6 +433,27 @@ export const savedEvent = pgTable(
   (t) => [uniqueIndex("saved_event_user_event_idx").on(t.userId, t.eventId)],
 );
 
+// Notifications für die Navbar-Glocke: erzeugt für den betroffenen Nutzer bei
+// Entscheidung über Profilverifizierung, Event-Einreichung, Profil-Claim oder
+// Event-Claim (jeweils approved/rejected) - siehe backend/src/notifications/index.ts
+// für die Erzeugung und backend/src/routers/notifications.ts fürs Abrufen/Löschen.
+// `message` wird bereits beim Erzeugen fertig auf Deutsch formuliert, damit das
+// Frontend keine typ-spezifische i18n-Logik braucht. `link` ist nullable, weil
+// z.B. ein abgelehntes Event keine öffentliche Seite hat, auf die verlinkt
+// werden könnte.
+export const notification = pgTable("notification", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  type: notificationTypeEnum("type").notNull(),
+  message: text("message").notNull(),
+  link: text("link"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- Reports ---------------------------------------------------------------
 
 export const report = pgTable("report", {
@@ -662,3 +697,7 @@ export const savedEventRelations = relations(savedEvent, ({ one }) => ({
 }));
 
 export const reportRelations = relations(report, ({}) => ({}));
+
+export const notificationRelations = relations(notification, ({ one }) => ({
+  user: one(user, { fields: [notification.userId], references: [user.id] }),
+}));

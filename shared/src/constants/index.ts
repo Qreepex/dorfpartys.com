@@ -80,6 +80,20 @@ export type VerificationMethod = (typeof VERIFICATION_METHODS)[number];
 export const EVENT_STATUSES = ['draft', 'in_review', 'approved', 'rejected'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
+// Notification-Typen für die Navbar-Glocke (siehe backend/src/notifications/index.ts) -
+// je eine Variante für Annahme/Ablehnung der vier Szenarien aus AGENTS.md 5.4/5.5.
+export const NOTIFICATION_TYPES = [
+	'verification_approved',
+	'verification_rejected',
+	'event_approved',
+	'event_rejected',
+	'account_claim_approved',
+	'account_claim_rejected',
+	'event_claim_approved',
+	'event_claim_rejected'
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
 export const MAX_EVENT_PHOTOS = 1;
 export const MAX_EVENT_LINKS = 3;
 

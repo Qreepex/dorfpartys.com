@@ -4,6 +4,7 @@ import { adminVerificationRouter } from "./admin-verification.js";
 import { eventClaimsRouter } from "./event-claims.js";
 import { eventsRouter } from "./events.js";
 import { ghostAccountsRouter } from "./ghost-accounts.js";
+import { notificationsRouter } from "./notifications.js";
 import { organizerNominationsRouter } from "./organizer-nominations.js";
 import { reportsRouter } from "./reports.js";
 import { resolverRouter } from "./resolver.js";
@@ -29,6 +30,7 @@ export const appRouter = router({
   stats: statsRouter,
   savedEvents: savedEventsRouter,
   adminVerification: adminVerificationRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

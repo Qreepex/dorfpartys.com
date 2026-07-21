@@ -5,6 +5,7 @@ export * from './types/user.js';
 export * from './types/event.js';
 export * from './types/resolver.js';
 export * from './types/api.js';
+export * from './types/notification.js';
 
 export * from './schemas/event.js';
 export * from './schemas/profile.js';

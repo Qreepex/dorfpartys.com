@@ -2,6 +2,7 @@ import { eq, and, ne, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import { user, userProfile } from "../db/schema.js";
+import { createNotification } from "../notifications/index.js";
 import { moderatorProcedure, router } from "../trpc/trpc.js";
 import {
   extractInstagramHandle,
@@ -155,6 +156,13 @@ export const adminVerificationRouter = router({
         .set(updateData)
         .where(eq(userProfile.userId, input.userId));
 
+      await createNotification(ctx.db, {
+        userId: input.userId,
+        type: "verification_approved",
+        message: "Deine Veranstalter-Verifizierung wurde bestätigt.",
+        link: "/profil",
+      });
+
       return { success: true };
     }),
 
@@ -182,6 +190,13 @@ export const adminVerificationRouter = router({
           updatedAt: new Date(),
         })
         .where(eq(userProfile.userId, input.userId));
+
+      await createNotification(ctx.db, {
+        userId: input.userId,
+        type: "verification_rejected",
+        message: "Deine Veranstalter-Verifizierungsanfrage wurde abgelehnt.",
+        link: "/profil",
+      });
 
       return { success: true };
     }),

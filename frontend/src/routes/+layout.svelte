@@ -11,7 +11,7 @@
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	$effect.pre(() => {
-		initializeStores(data.user);
+		initializeStores(data.user, data.notifications);
 	});
 
 	function loadSimpleAnalytics() {

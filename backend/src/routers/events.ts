@@ -41,6 +41,7 @@ import {
   getClientIp,
   RATE_LIMITS,
 } from "../rate-limit/index.js";
+import { createNotification } from "../notifications/index.js";
 import { isOrganizerCurrentlyVerified } from "../verification/index.js";
 import {
   moderatorProcedure,
@@ -937,8 +938,16 @@ export const eventsRouter = router({
           .update(event)
           .set({ status: "rejected", updatedAt: new Date() })
           .where(eq(event.id, input.id));
-        // Hook für Review-Status-Benachrichtigung an existing.createdBy - bewusst
-        // nicht implementiert (AGENTS.md Abschnitt 9).
+        // Benachrichtigt den Einreicher (existing.createdBy), nicht zwingend
+        // event.organizerUserId - der Einreicher wartet auf die Entscheidung,
+        // unabhängig davon, wer am Ende als Veranstalter hinterlegt ist. Kein
+        // Link, da ein abgelehntes Event keine öffentliche Seite hat.
+        await createNotification(ctx.db, {
+          userId: existing.createdBy,
+          type: "event_rejected",
+          message: `Deine Veranstaltung "${existing.title}" wurde abgelehnt.`,
+          link: null,
+        });
         return { id: input.id, status: "rejected" as const };
       }
 
@@ -965,8 +974,20 @@ export const eventsRouter = router({
         })
         .where(eq(event.id, input.id));
 
-      // Hook für Review-Status-Benachrichtigung an existing.createdBy - bewusst
-      // nicht implementiert (AGENTS.md Abschnitt 9).
+      // Benachrichtigt den Einreicher (existing.createdBy), siehe Kommentar oben.
+      const [eventBundesland] = await ctx.db
+        .select({ country: bundeslandTable.country })
+        .from(bundeslandTable)
+        .where(eq(bundeslandTable.id, existing.bundeslandId));
+      await createNotification(ctx.db, {
+        userId: existing.createdBy,
+        type: "event_approved",
+        message: `Deine Veranstaltung "${existing.title}" wurde freigeschaltet.`,
+        link: eventBundesland
+          ? buildEventUrl(eventBundesland.country, slug)
+          : null,
+      });
+
       return { id: input.id, status: "approved" as const, slug };
     }),
 });

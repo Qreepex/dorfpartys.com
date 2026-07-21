@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, count, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { accountClaim, event, user, userProfile } from "../db/schema.js";
+import { createNotification } from "../notifications/index.js";
 import {
   moderatorProcedure,
   protectedProcedure,
@@ -204,6 +205,17 @@ export const accountClaimsRouter = router({
         .set({ mergedIntoUserId: claim.claimedByUserId, updatedAt: new Date() })
         .where(eq(userProfile.userId, claim.ghostUserId));
 
+      const [ghostProfile] = await ctx.db
+        .select({ displayName: userProfile.displayName })
+        .from(userProfile)
+        .where(eq(userProfile.userId, claim.ghostUserId));
+      await createNotification(ctx.db, {
+        userId: claim.claimedByUserId,
+        type: "account_claim_approved",
+        message: `Deine Anfrage, das Profil "${ghostProfile?.displayName ?? "Veranstalter"}" zu übernehmen, wurde angenommen.`,
+        link: "/profil",
+      });
+
       return { id: input.id, status: "approved" as const };
     }),
 
@@ -211,7 +223,11 @@ export const accountClaimsRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [claim] = await ctx.db
-        .select({ status: accountClaim.status })
+        .select({
+          status: accountClaim.status,
+          claimedByUserId: accountClaim.claimedByUserId,
+          ghostUserId: accountClaim.ghostUserId,
+        })
         .from(accountClaim)
         .where(eq(accountClaim.id, input.id));
       if (!claim) throw new TRPCError({ code: "NOT_FOUND" });
@@ -230,6 +246,17 @@ export const accountClaimsRouter = router({
           reviewedAt: new Date(),
         })
         .where(eq(accountClaim.id, input.id));
+
+      const [ghostProfile] = await ctx.db
+        .select({ displayName: userProfile.displayName })
+        .from(userProfile)
+        .where(eq(userProfile.userId, claim.ghostUserId));
+      await createNotification(ctx.db, {
+        userId: claim.claimedByUserId,
+        type: "account_claim_rejected",
+        message: `Deine Anfrage, das Profil "${ghostProfile?.displayName ?? "Veranstalter"}" zu übernehmen, wurde abgelehnt.`,
+        link: "/profil",
+      });
 
       return { id: input.id, status: "rejected" as const };
     }),

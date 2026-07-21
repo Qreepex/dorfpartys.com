@@ -1,7 +1,15 @@
+import { buildEventUrl } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { event, eventClaim, user, userProfile } from "../db/schema.js";
+import {
+  bundesland as bundeslandTable,
+  event,
+  eventClaim,
+  user,
+  userProfile,
+} from "../db/schema.js";
+import { createNotification } from "../notifications/index.js";
 import {
   moderatorProcedure,
   protectedProcedure,
@@ -206,6 +214,20 @@ export const eventClaimsRouter = router({
         })
         .where(eq(event.id, claim.eventId));
 
+      const [claimedEvent] = await ctx.db
+        .select({ title: event.title, slug: event.slug, country: bundeslandTable.country })
+        .from(event)
+        .innerJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+        .where(eq(event.id, claim.eventId));
+      await createNotification(ctx.db, {
+        userId: claim.claimedByUserId,
+        type: "event_claim_approved",
+        message: `Deine Anfrage, die Veranstaltung "${claimedEvent?.title ?? "Veranstaltung"}" zu übernehmen, wurde angenommen.`,
+        link: claimedEvent?.slug
+          ? buildEventUrl(claimedEvent.country, claimedEvent.slug)
+          : null,
+      });
+
       return { id: input.id, status: "approved" as const };
     }),
 
@@ -213,7 +235,11 @@ export const eventClaimsRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [claim] = await ctx.db
-        .select({ status: eventClaim.status })
+        .select({
+          status: eventClaim.status,
+          claimedByUserId: eventClaim.claimedByUserId,
+          eventId: eventClaim.eventId,
+        })
         .from(eventClaim)
         .where(eq(eventClaim.id, input.id));
       if (!claim) throw new TRPCError({ code: "NOT_FOUND" });
@@ -232,6 +258,20 @@ export const eventClaimsRouter = router({
           reviewedAt: new Date(),
         })
         .where(eq(eventClaim.id, input.id));
+
+      const [claimedEvent] = await ctx.db
+        .select({ title: event.title, slug: event.slug, country: bundeslandTable.country })
+        .from(event)
+        .innerJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+        .where(eq(event.id, claim.eventId));
+      await createNotification(ctx.db, {
+        userId: claim.claimedByUserId,
+        type: "event_claim_rejected",
+        message: `Deine Anfrage, die Veranstaltung "${claimedEvent?.title ?? "Veranstaltung"}" zu übernehmen, wurde abgelehnt.`,
+        link: claimedEvent?.slug
+          ? buildEventUrl(claimedEvent.country, claimedEvent.slug)
+          : null,
+      });
 
       return { id: input.id, status: "rejected" as const };
     }),
