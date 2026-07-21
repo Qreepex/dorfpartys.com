@@ -55,7 +55,7 @@
 
 <main class="mx-auto max-w-[90ch]">
 	<header class="mb-8">
-		<h1>Inhalte melden</h1>
+		<h1>Inhalte melden / entfernen</h1>
 		<p class="text-muted">
 			Wenn Sie Inhalte auf dorfpartys.com entdecken, die gegen unsere Nutzungsbedingungen verstoßen
 			oder rechtswidrig sind, können Sie diese hier melden. Wir werden Ihren Bericht überprüfen und

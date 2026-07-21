@@ -28,7 +28,7 @@
 				</a>
 				·
 				<a class="text-muted no-underline hover:text-primary" href={resolve('/report')}>
-					Inhalte melden
+					Inhalte melden / entfernen
 				</a>
 			</span>
 		</div>
