@@ -575,12 +575,19 @@
 						action="uploadPhoto"
 						shape="rect"
 						extraFields={() => ({ eventId: crypto.randomUUID() })}
-						helpText="Wird automatisch skaliert (max. 1920px) und komprimiert"
 						onUploadComplete={(s3Key) => {
 							uploadedPhotoS3Key = s3Key;
 							removeExistingPhoto = false;
 						}}
 						onBusyChange={(busy) => (photoUploadBusy = busy)}
+						onDiscard={async (s3Key) => {
+							const formData = new FormData();
+							formData.append('s3Key', s3Key);
+							await callAction(`${page.url.pathname}?/discardPhoto`, formData);
+						}}
+						onCleared={() => {
+							uploadedPhotoS3Key = null;
+						}}
 					/>
 				{/key}
 			</div>

@@ -457,6 +457,25 @@ export const rateLimitCounter = pgTable(
   ],
 );
 
+// Trackt jeden über uploads.uploadEventPhoto/uploadAvatarPhoto hochgeladenen
+// S3-Key, bis er an einen echten Datensatz angehängt wird (Event-Foto beim
+// Speichern, Avatar sofort beim Upload - siehe backend/src/routers/users.ts
+// und events.ts, `confirmUpload`). Eine Zeile hier = "noch nicht bestätigt".
+// Ein periodischer Sweep (backend/src/index.ts) löscht Zeilen, die länger als
+// PENDING_UPLOAD_TTL_MS offen sind, samt der zugehörigen S3-Datei - verhindert
+// verwaiste Dateien aus abgebrochenen Formularen (Event-Foto hochgeladen, nie
+// abgeschickt) oder Tab-Schließen mitten im Vorgang.
+export const pendingUpload = pgTable("pending_upload", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  s3Key: text("s3_key").notNull().unique(),
+  uploadedByUserId: uuid("uploaded_by_user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // --- Relations ---------------------------------------------------------
 
 export const bundeslandRelations = relations(bundesland, ({ many }) => ({

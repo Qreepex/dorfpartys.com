@@ -229,6 +229,34 @@ export const actions: Actions = {
 			});
 		}
 	},
+	// Löscht ein gerade erst hochgeladenes, noch nicht abgeschicktes Foto sofort
+	// wieder (ersetzt/entfernt im Formular, bevor "Absenden" geklickt wurde) -
+	// siehe PhotoUpload.svelte `onDiscard`. Reine Aufräum-Optimierung: das
+	// periodische Sweep-Sicherheitsnetz (backend/src/storage/pending-upload.ts)
+	// würde denselben Key ohnehin nach 15 Minuten löschen, falls dieser Request
+	// fehlschlägt - daher hier bewusst kein harter Fehlerzustand fürs Formular.
+	discardPhoto: async ({ request, locals, url }) => {
+		try {
+			await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		const formData = await request.formData();
+		const s3Key = String(formData.get('s3Key') ?? '');
+		if (!s3Key) {
+			return fail(400, { error: 'Kein S3-Key angegeben' });
+		}
+
+		try {
+			await locals.trpc.uploads.discardPendingUpload.mutate({ s3Key });
+			return { success: true };
+		} catch (err) {
+			return fail(400, {
+				error: err instanceof Error ? err.message : 'Verwerfen fehlgeschlagen'
+			});
+		}
+	},
 	submit: async ({ request, locals, url }) => {
 		try {
 			await locals.trpc.users.me.query();

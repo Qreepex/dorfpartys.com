@@ -10,6 +10,7 @@ import {
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
@@ -29,7 +30,11 @@ import {
   generateUniqueEventSlug,
   generateUniqueOrganizerSlug,
 } from "../slug/index.js";
-import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
+import {
+  buildPublicStorageUrl,
+  confirmUpload,
+  deleteS3Object,
+} from "../storage/index.js";
 import { sanitizeInput, sanitizeText } from "../sanitization/index.js";
 import {
   enforceRateLimit,
@@ -233,6 +238,7 @@ async function replacePhotosAndLinks(
   eventId: string,
   photos: Array<{ s3Key: string; position: 1 | 2 | 3 }> | undefined,
   links: Array<{ url: string; label: string; position: 1 | 2 | 3 }> | undefined,
+  log: FastifyBaseLogger,
 ) {
   if (photos) {
     const previousPhotos = await db
@@ -249,6 +255,9 @@ async function replacePhotosAndLinks(
           position: p.position,
         })),
       );
+      // Jetzt an das Event angehängt - nicht mehr "pending", der Sweep
+      // (backend/src/index.ts) darf diese Keys nicht mehr löschen.
+      await Promise.all(photos.map((p) => confirmUpload(db, p.s3Key)));
     }
 
     // Alte Keys, die nicht in der neuen Auswahl wiederverwendet werden, aktiv
@@ -257,7 +266,7 @@ async function replacePhotosAndLinks(
     const staleKeys = previousPhotos
       .map((p) => p.s3Key)
       .filter((key) => !nextKeys.has(key));
-    await Promise.all(staleKeys.map((key) => deleteS3Object(key)));
+    await Promise.all(staleKeys.map((key) => deleteS3Object(key, log)));
   }
   if (links) {
     await db.delete(eventLink).where(eq(eventLink.eventId, eventId));
@@ -353,6 +362,7 @@ export const eventsRouter = router({
         row.id,
         input.photos,
         sanitized.links,
+        ctx.req.log,
       );
 
       return { id: row.id };
@@ -423,6 +433,7 @@ export const eventsRouter = router({
         input.id,
         input.photos,
         sanitized.links,
+        ctx.req.log,
       );
 
       return { id: input.id };
@@ -539,7 +550,7 @@ export const eventsRouter = router({
         .from(eventPhoto)
         .where(eq(eventPhoto.eventId, input.id));
 
-      await Promise.all(photos.map((p) => deleteS3Object(p.s3Key)));
+      await Promise.all(photos.map((p) => deleteS3Object(p.s3Key, ctx.req.log)));
 
       // Event löschen (DB-seitige onDelete: "cascade" für event_photo,
       // event_link, event_claim, organizer_nomination, saved_event -

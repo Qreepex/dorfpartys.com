@@ -1,11 +1,17 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { MAX_AVATAR_DIMENSION } from "@dorfpartys/shared";
+import type { FastifyBaseLogger } from "fastify";
+import type { Database } from "../db/index.js";
 import {
   validateAndSanitizeImage,
   constrainToSquareMax,
   createValidatedImage,
   uploadToS3,
+  logS3Error,
+  trackPendingUpload,
+  discardPendingUpload,
+  type ValidatedImage,
 } from "../storage/index.js";
 import {
   enforceRateLimit,
@@ -30,6 +36,46 @@ const bufferSchema = z
 // Abschnitt 7: presigned Uploads laufen serverseitig über dieses Backend).
 const UPLOAD_LIMIT_MESSAGE =
   "Du hast das Limit für Bild-Uploads erreicht. Bitte versuche es später erneut.";
+
+// Der eigentliche S3-PUT ist der einzige Schritt in der Upload-Pipeline, der
+// von externer Infrastruktur abhängt (Netzwerk/Credentials/Bucket-Policy) statt
+// von der Eingabe des Nutzers - ein Fehler hier ist also kein "Bad Request"
+// (die Datei war völlig in Ordnung), sondern ein Server-/Infra-Problem.
+// Der AWS SDK liefert bei einer nicht-AWS-konformen Fehlerantwort (z.B. IONOS)
+// oft nur einen nichtssagenden `UnknownError` ohne brauchbare Message - der
+// darf nicht 1:1 an den Client durchgereicht werden, sondern wird hier mit
+// vollem Kontext geloggt (Statuscode, Request-ID) und durch eine generische,
+// verständliche Meldung ersetzt.
+async function uploadValidatedImage(
+  db: Database,
+  validatedImage: ValidatedImage,
+  uploadedByUserId: string,
+  log: FastifyBaseLogger,
+): Promise<{ s3Key: string }> {
+  try {
+    await uploadToS3(
+      validatedImage.s3Key,
+      validatedImage.buffer,
+      validatedImage.mimeType,
+    );
+  } catch (err) {
+    logS3Error(log, err, { s3Key: validatedImage.s3Key }, "S3 upload failed");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message:
+        "Foto konnte nicht gespeichert werden - das liegt nicht an deiner Datei. Bitte versuch es später erneut.",
+    });
+  }
+
+  // Als "pending" tracken, bis der Aufrufer den Key an einen echten Datensatz
+  // anhängt (Event gespeichert / Avatar gesetzt, siehe `confirmUpload` in
+  // users.ts/events.ts) - ein periodischer Sweep löscht alles, was 15 Minuten
+  // lang nie bestätigt wird (backend/src/index.ts), damit abgebrochene
+  // Formulare keine dauerhaft verwaisten Dateien im Bucket hinterlassen.
+  await trackPendingUpload(db, validatedImage.s3Key, uploadedByUserId);
+
+  return { s3Key: validatedImage.s3Key };
+}
 
 async function enforceUploadRateLimit(
   db: Parameters<typeof enforceRateLimit>[0],
@@ -63,6 +109,8 @@ export const uploadsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await enforceUploadRateLimit(ctx.db, ctx.req, ctx.user.id);
+
+      let validatedImage: ValidatedImage;
       try {
         // Production-grade validation with re-encoding
         const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
@@ -70,26 +118,20 @@ export const uploadsRouter = router({
           input.contentType,
         );
 
-        const validatedImage = createValidatedImage(
+        validatedImage = createValidatedImage(
           sanitizedBuffer,
           mimeType,
           input.eventId,
           "event",
         );
-
-        await uploadToS3(
-          validatedImage.s3Key,
-          validatedImage.buffer,
-          validatedImage.mimeType,
-        );
-
-        return { s3Key: validatedImage.s3Key };
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: err instanceof Error ? err.message : "Upload fehlgeschlagen",
         });
       }
+
+      return uploadValidatedImage(ctx.db, validatedImage, ctx.user.id, ctx.req.log);
     }),
 
   uploadAvatarPhoto: protectedProcedure
@@ -101,6 +143,8 @@ export const uploadsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await enforceUploadRateLimit(ctx.db, ctx.req, ctx.user.id);
+
+      let validatedImage: ValidatedImage;
       try {
         // Production-grade validation with re-encoding
         const { mimeType, sanitizedBuffer } = await validateAndSanitizeImage(
@@ -117,25 +161,31 @@ export const uploadsRouter = router({
           MAX_AVATAR_DIMENSION,
         );
 
-        const validatedImage = createValidatedImage(
+        validatedImage = createValidatedImage(
           avatarBuffer,
           mimeType,
           ctx.user.id,
           "profile",
         );
-
-        await uploadToS3(
-          validatedImage.s3Key,
-          validatedImage.buffer,
-          validatedImage.mimeType,
-        );
-
-        return { s3Key: validatedImage.s3Key };
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: err instanceof Error ? err.message : "Upload fehlgeschlagen",
         });
       }
+
+      return uploadValidatedImage(ctx.db, validatedImage, ctx.user.id, ctx.req.log);
+    }),
+
+  // Sofort-Löschung eines noch nicht bestätigten Uploads - z.B. wenn im
+  // Event-Formular ein gerade hochgeladenes Foto ersetzt oder entfernt wird,
+  // bevor überhaupt abgeschickt wurde (siehe PhotoUpload.svelte `onDiscard`).
+  // `discardPendingUpload` prüft selbst, dass der Key dem aufrufenden Nutzer
+  // gehört und noch nicht bestätigt/angehängt ist.
+  discardPendingUpload: protectedProcedure
+    .input(z.object({ s3Key: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await discardPendingUpload(ctx.db, input.s3Key, ctx.user.id, ctx.req.log);
+      return { success: true };
     }),
 });

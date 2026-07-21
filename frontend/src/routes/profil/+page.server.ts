@@ -20,12 +20,20 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	// Bild-Upload läuft als eigene Action (JS-Fetch aus PhotoUpload.svelte,
-	// analog zu `uploadPhoto` in veranstaltung-eintragen/+page.server.ts) -
+	// Bild-Upload läuft als eigene Action (JS-Fetch aus PhotoUpload.svelte),
 	// getrennt vom eigentlichen Formular-Save, damit die Vorschau sofort nach
 	// dem Hochladen verfügbar ist, ohne das restliche Formular abzuschicken.
-	// Persistiert wird der zurückgegebene S3-Key erst beim Speichern des
-	// Profils (verstecktes Feld, siehe +page.svelte) über `updateProfile`.
+	// Der neue Avatar wird direkt hier persistiert (nicht erst beim Speichern
+	// des restlichen Profils) - ein Profilbild-Upload ist für Nutzer:innen ein
+	// abgeschlossener, für sich stehender Vorgang ("hochgeladen" = "gesetzt"),
+	// kein Formularfeld, das noch einen separaten "Speichern"-Klick braucht.
+	// `updateMyProfile.mutate({ avatarS3Key })` bekommt bewusst NUR dieses eine
+	// Feld übergeben (kein Objekt aus FormData-Werten) - alle anderen Felder
+	// bleiben dadurch `undefined` und werden von `upsertProfile`
+	// (backend/src/routers/users.ts) unangetastet gelassen, insbesondere
+	// `isPublic`: über FormData gelesen würde ein fehlendes Checkbox-Feld als
+	// explizites `false` ankommen und ein öffentliches Profil ungewollt privat
+	// stellen.
 	uploadAvatar: async ({ request, locals, url }) => {
 		try {
 			await locals.trpc.users.me.query();
@@ -50,6 +58,7 @@ export const actions: Actions = {
 				contentType: contentType as 'image/jpeg' | 'image/png',
 				buffer
 			});
+			await locals.trpc.users.updateMyProfile.mutate({ avatarS3Key: result.s3Key });
 			return { success: true, s3Key: result.s3Key };
 		} catch (err) {
 			return fail(400, {
@@ -58,9 +67,27 @@ export const actions: Actions = {
 		}
 	},
 
+	// Gegenstück zu uploadAvatar - entfernt ein bereits gesetztes Profilbild
+	// wieder (Button in PhotoUpload.svelte, siehe +page.svelte).
+	removeAvatar: async ({ locals, url }) => {
+		try {
+			await locals.trpc.users.me.query();
+		} catch {
+			redirect(302, `/auth/login?redirectTo=${encodeURIComponent(url.pathname)}`);
+		}
+
+		try {
+			await locals.trpc.users.removeAvatar.mutate();
+			return { success: true };
+		} catch (err) {
+			return fail(400, {
+				error: trpcErrorMessage(err, 'Profilbild konnte nicht entfernt werden.')
+			});
+		}
+	},
+
 	updateProfile: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const avatarS3Key = formData.get('avatarS3Key');
 		const raw = {
 			displayName: formData.get('displayName') || undefined,
 			websiteUrl: formData.get('websiteUrl') || undefined,
@@ -68,8 +95,7 @@ export const actions: Actions = {
 			facebookUrl: formData.get('facebookUrl') || undefined,
 			tiktokUrl: formData.get('tiktokUrl') || undefined,
 			bio: formData.get('bio') || undefined,
-			isPublic: formData.get('isPublic') === 'on',
-			...(avatarS3Key ? { avatarS3Key: String(avatarS3Key) } : {})
+			isPublic: formData.get('isPublic') === 'on'
 		};
 
 		const parsed = updateProfileInputSchema.safeParse(raw);

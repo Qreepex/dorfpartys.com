@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import '$lib/components/form-field.css';
 	import {
 		Button,
@@ -26,14 +27,14 @@
 	let form = $state(initialForm);
 	let verificationCode = $state<string | null>(null);
 	let showVerificationCode = $state(false);
-	let uploadedAvatarS3Key = $state<string | null>(null);
 
 	// Speichern ist erst aktiv, sobald tatsächlich etwas geändert wurde (kein
 	// versehentliches Absenden eines unveränderten Formulars) - `oninput`/
 	// `onchange` auf dem Formular selbst (Event-Delegation) reicht für alle
-	// Text-/Toggle-Felder, ohne jedes einzeln binden zu müssen. Der
-	// Avatar-Upload läuft separat (eigene Action, kein natives Change-Event
-	// auf dem Hauptformular) und setzt `dirty` daher explizit selbst.
+	// Text-/Toggle-Felder, ohne jedes einzeln binden zu müssen. Das Profilbild
+	// ist davon ausgenommen: der Avatar-Upload persistiert sich selbst sofort
+	// (eigene Action, siehe uploadAvatar in +page.server.ts), braucht also
+	// keinen zusätzlichen Klick auf "Speichern".
 	let dirty = $state(false);
 	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
 	let feedbackDismissed = $state(false);
@@ -167,7 +168,6 @@
 		oninput={() => (dirty = true)}
 		onchange={() => (dirty = true)}
 	>
-		<input type="hidden" name="avatarS3Key" value={uploadedAvatarS3Key ?? ''} />
 		<FormGrid>
 			<div class="sm:col-span-full">
 				<PhotoUpload
@@ -179,9 +179,9 @@
 					maxDimension={MAX_AVATAR_DIMENSION}
 					currentImageUrl={data.profile?.avatarUrl ?? null}
 					helpText="JPG oder PNG. Wird automatisch auf {MAX_AVATAR_DIMENSION}×{MAX_AVATAR_DIMENSION} zugeschnitten und skaliert."
-					onUploadComplete={(s3Key) => {
-						uploadedAvatarS3Key = s3Key;
-						dirty = true;
+					onRemove={async () => {
+						const outcome = await callAction(`${page.url.pathname}?/removeAvatar`, new FormData());
+						return { ok: outcome.ok, error: outcome.error };
 					}}
 				/>
 			</div>

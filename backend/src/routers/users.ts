@@ -5,6 +5,7 @@ import {
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ilike, inArray, isNull } from "drizzle-orm";
+import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
 import {
@@ -20,7 +21,11 @@ import {
 import { sanitizeText } from "../sanitization/index.js";
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
 import { isSlugAvailable, validateSlugFormat } from "../slug/validation.js";
-import { buildPublicStorageUrl, deleteS3Object } from "../storage/index.js";
+import {
+  buildPublicStorageUrl,
+  confirmUpload,
+  deleteS3Object,
+} from "../storage/index.js";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc.js";
 import {
   generateVerificationCode,
@@ -38,6 +43,7 @@ async function upsertProfile(
   db: Database,
   userId: string,
   profileFields: Omit<UpdateProfileInput, "links">,
+  log: FastifyBaseLogger,
 ) {
   // Sanitiere Textfelder
   const sanitized = {
@@ -55,13 +61,20 @@ async function upsertProfile(
       .from(userProfile)
       .where(eq(userProfile.userId, userId));
     // Alter Avatar-Key wird aktiv aus S3 entfernt - keine verwaisten
-    // öffentlichen Dateien (AGENTS.md 7.1).
+    // öffentlichen Dateien (AGENTS.md 7.1). `deleteS3Object` ist bewusst
+    // best-effort (siehe dort) - ein Fehler hier (z.B. fehlende
+    // `s3:DeleteObject`-Berechtigung) darf das eigentliche Setzen des neuen
+    // Avatars unten nicht verhindern.
     if (
       existing?.avatarS3Key &&
       existing.avatarS3Key !== sanitized.avatarS3Key
     ) {
-      await deleteS3Object(existing.avatarS3Key);
+      await deleteS3Object(existing.avatarS3Key, log);
     }
+
+    // Jetzt an ein echtes Profil angehängt - nicht mehr "pending", der Sweep
+    // (backend/src/index.ts) darf ihn nicht mehr löschen.
+    await confirmUpload(db, sanitized.avatarS3Key);
   }
 
   let slugUpdate: { slug: string } | Record<string, never> = {};
@@ -407,7 +420,7 @@ export const usersRouter = router({
         }
       }
 
-      await upsertProfile(ctx.db, ctx.user.id, profileFields);
+      await upsertProfile(ctx.db, ctx.user.id, profileFields, ctx.req.log);
 
       if (links) {
         await ctx.db.delete(userLink).where(eq(userLink.userId, ctx.user.id));
@@ -426,6 +439,36 @@ export const usersRouter = router({
       return { userId: ctx.user.id };
     }),
 
+  // Entfernt das Profilbild wieder (Gegenstück zum Upload, siehe
+  // uploads.uploadAvatarPhoto) - eigene, schlanke Mutation statt einer
+  // dritten Bedeutung von `avatarS3Key` in `updateMyProfile`
+  // (undefined = unverändert lassen, string = setzen), das würde ein
+  // `null` für "aktiv entfernen" brauchen und `upsertProfile`s
+  // Skip-wenn-undefined-Semantik verkomplizieren.
+  removeAvatar: protectedProcedure.mutation(async ({ ctx }) => {
+    const [existing] = await ctx.db
+      .select({ avatarS3Key: userProfile.avatarS3Key })
+      .from(userProfile)
+      .where(eq(userProfile.userId, ctx.user.id));
+
+    if (!existing?.avatarS3Key) {
+      return { userId: ctx.user.id };
+    }
+
+    // Best-effort (siehe deleteS3Object) - selbst wenn das Löschen in S3
+    // fehlschlägt (z.B. fehlende Berechtigung), wird der Verweis in der DB
+    // trotzdem entfernt, damit das Profil nicht auf eine kaputte/verwaiste
+    // Datei zeigt.
+    await deleteS3Object(existing.avatarS3Key, ctx.req.log);
+
+    await ctx.db
+      .update(userProfile)
+      .set({ avatarS3Key: null, updatedAt: new Date() })
+      .where(eq(userProfile.userId, ctx.user.id));
+
+    return { userId: ctx.user.id };
+  }),
+
   // Registrierungs-Multi-Step-Formular nach dem ersten Authentik-Login
   // (AGENTS.md Abschnitt 5) - legt den Anzeigenamen/Veranstalter-Profil an
   // und markiert das Onboarding als abgeschlossen.
@@ -433,7 +476,7 @@ export const usersRouter = router({
     .input(completeOnboardingInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { inviteCode, ...profileFields } = input;
-      await upsertProfile(ctx.db, ctx.user.id, profileFields);
+      await upsertProfile(ctx.db, ctx.user.id, profileFields, ctx.req.log);
       await ctx.db
         .update(user)
         .set({ onboardingCompletedAt: new Date() })
