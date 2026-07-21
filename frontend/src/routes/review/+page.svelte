@@ -98,7 +98,8 @@
 							{#if event.photos.length > 0}
 								<div class="mt-2 grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2">
 									{#each event.photos as photo (photo.id)}
-										<a href={photo.url} target="_blank" rel="noopener noreferrer">
+										<!-- rel="external": S3-Objekt-URL (speicher.dorfpartys.com), kein interner Route -->
+										<a href={photo.url} target="_blank" rel="external noopener noreferrer">
 											<img
 												class="aspect-4/3 w-full border border-border object-cover"
 												src={photo.url}
@@ -119,11 +120,12 @@
 								<ul class="mt-2 flex flex-wrap gap-2">
 									{#each event.links as link (link.id)}
 										<li>
+											<!-- rel="external": externe, vom Veranstalter gepflegte URL -->
 											<a
 												class="inline-block border border-border px-3 py-1.5 text-[0.85rem] text-text no-underline hover:border-primary hover:text-primary"
 												href={link.url}
 												target="_blank"
-												rel="noopener noreferrer ugc">{link.label}</a
+												rel="external noopener noreferrer ugc">{link.label}</a
 											>
 										</li>
 									{/each}

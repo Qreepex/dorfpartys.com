@@ -3,6 +3,7 @@
 	import { Breadcrumbs, EventList, LegalDisclaimer, ShareButton } from '$lib/components/index.js';
 	import NavTree from '$lib/components/NavTree.svelte';
 	import { jsonLdScriptTag, robotsContent } from '$lib/seo.js';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import {
 		SITE_URL,
 		buildEventUrl,
@@ -41,8 +42,8 @@
 			};
 
 		const now = new Date();
-		const futureGroups = new Map<string, MonthBucket>();
-		const archiveGroups = new Map<string, MonthBucket>();
+		const futureGroups = new SvelteMap<string, MonthBucket>();
+		const archiveGroups = new SvelteMap<string, MonthBucket>();
 		const dateless: NonNullable<typeof result>['results'] = [];
 
 		for (const event of result.results) {
@@ -75,20 +76,27 @@
 	// zeigt der Badge dorthin (Archiv-Überschriften bekommen ein "archiv-"-Präfix in der Id, damit
 	// z.B. "August" (kommend) und "August" (archiviert, gleiches Jahr) nie dieselbe Fragment-Id
 	// teilen).
+	// `fragmentId` (statt eines fertigen `href`-Strings): das Fragment ist eine
+	// reine Same-Page-Anker-Navigation ohne SvelteKit-Route dahinter - im Markup
+	// unten als `href="#{badge.fragmentId}"` (literales `#`-Präfix + Ausdruck)
+	// zusammengesetzt, damit svelte/no-navigation-without-resolve das als
+	// Fragment-Link erkennt (siehe `allowFragment`/`expressionStartsWith` in der
+	// Regel - die greift nur, wenn das führende `#` als eigenes Literal im
+	// Attribut steht, nicht wenn es Teil eines bereits fertigen String-Werts ist).
 	const monthBadges = $derived.by(() => {
-		const badges: Array<{ slug: string; label: string; href: string }> = [];
-		const seen = new Set<string>();
+		const badges: Array<{ slug: string; label: string; fragmentId: string }> = [];
+		const seen = new SvelteSet<string>();
 		for (const bucket of eventsByMonth.future) {
-			badges.push({ slug: bucket.slug, label: bucket.label, href: `#${bucket.slug}` });
+			badges.push({ slug: bucket.slug, label: bucket.label, fragmentId: bucket.slug });
 			seen.add(bucket.slug);
 		}
 		for (const bucket of eventsByMonth.archive) {
 			if (seen.has(bucket.slug)) continue;
-			badges.push({ slug: bucket.slug, label: bucket.label, href: `#archiv-${bucket.slug}` });
+			badges.push({ slug: bucket.slug, label: bucket.label, fragmentId: `archiv-${bucket.slug}` });
 			seen.add(bucket.slug);
 		}
 		if (eventsByMonth.dateless.length > 0) {
-			badges.push({ slug: 'ohne-termin', label: 'Ohne Termin', href: '#ohne-termin' });
+			badges.push({ slug: 'ohne-termin', label: 'Ohne Termin', fragmentId: 'ohne-termin' });
 		}
 		return badges;
 	});
@@ -240,9 +248,9 @@
 			<!-- Month badge filter (scrolls to matching section) -->
 			{#if monthBadges.length > 0}
 				<nav class="mb-8 flex flex-wrap gap-2" aria-label="Monatlicher Filter">
-					{#each monthBadges as badge (badge.href)}
+					{#each monthBadges as badge (badge.fragmentId)}
 						<a
-							href={badge.href}
+							href="#{badge.fragmentId}"
 							class="hover:bg-accent inline-block rounded-full border border-border px-3 py-1 text-sm transition-colors"
 						>
 							{badge.label}
@@ -297,7 +305,7 @@
 			{#if result.results.length === 0}
 				<p class="mt-6 text-muted">
 					<strong class="text-text">Deine Party fehlt hier?</strong>
-					<a class="text-primary" href={`${resolve('/veranstaltung-eintragen')}#formular`}
+					<a class="text-primary" href={resolve('/veranstaltung-eintragen#formular')}
 						>Trag sie in 2 Minuten ein</a
 					>
 					- dann bist du die Nummer 1 auf dieser Seite.

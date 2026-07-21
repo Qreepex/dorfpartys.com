@@ -1,7 +1,9 @@
 <script lang="ts">
+	import type { ResolvedPathname } from '$app/types';
+
 	interface Crumb {
 		name: string;
-		href: string;
+		href: ResolvedPathname;
 	}
 
 	interface Props {

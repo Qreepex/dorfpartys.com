@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import type { ResolvedPathname } from '$app/types';
 	import Button from '$lib/components/Button.svelte';
 	import { DropdownSelect, EventList, FaqList } from '$lib/components/index.js';
 	import { FAQ_ENTRIES } from '$lib/content/faq.js';
@@ -17,6 +18,19 @@
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
+
+	/**
+	 * `buildCountryRootUrl`/`buildFilterUrl` (`@dorfpartys/shared`) sind bewusst
+	 * framework-unabhängige, reine Funktionen (AGENTS.md 0/1.8) - dieselben
+	 * Funktionen erzeugen auch im Backend die Sitemap-URLs, dürfen also nicht
+	 * von SvelteKits `resolve()` abhängen. Sie bauen exakt die Pfade, die die
+	 * Catch-all-Route `/[country]/[...segments]` bedient (siehe Resolver-Tests
+	 * im Backend) - der Cast ist hier sicher, weil URL-Builder und Route
+	 * bewusst synchron gehalten werden.
+	 */
+	function asResolved(pathname: string): ResolvedPathname {
+		return pathname as ResolvedPathname;
+	}
 
 	const COUNTRY_LABELS: Record<Country, string> = {
 		de: 'Deutschland',
@@ -42,7 +56,7 @@
 	 * um Svelte-Reactivity-Lint-Regeln nicht zu verletzen - `page.url.searchParams`
 	 * wird nur gelesen, nicht mutiert.
 	 */
-	function buildHomeHref(overrides: Record<string, string | null>): string {
+	function buildHomeHref(overrides: Record<string, string | null>): ResolvedPathname {
 		const merged: Record<string, string> = Object.fromEntries(page.url.searchParams);
 		for (const [key, value] of Object.entries(overrides)) {
 			if (value === null) {
@@ -54,7 +68,7 @@
 		const qs = Object.entries(merged)
 			.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
 			.join('&');
-		return qs ? `/?${qs}` : '/';
+		return qs ? resolve(`/?${qs}`) : resolve('/');
 	}
 
 	// Land-Toggle (löst den alten Navbar-Toggle ab - hier hat er tatsächlich
@@ -81,7 +95,7 @@
 	const homeHref = $derived(buildHomeHref({ alle: null }));
 	const allCountriesHref = $derived(buildHomeHref({ alle: '1' }));
 	// `#formular` scrollt beim Ankommen direkt zum Formular (Teil C.3).
-	const veranstaltungEintragenHref = `${resolve('/veranstaltung-eintragen')}`;
+	const veranstaltungEintragenHref = resolve('/veranstaltung-eintragen#formular');
 	const faqHref = resolve('/faq');
 
 	function handleSearch(event: SubmitEvent) {
@@ -117,7 +131,7 @@
 	const countryEntries = COUNTRIES.map((c) => ({
 		code: c,
 		label: COUNTRY_LABELS[c],
-		href: buildCountryRootUrl(c)
+		href: asResolved(buildCountryRootUrl(c))
 	}));
 
 	const websiteJsonLd = {
@@ -354,7 +368,7 @@
 			<h2>Regionen in {COUNTRY_LABELS[country]}</h2>
 			<a
 				class="text-[0.85rem] text-primary no-underline hover:underline"
-				href={buildCountryRootUrl(country)}
+				href={asResolved(buildCountryRootUrl(country))}
 			>
 				Ganz {COUNTRY_LABELS[country]} ohne Filter ansehen
 			</a>
@@ -368,7 +382,7 @@
 				<li>
 					<a
 						class="text-[0.9rem] text-text no-underline hover:text-primary hover:underline"
-						href={buildFilterUrl(country, { bundeslandSlug: bl.slug })}
+						href={asResolved(buildFilterUrl(country, { bundeslandSlug: bl.slug }))}
 					>
 						{bl.name}
 					</a>
@@ -387,9 +401,11 @@
 				<li>
 					<a
 						class="inline-block border border-border px-4 py-2 text-[0.9rem] text-text no-underline hover:border-primary hover:text-primary"
-						href={buildFilterUrl(country, {
-							artSlug: art.slug
-						})}
+						href={asResolved(
+							buildFilterUrl(country, {
+								artSlug: art.slug
+							})
+						)}
 					>
 						{art.name}
 					</a>
@@ -418,9 +434,8 @@
 			<p class="mb-6 text-[0.9rem] text-muted">
 				Noch keine Termine{#if !data.showAllCountries}
 					in {COUNTRY_LABELS[country]}{/if}?
-				<a class="text-primary" href={`${veranstaltungEintragenHref}#formular`}
-					>Trag die erste Party ein</a
-				> - dauert 2 Minuten.
+				<a class="text-primary" href={veranstaltungEintragenHref}>Trag die erste Party ein</a> - dauert
+				2 Minuten.
 			</p>
 		{:else}
 			<p class="mb-6 text-[0.9rem] text-muted">{data.upcoming.length} kommende Termine</p>
@@ -470,9 +485,7 @@
 				Veranstaltungen an einem Ort - praktisch für Vereine mit wiederkehrenden Festen.
 			</li>
 		</ul>
-		<Button href={`${veranstaltungEintragenHref}#formular`} class="mt-6"
-			>Jetzt Event eintragen</Button
-		>
+		<Button href={veranstaltungEintragenHref} class="mt-6">Jetzt Event eintragen</Button>
 	</section>
 
 	<section class="mt-16">

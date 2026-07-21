@@ -40,7 +40,7 @@
 	<p class="mt-10 text-muted">
 		Noch Fragen offen? Schau dir <a class="text-primary" href={resolve('/')}>die Startseite</a>
 		an oder
-		<a class="text-primary" href={`${resolve('/veranstaltung-eintragen')}#formular`}
+		<a class="text-primary" href={resolve('/veranstaltung-eintragen#formular')}
 			>trag direkt deine Veranstaltung ein</a
 		>.
 	</p>

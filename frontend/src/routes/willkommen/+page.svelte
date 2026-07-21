@@ -12,6 +12,11 @@
 	let bio = $state('');
 	let websiteUrl = $state('');
 	let instagramUrl = $state('');
+	// Einmalige Vorbefüllung eines frei editierbaren Textfelds (Nutzer kann den
+	// vorgeschlagenen Code jederzeit überschreiben) - kein `$derived`, da das
+	// sonst jede Eingabe der Person wieder mit dem Prop-Wert überschreiben
+	// würde, sobald `data` sich referenziell ändert.
+	// svelte-ignore state_referenced_locally
 	let inviteCode = $state(data.prefillInviteCode ?? '');
 
 	const canContinueFromStep1 = $derived(displayName.trim().length > 0);

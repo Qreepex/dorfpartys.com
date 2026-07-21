@@ -30,10 +30,10 @@
 	// (`url.searchParams.get('id')`), analog zum Link aus /meine-veranstaltungen.
 	// `#formular` scrollt direkt zum Formular (Teil C.3 der Submission-Flow-Vereinfachung).
 	const editHref = $derived(
-		`${resolve('/veranstaltung-eintragen')}?id=${encodeURIComponent(event.id)}#formular`
+		resolve(`/veranstaltung-eintragen?id=${encodeURIComponent(event.id)}#formular`)
 	);
 	const loginHref = $derived(
-		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
+		resolve(`/auth/login?redirectTo=${encodeURIComponent(page.url.pathname)}`)
 	);
 
 	let showClaimForm = $state(false);
@@ -211,12 +211,15 @@
 			<ul class="mb-6 flex flex-wrap gap-3">
 				{#each event.links as link (link.id)}
 					<li>
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, vom Veranstalter gepflegte URL, kein interner Route -->
+						<!-- `rel="external"` markiert die URL bewusst als externes, vom
+						     Veranstalter gepflegtes Ziel (kein interner Route, daher kein
+						     resolve() nötig) - vom `hasRelExternal`-Check der
+						     svelte/no-navigation-without-resolve-Regel erkannt. -->
 						<a
 							class="inline-flex items-center gap-2 border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
 							href={link.url}
 							target="_blank"
-							rel="noopener noreferrer ugc"
+							rel="external noopener noreferrer ugc"
 						>
 							<LinkTypeIcon type={detectEventLinkType(link.url)} />
 							{link.label}</a
@@ -309,7 +312,7 @@
 								minute: '2-digit'
 							})}
 							{#if event.endDate}
-								{'–'}
+								–
 								{new Date(event.endDate).toLocaleString('de-DE', {
 									day: '2-digit',
 									month: 'long',

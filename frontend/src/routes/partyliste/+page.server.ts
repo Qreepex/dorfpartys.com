@@ -1,5 +1,6 @@
 import { requireUser } from '$lib/server/require-auth.js';
 import { error, redirect } from '@sveltejs/kit';
+import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -21,15 +22,18 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	delete: async ({ request, locals, url }) => {
+	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const eventId = String(formData.get('eventId') ?? '');
 		if (eventId) {
 			try {
 				await locals.trpc.events.delete.mutate({ id: eventId });
-			} catch (err: any) {
-				if (err?.code === 'BAD_REQUEST') {
-					return { error: err.message };
+			} catch (err) {
+				if (err instanceof TRPCClientError) {
+					const code = (err.data as { code?: string } | null)?.code;
+					if (code === 'BAD_REQUEST') {
+						return { error: err.message };
+					}
 				}
 				throw error(500, 'Event konnte nicht gelöscht werden');
 			}
@@ -37,7 +41,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	edit: async ({ request, locals, url }) => {
+	edit: async ({ request }) => {
 		const formData = await request.formData();
 		const eventId = String(formData.get('eventId') ?? '');
 		if (eventId) {

@@ -24,7 +24,7 @@
 		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
 			try {
 				await navigator.share({ title, text, url: shareUrl });
-			} catch (error) {
+			} catch {
 				// Nutzer:in hat den nativen Share-Dialog abgebrochen (AbortError) - das ist
 				// eine bewusste Nutzeraktion, kein Fehlerzustand, daher kein UI-Feedback.
 				// Andere Fehler (z.B. fehlende Berechtigung) werden ebenfalls still

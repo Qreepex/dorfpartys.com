@@ -20,6 +20,11 @@
 
 	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
 
+	// Bewusster Einmal-Snapshot, keine `$derived`: `form` wird danach lokal
+	// verwaltet (handleSubmit setzt es direkt nach dem fetch-basierten
+	// Submit, siehe unten) und beim Zurücksetzen (resetForm) nicht mehr über
+	// den Prop bezogen.
+	// svelte-ignore state_referenced_locally
 	let form = $state(initialForm);
 	let submitStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
 	// Großes, kaum zu übersehendes Feedback-Banner nach dem Absenden (Teil E) -
@@ -40,6 +45,7 @@
 	// Beschreibung, Datum, ...) zu verlieren - diese hängen alle an eigenem
 	// $state, nicht an `data`, aber ein Re-Render/Remount soll trotzdem
 	// ausgeschlossen sein.
+	// svelte-ignore state_referenced_locally
 	let isProfilePublic = $state(data.isProfilePublic);
 
 	async function handleSubmit(event: SubmitEvent) {
@@ -78,7 +84,9 @@
 	// Submission-Flow-Vereinfachung) - der Fragment-Teil wird vom
 	// `redirect()`-Aufruf in auth/callback/+server.ts unverändert durchgereicht.
 	const loginHref = $derived(
-		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search + '#formular')}`
+		resolve(
+			`/auth/login?redirectTo=${encodeURIComponent(page.url.pathname + page.url.search + '#formular')}`
+		)
 	);
 
 	// Bearbeiten-Modus: /veranstaltung-eintragen?id=... (Link aus
@@ -86,6 +94,15 @@
 	// im Load (+page.server.ts). Alle Felder unten werden daraus vorbefüllt -
 	// derselbe Formular-Markup wie beim Neuanlegen, siehe TODO.md "Das
 	// Bearbeiten von Veranstaltungen ist noch nicht möglich...".
+	// Bewusst EIN Snapshot bei Mount, kein `$derived`: sämtliche Formularfelder
+	// weiter unten (title, description, organizerMode, ...) werden ebenfalls
+	// nur einmalig aus `editingEvent` vorbefüllt und danach rein lokal
+	// bearbeitet - ein `$derived` hier allein würde diese Konsistenz brechen
+	// (Kopfzeile/Hidden-Inputs würden bei einer `data`-Änderung plötzlich ein
+	// anderes Event zeigen als die editierbaren Felder). Ein Wechsel des
+	// bearbeiteten Events erfordert daher wie vorgesehen einen vollen Reload
+	// dieser Seite (neuer `?id=`-Link von /meine-veranstaltungen aus).
+	// svelte-ignore state_referenced_locally
 	const editingEvent = data.editingEvent;
 	const isEditing = !!editingEvent;
 
@@ -162,6 +179,11 @@
 	// "myself" wenn der aktuelle Nutzer schon der hinterlegte Veranstalter ist,
 	// sonst "profile" (fremdes/Ghost-Profil, Anzeigename kommt vom Backend via
 	// `organizerDisplayName`, siehe events.getForEdit) oder "freetext".
+	// Bewusster Einmal-Snapshot (wie editingEvent oben): `organizerMode` ist
+	// danach frei per RadioGroup umschaltbar, `data.currentUserId` ändert sich
+	// ohnehin nicht während die Seite gemountet ist (Identität des
+	// eingeloggten Nutzers wechselt nicht zur Laufzeit).
+	// svelte-ignore state_referenced_locally
 	let organizerMode = $state<'myself' | 'profile' | 'freetext'>(
 		editingEvent
 			? editingEvent.organizerUserId === data.currentUserId
@@ -171,6 +193,7 @@
 					: 'freetext'
 			: 'myself'
 	);
+	// svelte-ignore state_referenced_locally
 	let organizerUserId = $state(
 		editingEvent && editingEvent.organizerUserId !== data.currentUserId
 			? (editingEvent.organizerUserId ?? '')
@@ -190,6 +213,11 @@
 	let organizerSearchQuery = $state('');
 	let organizerSearchResults = $state<OrganizerSearchResult[]>([]);
 	let organizerSearchLoading = $state(false);
+	// Bewusster Einmal-Snapshot: wird danach ausschließlich manuell gepflegt
+	// über selectOrganizer()/clearOrganizerSelection() unten, nicht automatisch
+	// aus `organizerMode` neu abgeleitet (sonst würde ein Zurückschalten auf
+	// "profile" den zuvor gewählten Anzeigenamen verlieren).
+	// svelte-ignore state_referenced_locally
 	let organizerSelectedLabel = $state(
 		organizerMode === 'profile' ? (editingEvent?.organizerDisplayName ?? 'Unbenannt') : ''
 	);
@@ -989,8 +1017,9 @@
 	</p>
 	<ul class="mb-4 list-disc space-y-1 pl-5 text-sm text-muted">
 		<li>
-			Dein Anzeigename, Profilbild und deine Bio sind für alle unter deiner Veranstalter-Seite
-			(<code>/veranstalter/…</code>) sichtbar.
+			Dein Anzeigename, Profilbild und deine Bio sind für alle unter deiner Veranstalter-Seite (<code
+				>/veranstalter/…</code
+			>) sichtbar.
 		</li>
 		<li>
 			Du wirst als Veranstalter auf diesem und künftigen Events angezeigt, die du unter deinem

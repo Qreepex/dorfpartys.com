@@ -13,7 +13,7 @@
 	let past = $derived(data.past);
 
 	const loginHref = $derived(
-		`${resolve('/auth/login')}?redirectTo=${encodeURIComponent(page.url.pathname)}`
+		resolve(`/auth/login?redirectTo=${encodeURIComponent(page.url.pathname)}`)
 	);
 	let showClaimForm = $state(false);
 	let claimReason = $state('');
@@ -140,34 +140,36 @@
 		<ul class="mb-8 flex flex-wrap gap-3">
 			{#if profile.websiteUrl}
 				<li>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
+					<!-- `rel="external"` markiert die URL bewusst als externes, selbst
+					     gepflegtes Ziel (kein interner Route, daher kein resolve() nötig) -
+					     vom `hasRelExternal`-Check der svelte/no-navigation-without-resolve-Regel erkannt. -->
 					<a
 						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
 						href={profile.websiteUrl}
 						target="_blank"
-						rel="noopener noreferrer ugc">Website</a
+						rel="external noopener noreferrer ugc">Website</a
 					>
 				</li>
 			{/if}
 			{#if profile.instagramUrl}
 				<li>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
+					<!-- rel="external", s.o. -->
 					<a
 						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
 						href={profile.instagramUrl}
 						target="_blank"
-						rel="noopener noreferrer ugc">Instagram</a
+						rel="external noopener noreferrer ugc">Instagram</a
 					>
 				</li>
 			{/if}
 			{#each links as link (link.id)}
 				<li>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
+					<!-- rel="external", s.o. -->
 					<a
 						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
 						href={link.url}
 						target="_blank"
-						rel="noopener noreferrer ugc">{link.label}</a
+						rel="external noopener noreferrer ugc">{link.label}</a
 					>
 				</li>
 			{/each}

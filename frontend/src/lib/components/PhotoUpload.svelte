@@ -202,7 +202,9 @@
 				{/if}
 			</button>
 			<p class="mt-2 text-sm text-muted">
-				JPG oder PNG, max. {maxSizeBytes ? (maxSizeBytes / (1024 * 1024)).toFixed(0) : MAX_IMAGE_SIZE_MB}MB
+				JPG oder PNG, max. {maxSizeBytes
+					? (maxSizeBytes / (1024 * 1024)).toFixed(0)
+					: MAX_IMAGE_SIZE_MB}MB
 			</p>
 			{#if helpText}
 				<p class="mt-1 text-xs text-muted">{helpText}</p>

@@ -31,8 +31,7 @@
 <main class="mx-auto max-w-[90ch]">
 	<div class="header-row">
 		<h1>Meine Veranstaltungen</h1>
-		<Button href={`${resolve('/veranstaltung-eintragen')}#formular`}
-			>Neue Veranstaltung erstellen</Button
+		<Button href={resolve('/veranstaltung-eintragen#formular')}>Neue Veranstaltung erstellen</Button
 		>
 	</div>
 
@@ -74,7 +73,7 @@
 						{/if}
 						<a
 							class="action-link"
-							href={`${resolve(`/veranstaltung-eintragen?id=${encodeURIComponent(event.id)}`)}#formular`}
+							href={resolve(`/veranstaltung-eintragen?id=${encodeURIComponent(event.id)}#formular`)}
 						>
 							Bearbeiten
 						</a>

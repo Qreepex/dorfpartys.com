@@ -96,7 +96,11 @@
 	}
 
 	button {
-		transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out, border 0.15s ease-in-out;
+		transition:
+			background-color 0.15s ease-in-out,
+			color 0.15s ease-in-out,
+			border-color 0.15s ease-in-out,
+			border 0.15s ease-in-out;
 		cursor: pointer;
 	}
 }

@@ -1,5 +1,6 @@
 import { requireUser } from '$lib/server/require-auth.js';
 import { error } from '@sveltejs/kit';
+import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
 
 // Persönliche Übersicht aller selbst eingereichten Veranstaltungen (Navbar-
@@ -20,9 +21,13 @@ export const actions: Actions = {
 		if (eventId) {
 			try {
 				await locals.trpc.events.delete.mutate({ id: eventId });
-			} catch (err: any) {
-				if (err?.code === 'BAD_REQUEST' || err?.code === 'FORBIDDEN') {
-					return { error: err.message ?? 'Event konnte nicht gelöscht werden' };
+			} catch (err) {
+				const code =
+					err instanceof TRPCClientError ? (err.data as { code?: string } | null)?.code : undefined;
+				if (code === 'BAD_REQUEST' || code === 'FORBIDDEN') {
+					return {
+						error: err instanceof Error ? err.message : 'Event konnte nicht gelöscht werden'
+					};
 				}
 				throw error(500, 'Event konnte nicht gelöscht werden');
 			}

@@ -15,6 +15,14 @@
 	import type { ActionData, PageData } from './$types.js';
 
 	let { data, form: initialForm }: { data: PageData; form: ActionData } = $props();
+	// Bewusster Einmal-Snapshot, keine `$derived`: `form` wird danach lokal
+	// verwaltet (handleProfileSubmit setzt es direkt nach dem fetch-basierten
+	// Submit, siehe unten). Die übrigen Forms auf dieser Seite
+	// (confirmNomination/rejectNomination/requestVerification) sind normale
+	// POST-Forms ohne `use:enhance` und lösen daher einen vollen
+	// Seiten-Reload (= Remount, frischer Prop-Wert) aus - `initialForm` ist
+	// also bei jedem Mount bereits aktuell.
+	// svelte-ignore state_referenced_locally
 	let form = $state(initialForm);
 	let verificationCode = $state<string | null>(null);
 	let showVerificationCode = $state(false);
@@ -319,8 +327,8 @@
 						<p class="text-sm text-text">
 							Sende diesen Code an <strong>@dorfpartys</strong> auf
 							<strong>Instagram</strong> oder <strong>TikTok</strong>, oder schreib eine E-Mail an
-							<a href="mailto:verifizierung@dorfpartys.com">verifizierung@dorfpartys.com</a> (von
-							einer der oben hinterlegten Adressen).
+							<a href="mailto:verifizierung@dorfpartys.com">verifizierung@dorfpartys.com</a> (von einer
+							der oben hinterlegten Adressen).
 						</p>
 					</div>
 				{/if}
@@ -333,10 +341,13 @@
 		<ul class="mt-3 flex flex-wrap gap-3">
 			{#each data.links as link (link.id)}
 				<li>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- externe, selbst gepflegte URL, kein interner Route -->
+					<!-- `rel="external"` markiert die URL bewusst als externes, selbst
+					     gepflegtes Ziel (kein interner Route, daher kein resolve() nötig) -
+					     vom `hasRelExternal`-Check der svelte/no-navigation-without-resolve-Regel erkannt. -->
 					<a
 						class="inline-block border border-border px-3.5 py-2 text-text no-underline hover:border-primary hover:text-primary"
-						href={link.url}>{link.label}</a
+						href={link.url}
+						rel="external">{link.label}</a
 					>
 				</li>
 			{/each}

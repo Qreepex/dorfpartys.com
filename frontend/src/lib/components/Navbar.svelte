@@ -91,7 +91,7 @@
 			{#if user}
 				<a
 					class="text-muted no-underline hover:text-text"
-					href={`${resolve('/veranstaltung-eintragen')}#formular`}
+					href={resolve('/veranstaltung-eintragen#formular')}
 				>
 					Event einreichen
 				</a>

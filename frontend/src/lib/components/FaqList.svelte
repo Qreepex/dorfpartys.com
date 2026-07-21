@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import type { FaqEntry, FaqLink } from '$lib/seo.js';
 
 	interface Props {
@@ -20,7 +21,7 @@
 	 * gemappt statt den href-String direkt an resolve() durchzureichen - bei
 	 * einer neuen internen Verlinkung in faq.ts einfach einen Case ergänzen.
 	 */
-	function resolveInternalHref(href: string): string {
+	function resolveInternalHref(href: string): ResolvedPathname {
 		switch (href) {
 			case '/veranstaltung-eintragen':
 				return resolve('/veranstaltung-eintragen');
@@ -29,7 +30,11 @@
 			case '/datenschutz':
 				return resolve('/datenschutz');
 			default:
-				return href;
+				// Unbekannter/zukünftiger Fall, der noch keinen eigenen Case oben hat
+				// (siehe Kommentar oben) - laut Konvention in faq.ts sind hier aktuell
+				// nur die drei obigen internen Ziele vorgesehen; der Cast dokumentiert
+				// diese Annahme, statt sie stillschweigend als `string` durchzureichen.
+				return href as ResolvedPathname;
 		}
 	}
 
@@ -91,7 +96,7 @@
 								class="text-primary underline"
 								href={segment.href}
 								target="_blank"
-								rel="noopener noreferrer">{segment.text}</a
+								rel="external noopener noreferrer">{segment.text}</a
 							>
 						{:else if segment.href}
 							<a class="text-primary underline" href={resolveInternalHref(segment.href)}

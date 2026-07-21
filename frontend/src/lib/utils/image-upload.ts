@@ -29,8 +29,7 @@ export interface OptimizeImageOptions {
 }
 
 export type OptimizeImageResult =
-	| { blob: Blob; type: 'image/jpeg' | 'image/png' }
-	| ImageProcessingError;
+	{ blob: Blob; type: 'image/jpeg' | 'image/png' } | ImageProcessingError;
 
 /**
  * Client-seitige Bildverarbeitung für UX (nicht für Sicherheit) - Resize,
@@ -75,7 +74,13 @@ export async function optimizeImage(
 					if (squareCrop) {
 						resolveSquareCrop(img, file, maxDimension, resolve);
 					} else {
-						resolveFit(img, file.type as 'image/jpeg' | 'image/png', maxDimension, maxSizeBytes, resolve);
+						resolveFit(
+							img,
+							file.type as 'image/jpeg' | 'image/png',
+							maxDimension,
+							maxSizeBytes,
+							resolve
+						);
 					}
 				} catch (err) {
 					resolve({

@@ -1,11 +1,15 @@
 <script lang="ts">
+	import type { ResolvedPathname } from '$app/types';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-	interface Props extends Omit<HTMLButtonAttributes & HTMLAnchorAttributes, 'type'> {
+	interface Props extends Omit<HTMLButtonAttributes & HTMLAnchorAttributes, 'type' | 'href'> {
 		variant?: 'primary' | 'secondary' | 'ghost';
 		type?: 'button' | 'submit' | 'reset';
-		href?: string;
+		// Typisiert auf SvelteKits `resolve()`-Ergebnis (statt generisch `string`) -
+		// Button wird ausschließlich für interne Navigation verwendet, nie für
+		// externe URLs (dafür gibt es reine `<a>`-Tags mit `rel="external"`).
+		href?: ResolvedPathname;
 		disabled?: boolean;
 		fullWidth?: boolean;
 		onclick?: (event: MouseEvent) => void;

@@ -26,24 +26,33 @@
 	}: Props = $props();
 
 	const uid = $props.id();
+	const errorId = `${uid}-error`;
 </script>
 
-<fieldset class="radio-group" class:disabled {disabled}>
+<!--
+	`aria-invalid` is only valid on roles that support it (see WAI-ARIA
+	role-support table linked in the a11y_role_supports_aria_props_implicit
+	warning) - the implicit role of a plain `<input type="radio">` is
+	`radio`, which does NOT support `aria-invalid`. The group's validation
+	state belongs on the group container instead, so this fieldset gets an
+	explicit `role="radiogroup"` (which DOES support `aria-invalid`) plus
+	`aria-describedby` pointing at the error message for screen readers.
+-->
+<fieldset
+	class="radio-group"
+	class:disabled
+	{disabled}
+	role="radiogroup"
+	aria-invalid={error ? 'true' : undefined}
+	aria-describedby={error ? errorId : undefined}
+>
 	{#if legend}
 		<legend class="field-label">{legend}{required ? ' *' : ''}</legend>
 	{/if}
 	<div class="radio-options">
 		{#each options as option (option.value)}
 			<label class="radio-item">
-				<input
-					type="radio"
-					{name}
-					value={option.value}
-					bind:group={value}
-					{required}
-					{disabled}
-					aria-invalid={error ? 'true' : undefined}
-				/>
+				<input type="radio" {name} value={option.value} bind:group={value} {required} {disabled} />
 				<span class="radio-control"></span>
 				<div class="radio-label">
 					<span class="radio-text">{option.label}</span>
@@ -55,7 +64,7 @@
 		{/each}
 	</div>
 	{#if error}
-		<p class="field-error">{error}</p>
+		<p id={errorId} class="field-error">{error}</p>
 	{/if}
 </fieldset>
 

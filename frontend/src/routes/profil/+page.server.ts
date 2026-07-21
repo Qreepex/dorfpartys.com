@@ -1,7 +1,16 @@
 import { requireUser } from '$lib/server/require-auth.js';
 import { updateProfileInputSchema } from '@dorfpartys/shared';
 import { fail, redirect } from '@sveltejs/kit';
+import { TRPCClientError } from '@trpc/client';
 import type { Actions, PageServerLoad } from './$types.js';
+
+// Liest die vom Backend gesetzte Fehlermeldung aus einem tRPC-Fehler aus
+// (analog `extractServerFieldErrors` in veranstaltung-eintragen/+page.server.ts),
+// statt den Fehler ungetypt als `any` zu behandeln.
+function trpcErrorMessage(err: unknown, fallback: string): string {
+	if (err instanceof TRPCClientError) return err.message || fallback;
+	return fallback;
+}
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals.trpc, url.pathname);
@@ -80,9 +89,9 @@ export const actions: Actions = {
 
 		try {
 			await locals.trpc.users.updateMyProfile.mutate(parsed.data);
-		} catch (error: any) {
+		} catch (err) {
 			return fail(400, {
-				profileError: error?.message || 'Profil konnte nicht gespeichert werden.'
+				profileError: trpcErrorMessage(err, 'Profil konnte nicht gespeichert werden.')
 			});
 		}
 		return { success: true };
@@ -92,9 +101,9 @@ export const actions: Actions = {
 		try {
 			const result = await locals.trpc.users.requestVerification.mutate();
 			return { verificationRequested: true, ...result };
-		} catch (error: any) {
+		} catch (err) {
 			return fail(400, {
-				verificationError: error?.message || 'Verifizierung konnte nicht angefordert werden.'
+				verificationError: trpcErrorMessage(err, 'Verifizierung konnte nicht angefordert werden.')
 			});
 		}
 	},
@@ -106,9 +115,9 @@ export const actions: Actions = {
 		const id = String(formData.get('id') ?? '');
 		try {
 			await locals.trpc.organizerNominations.confirm.mutate({ id });
-		} catch (error: any) {
+		} catch (err) {
 			return fail(400, {
-				nominationError: error?.message || 'Bestätigung fehlgeschlagen.'
+				nominationError: trpcErrorMessage(err, 'Bestätigung fehlgeschlagen.')
 			});
 		}
 		return { nominationHandled: true };
@@ -119,9 +128,9 @@ export const actions: Actions = {
 		const id = String(formData.get('id') ?? '');
 		try {
 			await locals.trpc.organizerNominations.reject.mutate({ id });
-		} catch (error: any) {
+		} catch (err) {
 			return fail(400, {
-				nominationError: error?.message || 'Ablehnen fehlgeschlagen.'
+				nominationError: trpcErrorMessage(err, 'Ablehnen fehlgeschlagen.')
 			});
 		}
 		return { nominationHandled: true };
