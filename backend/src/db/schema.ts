@@ -33,6 +33,11 @@ export const reportTypeEnum = pgEnum("report_type", [
   "netzdk",
   "netsperrer",
   "swisslaw",
+  // Veranstalter behauptet, die eigene Veranstaltung gefunden zu haben und
+  // möchte sie entfernt haben - keine automatische Löschung, echte
+  // Identitätsprüfung erfolgt außerhalb des Formulars (Instagram/E-Mail),
+  // siehe REPORT_TYPES in shared/src/schemas/reports.ts.
+  "own_event_takedown",
 ]);
 
 export const reportStatusEnum = pgEnum("report_status", [

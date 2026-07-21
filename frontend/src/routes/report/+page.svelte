@@ -96,6 +96,34 @@
 					{/if}
 				</div>
 
+				{#if selectedType === 'own_event_takedown'}
+					<div class="mb-6 border-l-4 border-primary bg-bg-alt p-4 sm:col-span-full">
+						<p class="text-sm font-semibold">
+							Wir nehmen das ernst und entfernen den Eintrag so schnell wie möglich, sobald die
+							Meldung bestätigt ist. Sollte Ihre Veranstaltung zu Unrecht hier gelandet sein,
+							entschuldigen wir uns für die Unannehmlichkeiten.
+						</p>
+						<p class="mt-3 text-sm">
+							Da über dieses Formular allein jede Person behaupten könnte, Veranstalter:in einer
+							beliebigen Party zu sein, reicht das Absenden dieses Berichts <strong
+								>nicht automatisch</strong
+							> zur Löschung aus. Bitte bestätigen Sie zusätzlich außerhalb dieses Formulars, dass
+							Sie wirklich der/die Veranstalter:in sind - entweder per kurzer Nachricht auf
+							<a
+								href="https://www.instagram.com/dorfpartys"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-primary underline">Instagram</a
+							>
+							oder per E-Mail an
+							<a href="mailto:report@dorfpartys.com" class="text-primary underline"
+								>report@dorfpartys.com</a
+							>, jeweils mit Bezug auf die betroffene Veranstaltung (z.B. Link/URL). Erst nach dieser
+							Bestätigung können wir den Eintrag entfernen.
+						</p>
+					</div>
+				{/if}
+
 				<DropdownSelect
 					label="Art des Inhalts"
 					name="subjectType"

@@ -7,14 +7,24 @@ export type ReportType =
   | "dsa"
   | "netzdk"
   | "netsperrer"
-  | "swisslaw";
+  | "swisslaw"
+  | "own_event_takedown";
 
 export type SubjectType = "event" | "user" | "profile";
 
 
 // Base schema for all reports
 const baseReportSchema = z.object({
-  type: z.enum(["normal", "dmca", "copyright", "dsa", "netzdk", "netsperrer", "swisslaw"]),
+  type: z.enum([
+    "normal",
+    "dmca",
+    "copyright",
+    "dsa",
+    "netzdk",
+    "netsperrer",
+    "swisslaw",
+    "own_event_takedown",
+  ]),
   subjectType: z.enum(["event", "user", "profile"]),
   subjectId: z.string().uuid().optional().nullable(),
   url: z.string().url().min(1, "URL is required"),
@@ -25,6 +35,17 @@ const baseReportSchema = z.object({
 // Normal report - no additional fields required
 export const normalReportSchema = baseReportSchema.extend({
   type: z.literal("normal"),
+  reporterEmail: z.string().email().optional(),
+  reporterName: z.string().optional(),
+});
+
+// "Das ist meine Veranstaltung" report - Veranstalter behauptet Inhaber der
+// Veranstaltung zu sein und möchte den Eintrag entfernt haben. Bewusst so
+// niedrigschwellig wie ein normaler Report gehalten (keine Pflichtfelder,
+// kein automatisches Löschen) - die eigentliche Identitätsprüfung erfolgt
+// außerhalb des Formulars über Instagram/E-Mail (siehe REPORT_TYPES unten).
+export const ownEventTakedownReportSchema = baseReportSchema.extend({
+  type: z.literal("own_event_takedown"),
   reporterEmail: z.string().email().optional(),
   reporterName: z.string().optional(),
 });
@@ -90,6 +111,7 @@ export const swissLawReportSchema = baseReportSchema.extend({
 // Discriminated union of all report types
 export const submitReportSchema = z.discriminatedUnion("type", [
   normalReportSchema,
+  ownEventTakedownReportSchema,
   dmcaReportSchema,
   copyrightReportSchema,
   dsaReportSchema,
@@ -100,6 +122,9 @@ export const submitReportSchema = z.discriminatedUnion("type", [
 
 export type SubmitReportInput = z.infer<typeof submitReportSchema>;
 export type NormalReportInput = z.infer<typeof normalReportSchema>;
+export type OwnEventTakedownReportInput = z.infer<
+  typeof ownEventTakedownReportSchema
+>;
 export type DMCAReportInput = z.infer<typeof dmcaReportSchema>;
 export type CopyrightReportInput = z.infer<typeof copyrightReportSchema>;
 export type DSAReportInput = z.infer<typeof dsaReportSchema>;
@@ -112,6 +137,13 @@ export const REPORT_TYPES = {
   normal: {
     label: "General Report",
     description: "Report spam, inappropriate content, or other violations",
+    requiresEmail: false,
+    countries: ["de", "at", "ch"],
+  },
+  own_event_takedown: {
+    label: "Das ist meine Veranstaltung – Entfernung beantragen",
+    description:
+      "Sie sind der Veranstalter und möchten, dass dieser Eintrag entfernt wird",
     requiresEmail: false,
     countries: ["de", "at", "ch"],
   },
