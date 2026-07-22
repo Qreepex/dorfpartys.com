@@ -35,9 +35,11 @@ const STATIC_PAGES = [
 /**
  * Bedient sitemap-pages.xml, sitemap-events.xml, sitemap-veranstalter.xml,
  * sitemap-{country}-orte.xml, sitemap-{country}-arten.xml,
- * sitemap-{country}-filter-combinations-level[1-4].xml und
- * sitemap-{country}-{bundesland}-level4.xml (AGENTS.md 1.8).
- * Filter-Kombinationen werden auf 4 Komplexitätslevel + pro-Bundesland aufgeteilt.
+ * sitemap-{country}-filter-combinations-level2.xml und
+ * sitemap-{country}-{bundesland}-level3.xml (AGENTS.md 1.8).
+ * Single-Filter-URLs (BL only, Art only) liefern ausschließlich orte.xml/
+ * arten.xml aus - eine eigene level1-Sitemap gab es früher, war aber
+ * deckungsgleich damit und wurde entfernt.
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const rest = params.rest;
@@ -81,8 +83,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
 	}
 
-	// Two- and three-filter combinations at country level
-	const match = /^(de|at|ch)-(orte|arten|filter-combinations-level[1-2])$/.exec(rest);
+	// Two-filter combinations at country level
+	const match = /^(de|at|ch)-(orte|arten|filter-combinations-level2)$/.exec(rest);
 	if (!match) {
 		error(404);
 	}
@@ -98,13 +100,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	if (kind === 'arten') {
 		const entries = await locals.trpc.sitemap.arten.query({ country: countrySegment });
-		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
-	}
-
-	if (kind === 'filter-combinations-level1') {
-		const entries = await locals.trpc.sitemap.filterCombinationsLevel1.query({
-			country: countrySegment
-		});
 		return new Response(urlsetXml(entries), { headers: { 'Content-Type': 'application/xml' } });
 	}
 

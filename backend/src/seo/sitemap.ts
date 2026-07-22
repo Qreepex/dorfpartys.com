@@ -179,9 +179,15 @@ export async function getArtenSitemapEntries(db: Database, country: Country) {
 
 /**
  * Neue Sitemap-Struktur ohne Monate (Phase 2 Refactor):
- * - level1: Single filters (nur BL, nur Kreis, nur Art)
- * - level2: Two filters (BL+Kreis, BL+Art, Kreis+Art)
+ * - level2: Two filters (BL+Art)
  * - level3: Three filters (BL+Kreis+Art)
+ *
+ * Single-Filter-URLs (BL only, Art only) und BL+Kreis werden NICHT hier,
+ * sondern ausschließlich über orte.xml bzw. arten.xml ausgeliefert - eine
+ * eigene level1-Sitemap für BL/Art only gab es früher, war aber
+ * deckungsgleich mit orte/arten und wurde entfernt; BL+Kreis war ebenso
+ * deckungsgleich mit orte.xml und wurde aus level2 entfernt (doppelte URLs
+ * über zwei Sitemaps verschwenden Crawl-Budget).
  *
  * Splittet pro Country + pro Bundesland um unter 50k URLs zu bleiben.
  * URLs werden nur included wenn sie indexierbar sind (mindestens 1 Event in den letzten 12 Monaten).
@@ -193,41 +199,12 @@ async function getAllFilterCombinations(db: Database, country: Country) {
     .from(bundesland)
     .where(eq(bundesland.country, country));
 
-  const kreiseResult = await db
-    .select({
-      id: kreis.id,
-      bundeslandId: kreis.bundeslandId,
-      slug: kreis.slug,
-    })
-    .from(kreis)
-    .innerJoin(bundesland, eq(kreis.bundeslandId, bundesland.id))
-    .where(eq(bundesland.country, country));
-
   const arten = await db
     .select({ id: partyArt.id, slug: partyArt.slug })
     .from(partyArt)
     .where(eq(partyArt.active, true));
 
-  // Gruppiere Kreise nach Bundesland
-  const kreiseByBundeslandSlug = new Map<
-    string,
-    Array<{ id: string; slug: string }>
-  >();
-  for (const row of kreiseResult) {
-    const bundeslandSlug = bundeslaenderResult.find(
-      (bl) => bl.id === row.bundeslandId,
-    )?.slug;
-    if (bundeslandSlug) {
-      if (!kreiseByBundeslandSlug.has(bundeslandSlug)) {
-        kreiseByBundeslandSlug.set(bundeslandSlug, []);
-      }
-      kreiseByBundeslandSlug
-        .get(bundeslandSlug)!
-        .push({ id: row.id, slug: row.slug });
-    }
-  }
-
-  return { bundeslaenderResult, kreiseByBundeslandSlug, arten };
+  return { bundeslaenderResult, arten };
 }
 
 /**
@@ -247,14 +224,18 @@ export async function getBundeslandSlugsForSitemapIndex(
 }
 
 /**
- * Single Filter Sitemap: nur Bundesland oder nur Art
- * (keine Monat-URLs mehr)
+ * Two-Filter Sitemap: BL+Art
+ * (kein Art+Monat, kein BL+Monat mehr)
  *
- * Bundesland-only ist laut resolve.ts' `indexable`-Formel immer indexierbar
- * (unconditional). Art-only braucht dagegen >=1 Event (future oder
- * 12-Monats-Archiv), siehe AGENTS.md 1.6 und getArtenSitemapEntries.
+ * BL+Kreis wird hier NICHT ausgeliefert - orte.xml deckt diese Kombination
+ * bereits vollständig ab (identische Indexable-Bedingung, >=1 Event), eine
+ * zweite Kopie würde nur doppelte URLs über zwei Sitemaps erzeugen.
+ *
+ * BL+Art wird nur aufgenommen, wenn die BL+Art-Kombination >=1 Event hat -
+ * laut resolve.ts' `indexable`-Formel NICHT unconditionally indexierbar (nur
+ * Country-/Bundesland-Ebene ist das), siehe AGENTS.md 1.6.
  */
-export async function getFilterCombinationsLevel1SitemapEntries(
+export async function getFilterCombinationsLevel2SitemapEntries(
   db: Database,
   country: Country,
 ) {
@@ -262,67 +243,13 @@ export async function getFilterCombinationsLevel1SitemapEntries(
     db,
     country,
   );
-  const { artIdsWithEvents } = await getIndexableFilterSets(db, country);
+  const { bundeslandArtPairsWithEvents } = await getIndexableFilterSets(
+    db,
+    country,
+  );
 
   const entries: Array<{ loc: string }> = [];
   const seen = new Set<string>();
-
-  for (const bl of bundeslaenderResult) {
-    const url = buildFilterUrl(country, { bundeslandSlug: bl.slug });
-    if (!seen.has(url)) {
-      seen.add(url);
-      entries.push({ loc: url });
-    }
-  }
-
-  for (const art of arten) {
-    if (!artIdsWithEvents.has(art.id)) continue;
-    const url = buildFilterUrl(country, { artSlug: art.slug });
-    if (!seen.has(url)) {
-      seen.add(url);
-      entries.push({ loc: url });
-    }
-  }
-
-  return entries;
-}
-
-/**
- * Two-Filter Sitemap: BL+Kreis, BL+Art
- * (kein Art+Monat, kein BL+Monat mehr)
- *
- * BL+Kreis-Kombinationen werden nur aufgenommen, wenn der Kreis indexierbar
- * ist (>=1 Event, siehe getIndexableFilterSets); BL+Art analog nur, wenn die
- * BL+Art-Kombination >=1 Event hat - beide sind laut resolve.ts'
- * `indexable`-Formel NICHT unconditionally indexierbar (nur Country-/
- * Bundesland-Ebene ist das), siehe AGENTS.md 1.6.
- */
-export async function getFilterCombinationsLevel2SitemapEntries(
-  db: Database,
-  country: Country,
-) {
-  const { bundeslaenderResult, kreiseByBundeslandSlug, arten } =
-    await getAllFilterCombinations(db, country);
-  const { kreisIdsWithEvents, bundeslandArtPairsWithEvents } =
-    await getIndexableFilterSets(db, country);
-
-  const entries: Array<{ loc: string }> = [];
-  const seen = new Set<string>();
-
-  for (const bl of bundeslaenderResult) {
-    const kreise = kreiseByBundeslandSlug.get(bl.slug) || [];
-    for (const kreisItem of kreise) {
-      if (!kreisIdsWithEvents.has(kreisItem.id)) continue;
-      const url = buildFilterUrl(country, {
-        bundeslandSlug: bl.slug,
-        kreisSlug: kreisItem.slug,
-      });
-      if (!seen.has(url)) {
-        seen.add(url);
-        entries.push({ loc: url });
-      }
-    }
-  }
 
   for (const bl of bundeslaenderResult) {
     for (const art of arten) {

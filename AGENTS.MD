@@ -175,14 +175,13 @@ Entkoppelt von den drei Filter-Vokabularen (kein Kollisionsrisiko), einfacheres 
 ├── /sitemap-pages.xml                       (statische Seiten)
 ├── /sitemap-events.xml                      (Event-Detailseiten)
 ├── /sitemap-veranstalter.xml                (Organisator-Profile)
-├── /sitemap-{country}-orte.xml              (Bundesland + Kreis)
-├── /sitemap-{country}-arten.xml             (einzelne Party-Arten)
-├── /sitemap-{country}-filter-combinations-level1.xml   (einzelne Filter: BL only, Art only)
-├── /sitemap-{country}-filter-combinations-level2.xml   (zwei Filter: BL+Kreis, BL+Art)
+├── /sitemap-{country}-orte.xml              (Bundesland only + Bundesland+Kreis)
+├── /sitemap-{country}-arten.xml             (Art only)
+├── /sitemap-{country}-filter-combinations-level2.xml   (BL+Art)
 └── /sitemap-{country}-{bundesland}-level3.xml  [DYNAMISCH pro Bundesland]  (BL+Kreis+Art)
 ```
 
-Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Orte/Arten listen die volle Taxonomie (nicht nur Kombinationen mit aktuellen Events). Level1/Level2 sind pro Country. Level3 ist per Bundesland, um unter 50k URLs pro Sitemap zu bleiben.
+Segmentiert, dynamisch generiert (Backend, `seo`-Modul). `sitemap-pages.xml` deckt die statischen Seiten ab (Startseite, Länder-Roots, Impressum/Datenschutz/Nutzungsbedingungen). Jede URL erscheint in genau einer Sitemap: orte.xml liefert Bundesland-only (immer) und Bundesland+Kreis (>=1 Event) aus, arten.xml Art-only (>=1 Event); es gibt bewusst keine eigene level1-Sitemap dafür, das wäre deckungsgleich mit orte/arten gewesen. Level2 (nur noch BL+Art) ist pro Country. Level3 ist per Bundesland, um unter 50k URLs pro Sitemap zu bleiben.
 
 **URL-Reduktion durch Monat-Entfernung:** ~200k URLs → ~15-20k URLs (93% Reduktion).
 
@@ -442,11 +441,13 @@ profiles/{user_id}/{avatar_id}.{ext}
 
 ### Sitemaps (Phase 2 Split)
 
-- ✅ Level1: Single filters (Bundesland-only, Art-only)
-- ✅ Level2: Two-filter (BL+Kreis, BL+Art)
+- ✅ orte.xml: Bundesland-only (immer) + Bundesland+Kreis (>=1 Event)
+- ✅ arten.xml: Art-only (>=1 Event)
+- ✅ Level2: BL+Art
 - ✅ Level3 per Bundesland: BL+Kreis+Art (split für <50k URLs pro Sitemap)
 - ✅ Sitemap Index: Dynamische Bundesland-Aggregation für Level3-Files
 - ✅ URL-Reduktion: ~200k → ~15-20k URLs (93% reduction)
+- ✅ Keine URL-Überschneidung zwischen Sitemaps (level1 entfernt, BL+Kreis nur in orte.xml, siehe 1.8)
 
 ### Tests & Build
 

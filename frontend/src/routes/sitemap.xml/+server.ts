@@ -10,7 +10,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 		...COUNTRIES.flatMap((country) => [
 			`sitemap-${country}-orte.xml`,
 			`sitemap-${country}-arten.xml`,
-			`sitemap-${country}-filter-combinations-level1.xml`,
 			`sitemap-${country}-filter-combinations-level2.xml`
 		])
 	];

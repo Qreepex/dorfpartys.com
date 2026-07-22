@@ -3,7 +3,6 @@ import { COUNTRIES } from "@dorfpartys/shared";
 import {
   getArtenSitemapEntries,
   getEventSitemapEntries,
-  getFilterCombinationsLevel1SitemapEntries,
   getFilterCombinationsLevel2SitemapEntries,
   getFilterCombinationsLevel3SitemapEntries,
   getBundeslandSlugsForSitemapIndex,
@@ -22,12 +21,6 @@ export const sitemapRouter = router({
   arten: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES) }))
     .query(({ ctx, input }) => getArtenSitemapEntries(ctx.db, input.country)),
-
-  filterCombinationsLevel1: publicProcedure
-    .input(z.object({ country: z.enum(COUNTRIES) }))
-    .query(({ ctx, input }) =>
-      getFilterCombinationsLevel1SitemapEntries(ctx.db, input.country),
-    ),
 
   filterCombinationsLevel2: publicProcedure
     .input(z.object({ country: z.enum(COUNTRIES) }))
