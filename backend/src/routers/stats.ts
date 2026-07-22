@@ -29,15 +29,15 @@ export const statsRouter = router({
       ctx.db
         .select({ total: count() })
         .from(event)
-        .where(sql`${event.status} = 'approved' AND ${event.endDate} >= now()`),
+        .where(sql`${event.status} = 'approved' AND ${event.startDate} >= now()`),
       ctx.db
         .select({ total: countDistinct(event.kreisId) })
         .from(event)
-        .where(sql`${event.status} = 'approved' AND ${event.endDate} >= now()`),
+        .where(eq(event.status, "approved")),
       ctx.db
         .select({ total: countDistinct(event.bundeslandId) })
         .from(event)
-        .where(sql`${event.status} = 'approved' AND ${event.endDate} >= now()`),
+        .where(eq(event.status, "approved")),
       ctx.db
         .select({ total: count() })
         .from(partyArt)
