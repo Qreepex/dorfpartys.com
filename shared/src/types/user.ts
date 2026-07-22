@@ -4,7 +4,6 @@ export interface User {
 	id: string;
 	/** null bei Ghost-Accounts (nicht registrierte Veranstalter, siehe isGhost). */
 	authentikSubject: string | null;
-	email: string | null;
 	role: UserRole;
 	/** null = Onboarding-Flow nach dem Login noch nicht abgeschlossen/übersprungen. */
 	onboardingCompletedAt: string | null;

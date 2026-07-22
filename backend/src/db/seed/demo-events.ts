@@ -115,7 +115,6 @@ const DEMO_EVENTS: DemoEventInput[] = [
 
 async function ensureDemoOrganizer(index: number) {
   const authentikSubject = `demo-organizer-${index}`;
-  const email = `demo-organizer-${index}@example.dorfpartys.com`;
   const displayName = `Dorfpartys Demo-Team ${index}`;
 
   const [existing] = await db
@@ -128,7 +127,7 @@ async function ensureDemoOrganizer(index: number) {
     (
       await db
         .insert(user)
-        .values({ authentikSubject, email, role: "user" })
+        .values({ authentikSubject, role: "user" })
         .returning({ id: user.id })
     )[0].id;
 

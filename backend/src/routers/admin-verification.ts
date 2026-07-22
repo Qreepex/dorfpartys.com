@@ -1,7 +1,7 @@
 import { eq, and, ne, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
-import { user, userProfile } from "../db/schema.js";
+import { userProfile } from "../db/schema.js";
 import { createNotification } from "../notifications/index.js";
 import { moderatorProcedure, router } from "../trpc/trpc.js";
 import {
@@ -18,7 +18,6 @@ export const adminVerificationRouter = router({
         userId: userProfile.userId,
         displayName: userProfile.displayName,
         slug: userProfile.slug,
-        email: user.email,
         verificationCode: userProfile.verificationCode,
         verificationMethod: userProfile.verificationMethod,
         verificationRequestedAt: userProfile.verificationRequestedAt,
@@ -27,7 +26,6 @@ export const adminVerificationRouter = router({
         tiktokUrl: userProfile.tiktokUrl,
       })
       .from(userProfile)
-      .innerJoin(user, eq(userProfile.userId, user.id))
       .where(
         and(
           isNotNull(userProfile.verificationCode),

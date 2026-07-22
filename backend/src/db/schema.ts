@@ -115,9 +115,10 @@ export const slugRegistry = pgTable("slug_registry", {
 export const user = pgTable("user", {
   id: uuid("id").primaryKey().defaultRandom(),
   // Ghost-Accounts (siehe unten, `isGhost`) haben keinen echten Authentik-Login
-  // und daher weder Subject noch E-Mail.
+  // und daher kein Subject. E-Mails werden bewusst nicht gespeichert - viele
+  // OIDC-Provider (Discord/Google/Facebook via Authentik-Source) liefern gar
+  // keinen email-Claim, und die App braucht die Adresse nirgends.
   authentikSubject: text("authentik_subject").unique(),
-  email: text("email").unique(),
   role: userRoleEnum("role").notNull().default("user"),
   // null = Registrierungs-/Onboarding-Flow nach dem ersten Authentik-Login noch
   // nicht durchlaufen bzw. bewusst übersprungen (siehe auth/callback).

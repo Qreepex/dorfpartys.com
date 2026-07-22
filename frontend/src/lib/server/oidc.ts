@@ -30,7 +30,7 @@ export async function buildAuthorizationUrl(state: string, codeChallenge: string
 	url.searchParams.set('client_id', requiredEnv('AUTHENTIK_CLIENT_ID'));
 	url.searchParams.set('redirect_uri', requiredEnv('AUTHENTIK_REDIRECT_URI'));
 	url.searchParams.set('response_type', 'code');
-	url.searchParams.set('scope', 'openid email profile groups');
+	url.searchParams.set('scope', 'openid profile groups');
 	url.searchParams.set('state', state);
 	url.searchParams.set('code_challenge', codeChallenge);
 	url.searchParams.set('code_challenge_method', 'S256');

@@ -194,7 +194,7 @@ kreis           (id, slug, name, bundesland_id → bundesland)
 party_art       (id, slug, name, active)
 
 user (
-  id, authentik_subject, email, role [user | moderator | admin],
+  id, authentik_subject, role [user | moderator | admin],
   onboarding_completed_at,          -- null = Registrierungs-Flow (Abschnitt 5) noch nicht durchlaufen/übersprungen
   created_at
 )
@@ -283,7 +283,7 @@ Constraints/Validierung im Backend (nicht nur UI):
 ## 5. Auth & Submission-Workflow
 
 - **SSO via Authentik**, OpenID Connect.
-- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie, `dp_session` = ID-Token - die angefragten Scopes email/profile/groups landen laut OIDC-Spec im ID-Token, nicht im Access-Token; `backend/src/auth/verify.ts` erwartet diese Claims direkt im verifizierten Token).
+- **Frontend** übernimmt den OIDC-Login-Flow (Authorization Code) und hält die Session (httpOnly-Cookie, `dp_session` = ID-Token - die angefragten Scopes profile/groups landen laut OIDC-Spec im ID-Token, nicht im Access-Token; `backend/src/auth/verify.ts` erwartet diese Claims direkt im verifizierten Token). Der `email`-Scope/-Claim wird bewusst nicht angefragt/gespeichert - viele extern angebundene Accounts (Google/Discord/Facebook via Authentik-Source) liefern ihn ohnehin nicht, und die App braucht die Adresse nirgends.
 - **Backend** verifiziert eingehende Requests anhand des von Authentik ausgestellten JWT (Verifizierung über Authentik-JWKS-Endpoint, zustandslos). Rollen (`user`/`moderator`/`admin`) werden aus Authentik-Gruppen/Claims gemappt.
 - Rollen: `user` (einreichen/eigenes Profil & eigene Events bearbeiten), `moderator`/`admin` (Review-Dashboard unter `/review`).
 - **Registrierungs-Flow für neue Nutzer:innen:** `/auth/callback` prüft nach dem Token-Austausch `user.onboarding_completed_at`; ist es `null` (neuer oder noch nicht eingerichteter User), erfolgt Redirect zu `/willkommen?redirectTo=...` statt direkt zum ursprünglichen Ziel. `/willkommen` ist ein Multi-Step-Formular (Anzeigename → optionale Profildetails → Zusammenfassung, clientseitig gesteuert über `hidden`-Fieldsets, ein einziger Form-POST) und setzt `display_name`/`user_profile` sowie `onboarding_completed_at`. "Später einrichten" überspringt die Profildaten, markiert das Onboarding aber ebenfalls als gesehen (kein wiederholtes Nerven bei jedem Login). tRPC: `users.completeOnboarding` / `users.skipOnboarding`.

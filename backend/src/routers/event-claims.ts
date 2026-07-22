@@ -147,7 +147,6 @@ export const eventClaimsRouter = router({
         claimedByUserId: user.id,
         claimedByDisplayName: userProfile.displayName,
         claimedBySlug: userProfile.slug,
-        claimedByEmail: user.email,
       })
       .from(eventClaim)
       .innerJoin(event, eq(eventClaim.eventId, event.id))

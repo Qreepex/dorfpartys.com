@@ -64,7 +64,6 @@
 					<tr>
 						<th class="px-4 py-3 text-left font-semibold">Veranstalter</th>
 						<th class="px-4 py-3 text-left font-semibold">Profil-URL</th>
-						<th class="px-4 py-3 text-left font-semibold">E-Mail</th>
 						<th class="px-4 py-3 text-left font-semibold">Methode</th>
 						<th class="px-4 py-3 text-left font-semibold">Code</th>
 						<th class="px-4 py-3 text-left font-semibold">Angefordert am</th>
@@ -91,7 +90,6 @@
 									<span class="italic">Auto-generiert</span>
 								{/if}
 							</td>
-							<td class="px-4 py-3 font-mono text-xs">{req.email}</td>
 							<td class="px-4 py-3 text-xs">
 								<span class="inline-block rounded bg-primary/10 px-2 py-1 text-primary">
 									{getMethodLabel(guessMethod(req))}

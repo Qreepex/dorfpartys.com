@@ -16,31 +16,15 @@ const db = drizzle(postgresClient, { schema });
 const verificationMethods = ["email", "instagram", "tiktok"] as const;
 
 async function verifyUser(
-  emailOrUserId: string,
+  userId: string,
   method: (typeof verificationMethods)[number],
 ) {
-  // Bestimme, ob Input Email oder UUID ist
-  const isUuid =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      emailOrUserId,
-    );
-
   // Lade User + Profil
   let userRow, profileRow;
-  if (isUuid) {
-    [userRow] = await db
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.id, emailOrUserId));
-  } else {
-    [userRow] = await db
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.email, emailOrUserId));
-  }
+  [userRow] = await db.select().from(schema.user).where(eq(schema.user.id, userId));
 
   if (!userRow) {
-    console.error(`User not found: ${emailOrUserId}`);
+    console.error(`User not found: ${userId}`);
     process.exit(1);
   }
 
@@ -54,7 +38,7 @@ async function verifyUser(
     process.exit(1);
   }
 
-  console.log(`Verifying user: ${profileRow.displayName} (${userRow.email})`);
+  console.log(`Verifying user: ${profileRow.displayName} (${userRow.id})`);
   console.log(`Method: ${method}`);
 
   // Für Instagram/TikTok: extrahiere den Handle aus der URL
@@ -157,12 +141,10 @@ async function verifyUser(
 }
 
 // Parse CLI args
-const [emailOrUserId, method] = process.argv.slice(2);
+const [userId, method] = process.argv.slice(2);
 
-if (!emailOrUserId || !method) {
-  console.error(
-    "Usage: verify-user <email-or-user-id> <email|instagram|tiktok>",
-  );
+if (!userId || !method) {
+  console.error("Usage: verify-user <user-id> <email|instagram|tiktok>");
   process.exit(1);
 }
 
@@ -173,7 +155,7 @@ if (!verificationMethods.includes(method as any)) {
   process.exit(1);
 }
 
-verifyUser(emailOrUserId, method as (typeof verificationMethods)[number]).catch(
+verifyUser(userId, method as (typeof verificationMethods)[number]).catch(
   (err) => {
     console.error("Error during verification:", err);
     process.exit(1);

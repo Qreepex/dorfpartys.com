@@ -127,7 +127,6 @@ export const ghostAccountsRouter = router({
         .insert(user)
         .values({
           authentikSubject: null,
-          email: null,
           role: "user",
           isGhost: true,
           onboardingCompletedAt: new Date(),

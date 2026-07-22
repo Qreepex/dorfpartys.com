@@ -17,10 +17,10 @@ export async function resolveUserFromClaims(
 
   const [row] = await db
     .insert(user)
-    .values({ authentikSubject: claims.sub, email: claims.email, role })
+    .values({ authentikSubject: claims.sub, role })
     .onConflictDoUpdate({
       target: user.authentikSubject,
-      set: { email: claims.email, role },
+      set: { role },
     })
     .returning();
 

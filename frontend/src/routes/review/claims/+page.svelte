@@ -51,7 +51,6 @@
 					<tr>
 						<th class="px-4 py-3 text-left font-semibold">Event</th>
 						<th class="px-4 py-3 text-left font-semibold">Angefragt von</th>
-						<th class="px-4 py-3 text-left font-semibold">E-Mail</th>
 						<th class="px-4 py-3 text-left font-semibold">Grund</th>
 						<th class="px-4 py-3 text-left font-semibold">Angefragt am</th>
 						<th class="px-4 py-3 text-right font-semibold">Aktionen</th>
@@ -73,7 +72,6 @@
 									{claim.claimedByDisplayName || 'Unbenannt'}
 								{/if}
 							</td>
-							<td class="px-4 py-3 font-mono text-xs">{claim.claimedByEmail}</td>
 							<td class="px-4 py-3 text-xs text-muted">{claim.reason || '–'}</td>
 							<td class="px-4 py-3 text-xs text-muted">
 								{new Date(claim.requestedAt).toLocaleDateString('de-DE', {

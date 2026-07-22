@@ -62,7 +62,7 @@
 	}
 
 	const userInitial = $derived.by(() => {
-		const source = user?.displayName || user?.email || '';
+		const source = user?.displayName || '';
 		return source.trim().charAt(0).toUpperCase() || '?';
 	});
 
@@ -212,7 +212,7 @@
 							</span>
 						{/if}
 						<span class="max-w-32 truncate text-[0.9rem]"
-							>{user.displayName || user.email || 'Nutzer'}</span
+							>{user.displayName || 'Nutzer'}</span
 						>
 					</button>
 					{#if userMenuOpen}
@@ -240,6 +240,7 @@
 								class="px-3.5 py-2 text-[0.9rem] text-text no-underline hover:bg-border"
 								href={resolve('/auth/logout')}
 								role="menuitem"
+								data-sveltekit-reload
 								onclick={() => (userMenuOpen = false)}
 							>
 								Logout

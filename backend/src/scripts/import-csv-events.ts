@@ -1,14 +1,14 @@
+import { defaultEventLinkLabel } from "@dorfpartys/shared";
+import { parse } from "csv-parse/sync";
 import "dotenv/config";
+import { and, eq } from "drizzle-orm";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultEventLinkLabel } from "@dorfpartys/shared";
-import { parse } from "csv-parse/sync";
-import { and, eq } from "drizzle-orm";
-import { sanitizeText } from "../sanitization/index.js";
-import { generateUniqueEventSlug, generateUniqueOrganizerSlug } from "../slug/index.js";
 import { db, queryClient } from "../db/index.js";
 import { bundesland, event, eventLink, kreis, partyArt, user, userProfile } from "../db/schema.js";
+import { sanitizeText } from "../sanitization/index.js";
+import { generateUniqueEventSlug, generateUniqueOrganizerSlug } from "../slug/index.js";
 
 /**
  * Importiert Events aus der CSV-Pipeline (siehe `ingestion/`, Format
@@ -47,6 +47,22 @@ const BUNDESLAND_CODE_TO_SLUG: Record<string, string> = {
   SN: "sachsen",
   ST: "sachsen-anhalt",
   TH: "thueringen",
+  "SCHLESWIG-HOLSTEIN": "schleswig-holstein",
+  "NIEDERSACHSEN": "niedersachsen",
+  "HAMBURG": "hamburg",
+  "BREMEN": "bremen",
+  "NORDRHEIN-WESTFALEN": "nordrhein-westfalen",
+  "HESSEN": "hessen",
+  "RHEINLAND-PFALZ": "rheinland-pfalz",
+  "BADEN-WÜRTTEMBERG": "baden-wuerttemberg",
+  "BAYERN": "bayern",
+  "SAARLAND": "saarland",
+  "BERLIN": "berlin",
+  "BRANDENBURG": "brandenburg",
+  "MECKLENBURG-VORPOMMERN": "mecklenburg-vorpommern",
+  "SACHSEN": "sachsen",
+  "SACHSEN-ANHALT": "sachsen-anhalt",
+  "THÜRINGEN": "thueringen"
 };
 
 interface CsvRow {
@@ -102,7 +118,6 @@ async function ensureImportBotUser(): Promise<string> {
     .insert(user)
     .values({
       authentikSubject,
-      email: null,
       role: "admin",
       isGhost: true,
       onboardingCompletedAt: new Date(),
@@ -130,7 +145,6 @@ async function findOrCreateGhostOrganizer(displayName: string): Promise<string> 
     .insert(user)
     .values({
       authentikSubject: null,
-      email: null,
       role: "user",
       isGhost: true,
       onboardingCompletedAt: new Date(),
@@ -156,16 +170,22 @@ async function importRow(
 ): Promise<void> {
   const title = sanitizeText(row.Titel?.trim() ?? "");
   const link = row.Link?.trim();
-  const dateRaw = row.Datum?.trim();
+  let dateRaw = row.Datum?.trim();
   const bundeslandCode = row.Bundesland?.trim().toUpperCase();
-  const kreisName = row.Kreis?.trim();
+  let kreisName = row.Kreis?.trim();
   const partyArtSlug = row.Partyart?.trim();
   const organizerName = sanitizeText(row.Veranstalter?.trim() ?? "") || null;
 
-  if (!title || !link || !dateRaw || !bundeslandCode || !kreisName || !partyArtSlug) {
+  if (!title || !dateRaw || !bundeslandCode || !kreisName || !partyArtSlug) {
     console.warn(`  Zeile ${rowIndex}: übersprungen - Pflichtfeld fehlt ("${title || row.Titel}")`);
     stats.skippedInvalidRow += 1;
     return;
+  }
+
+  // wenn datum in DD.MM.YYYY oder D.M.YYYY, dann in YYYY-MM-DD hh:mm konvertieren, sonst parse() wird NaN
+  if (dateRaw.includes(".")) {
+    const [day, month, year] = dateRaw.split(".");
+    dateRaw = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
   const startDate = new Date(dateRaw);
@@ -192,6 +212,20 @@ async function importRow(
     return;
   }
 
+  if (kreisName === "Kreis Herzogtum Lauenburg") {
+    kreisName = "Herzogtum Lauenburg";
+  } else if (kreisName === "Landkreis Harburg") {
+    kreisName = "Harburg (Landkreis)";
+  } else if (kreisName === "Landkreis Lüneburg") {
+    kreisName = "Lüneburg";
+  } else if (kreisName === "Kreis Ostholstein") {
+    kreisName = "Ostholstein";
+  } else if (kreisName === "Landkreis Storman") {
+    kreisName = "Stormarn";
+  } else if (kreisName === "Kreis Storman") {
+    kreisName = "Stormarn";
+  }
+
   const [kreisRow] = await db
     .select({ id: kreis.id, name: kreis.name })
     .from(kreis)
@@ -213,10 +247,12 @@ async function importRow(
   // dürfen bereits importierte Zeilen nicht duplizieren. Der Link ist der
   // stabilste natürliche Schlüssel - die Ingestion-Pipeline dedupliziert
   // selbst schon darüber (siehe ingestion/src/pipeline/dedupe.ts).
-  const [existingLink] = await db.select({ eventId: eventLink.eventId }).from(eventLink).where(eq(eventLink.url, link));
-  if (existingLink) {
-    stats.alreadyImported += 1;
-    return;
+  if (link) {
+    const [existingLink] = await db.select({ eventId: eventLink.eventId }).from(eventLink).where(eq(eventLink.url, link));
+    if (existingLink) {
+      stats.alreadyImported += 1;
+      return;
+    }
   }
 
   if (dryRun) {
@@ -252,12 +288,14 @@ async function importRow(
       })
       .returning({ id: event.id });
 
-    await db.insert(eventLink).values({
-      eventId: eventRow.id,
-      url: link,
-      label: defaultEventLinkLabel(link),
-      position: 1,
-    });
+    if (link) {
+      await db.insert(eventLink).values({
+        eventId: eventRow.id,
+        url: link,
+        label: defaultEventLinkLabel(link),
+        position: 1,
+      });
+    }
 
     console.log(`  Importiert: ${title} (/${bundeslandRow.country}/veranstaltung/${slug}/)`);
     stats.imported += 1;

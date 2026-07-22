@@ -3,7 +3,6 @@ import { getAuthentikJwks } from "./jwks.js";
 
 export interface AuthentikClaims {
   sub: string;
-  email: string;
   groups: string[];
 }
 
@@ -11,6 +10,10 @@ export interface AuthentikClaims {
  * Verifiziert ein von Authentik ausgestelltes JWT zustandslos gegen den
  * JWKS-Endpoint (AGENTS.md Abschnitt 5). Wirft bei ungültiger/abgelaufener
  * Signatur oder falschem Issuer.
+ *
+ * Der email-Claim wird bewusst nicht ausgelesen/gespeichert - viele extern
+ * angebundene Accounts (Google/Discord/Facebook via Authentik-Source) liefern
+ * ihn gar nicht, und die App braucht die Adresse nirgends.
  */
 export async function verifyAuthentikToken(
   token: string,
@@ -25,13 +28,10 @@ export async function verifyAuthentikToken(
   if (typeof payload.sub !== "string") {
     throw new Error("JWT ohne gültigen sub-Claim");
   }
-  if (typeof payload.email !== "string") {
-    throw new Error("JWT ohne gültigen email-Claim");
-  }
 
   const groups = Array.isArray(payload.groups)
     ? payload.groups.filter((g): g is string => typeof g === "string")
     : [];
 
-  return { sub: payload.sub, email: payload.email, groups };
+  return { sub: payload.sub, groups };
 }
