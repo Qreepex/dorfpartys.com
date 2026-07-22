@@ -947,7 +947,10 @@ export const eventsRouter = router({
           .where(eq(event.id, input.id));
         // Benachrichtigt den Einreicher (existing.createdBy), nicht zwingend
         // event.organizerUserId - der Einreicher wartet auf die Entscheidung,
-        // unabhängig davon, wer am Ende als Veranstalter hinterlegt ist. Kein
+        // unabhängig davon, wer am Ende als Veranstalter hinterlegt ist. Bei
+        // einer Ghost-Account-Übernahme (account-claims.ts/invite-codes/index.ts)
+        // ist createdBy ohnehin mit auf den neuen Account umgehängt worden, der
+        // ursprüngliche Einreicher verliert dabei jeden Bezug zum Event. Kein
         // Link, da ein abgelehntes Event keine öffentliche Seite hat.
         await createNotification(ctx.db, {
           userId: existing.createdBy,

@@ -187,10 +187,15 @@ export const accountClaimsRouter = router({
           ),
         );
 
-      // Alle Events des Ghost-Accounts auf den übernehmenden Account umhängen.
+      // Alle Events des Ghost-Accounts komplett auf den übernehmenden Account
+      // umhängen (auch `createdBy`, nicht nur `organizerUserId` - gleiche
+      // Begründung wie in invite-codes/index.ts redeemInviteCode(): sonst
+      // behielte die ursprünglich einreichende Person über die Eigentums-
+      // Prüfung in `update`/`delete`/`getForEdit` dauerhaft Bearbeitungsrechte).
       await ctx.db
         .update(event)
         .set({
+          createdBy: claim.claimedByUserId,
           organizerUserId: claim.claimedByUserId,
           organizerVerified: !!claimerProfile?.verifiedAt,
           organizerConfirmed: true,

@@ -81,11 +81,19 @@ export async function redeemInviteCode(
       return { redeemed: false };
     }
 
-    // Alle Events des Ghost-Accounts auf den neu registrierten Account
-    // umhängen und sofort als verifiziert markieren (AGENTS.md 5.5-Analogie).
+    // Alle Events des Ghost-Accounts komplett auf den neu registrierten Account
+    // umhängen (auch `createdBy`, nicht nur `organizerUserId`) und sofort als
+    // verifiziert markieren (AGENTS.md 5.5-Analogie). Vollständige Übertragung
+    // statt nur des Veranstalter-Felds, weil sonst die ursprünglich
+    // einreichende Person (createdBy) über die Eigentums-Prüfung in
+    // `update`/`delete`/`getForEdit` (existing.createdBy === ctx.user.id)
+    // dauerhaft Bearbeitungsrechte am Event des jetzt echten Veranstalters
+    // behalten würde - nach der Übernahme gehört das Event ausschließlich dem
+    // neuen Account.
     await tx
       .update(event)
       .set({
+        createdBy: redeemingUserId,
         organizerUserId: redeemingUserId,
         organizerVerified: true,
         organizerConfirmed: true,
