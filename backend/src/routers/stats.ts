@@ -29,7 +29,9 @@ export const statsRouter = router({
       ctx.db
         .select({ total: count() })
         .from(event)
-        .where(sql`${event.status} = 'approved' AND (${event.startDate} >= now() OR ${event.endDate} >= now())`),
+        .where(
+          sql`${event.status} = 'approved' AND (${event.startDate} >= now() OR ${event.endDate} >= now())`,
+        ),
       ctx.db
         .select({ total: countDistinct(event.kreisId) })
         .from(event)

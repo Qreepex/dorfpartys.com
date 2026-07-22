@@ -70,6 +70,8 @@ export function parseIcsText(text: string, sourceId: string): RawItem[] {
 export const icsConnector: Connector<IcsSourceConfig> = {
 	async fetch(source) {
 		const text = await fetchText(source.url);
-		return parseIcsText(text, source.id);
+		const items = parseIcsText(text, source.id);
+		if (!source.fallbackLink) return items;
+		return items.map((item) => (item.link ? item : { ...item, link: source.fallbackLink }));
 	}
 };

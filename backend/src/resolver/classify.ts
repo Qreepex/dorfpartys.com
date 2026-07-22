@@ -1,5 +1,5 @@
 import type { Country } from "@dorfpartys/shared";
-import type { TaxonomyRepository } from "./types.js";
+import type { EventFilterIds, TaxonomyRepository } from "./types.js";
 
 export interface ClassifiedSegments {
   bundeslandSlug?: string;
@@ -67,4 +67,16 @@ export async function classifySegments(
   }
 
   return { ok: true, classified };
+}
+
+/** Extrahiert die für DB-Queries nutzbaren Filter-IDs aus klassifizierten Segmenten. */
+export function filterIdsFromClassified(
+  classified: ClassifiedSegments,
+): EventFilterIds {
+  return {
+    bundeslandId:
+      classified.bundeslandIdExplicit ?? classified.bundeslandIdImplied,
+    kreisId: classified.kreisId,
+    partyArtId: classified.partyArtId,
+  };
 }

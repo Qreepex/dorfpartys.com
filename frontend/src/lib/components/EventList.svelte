@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { Snippet } from 'svelte';
 	import type { Country } from '@dorfpartys/shared';
+	import { getGermanDateParts } from '@dorfpartys/shared';
+	import type { Snippet } from 'svelte';
 
 	interface DisplayEvent {
 		slug: string | null;
@@ -53,15 +54,15 @@
 	];
 
 	function day(iso: string | null) {
-		return iso ? new Date(iso).getDate().toString().padStart(2, '0') : '–';
+		return iso ? getGermanDateParts(new Date(iso)).day.toString().padStart(2, '0') : '–';
 	}
 	function monthAbbr(iso: string | null) {
-		return iso ? MONTH_ABBR[new Date(iso).getMonth()] : 'TBA';
+		return iso ? MONTH_ABBR[getGermanDateParts(new Date(iso)).month - 1] : 'TBA';
 	}
 	function yearSuffix(iso: string | null) {
 		if (!iso) return '';
-		const year = new Date(iso).getFullYear();
-		const currentYear = new Date().getFullYear();
+		const year = getGermanDateParts(new Date(iso)).year;
+		const currentYear = getGermanDateParts(new Date()).year;
 		return year !== currentYear ? ` ${year.toString().slice(-2)}` : '';
 	}
 </script>
@@ -70,7 +71,7 @@
 	<p class="empty">Für diese Auswahl ist aktuell kein Termin eingetragen.</p>
 {:else}
 	<ul class="events">
-		{#each events as item (item.slug ?? item.title)}
+		{#each events as item, index ((item.slug ?? item.title) + index)}
 			<li class="event-row">
 				<span class="event-date"
 					>{day(item.startDate)}<small

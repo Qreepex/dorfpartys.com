@@ -14,7 +14,8 @@
 		SITE_URL,
 		buildEventSeoSentence,
 		buildEventUrl,
-		detectEventLinkType
+		detectEventLinkType,
+		hasKnownGermanTime
 	} from '@dorfpartys/shared';
 	import type { ActionData, PageData } from './$types.js';
 
@@ -114,7 +115,8 @@
 				? `${event.title} - ${new Date(event.startDate).toLocaleDateString('de-DE', {
 						day: '2-digit',
 						month: 'long',
-						year: 'numeric'
+						year: 'numeric',
+						timeZone: 'Europe/Berlin'
 					})}${metaLocation ? ` in ${metaLocation}.` : '.'}`
 				: `${event.title}${metaLocation ? ` in ${metaLocation}.` : '.'}`,
 			event.description
@@ -346,16 +348,20 @@
 								day: '2-digit',
 								month: 'long',
 								year: 'numeric',
-								hour: '2-digit',
-								minute: '2-digit'
+								...(hasKnownGermanTime(new Date(event.startDate))
+									? { hour: '2-digit', minute: '2-digit' }
+									: {}),
+								timeZone: 'Europe/Berlin'
 							})}
 							{#if event.endDate}
 								–
 								{new Date(event.endDate).toLocaleString('de-DE', {
 									day: '2-digit',
 									month: 'long',
-									hour: '2-digit',
-									minute: '2-digit'
+									...(hasKnownGermanTime(new Date(event.endDate))
+										? { hour: '2-digit', minute: '2-digit' }
+										: {}),
+									timeZone: 'Europe/Berlin'
 								})}
 							{/if}
 						{:else}

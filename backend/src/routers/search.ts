@@ -140,9 +140,7 @@ function allCountryMatches(
 }
 
 /** Wählt den höchstbewerteten Treffer aus einer Match-Liste (für die Party-Art, von der genau EIN Treffer pro Kombination verwendet wird - siehe `findTaxonomyMatches`). */
-function bestOf<T extends { matchScore: number }>(
-  matches: T[],
-): T | undefined {
+function bestOf<T extends { matchScore: number }>(matches: T[]): T | undefined {
   return matches.reduce<T | undefined>(
     (best, candidate) =>
       !best || candidate.matchScore > best.matchScore ? candidate : best,
@@ -304,9 +302,9 @@ async function runSearch(
 ) {
   const pattern = `%${query}%`;
   const cookieCountry = ctx.req.cookies?.country;
-  const preferredCountry: Country = (
-    COUNTRIES as readonly string[]
-  ).includes(cookieCountry ?? "")
+  const preferredCountry: Country = (COUNTRIES as readonly string[]).includes(
+    cookieCountry ?? "",
+  )
     ? (cookieCountry as Country)
     : "de";
 

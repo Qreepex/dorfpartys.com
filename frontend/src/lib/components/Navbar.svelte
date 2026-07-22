@@ -211,9 +211,7 @@
 								{userInitial}
 							</span>
 						{/if}
-						<span class="max-w-32 truncate text-[0.9rem]"
-							>{user.displayName || 'Nutzer'}</span
-						>
+						<span class="max-w-32 truncate text-[0.9rem]">{user.displayName || 'Nutzer'}</span>
 					</button>
 					{#if userMenuOpen}
 						<div

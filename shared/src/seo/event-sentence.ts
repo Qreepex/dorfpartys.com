@@ -9,11 +9,18 @@
  * ausgewählt - dieselbe `id` liefert also immer denselben Satz, verschiedene
  * `id`s streuen über spürbar unterschiedliche Formulierungen.
  *
+ * Datum/Uhrzeit werden über `getGermanDateParts` (Europe/Berlin) statt über
+ * `date.getHours()`/`getDate()` etc. gelesen - Letztere nutzen die Zeitzone
+ * des ausführenden Prozesses (SSR läuft in Node, meist UTC-Container), nicht
+ * die tatsächliche Event-Zeitzone, und würden z.B. aus 20 Uhr 18 Uhr machen.
+ *
  * `startDate` kann fehlen oder ein reines Datum ohne Uhrzeit sein (AGENTS.md
  * 5, "Quantität über Qualität" - startDate/addressDescription sind optional),
  * daher deckt die Funktion alle vier Kombinationen aus Datum×Ort ab, jeweils
  * mit und ohne Uhrzeit.
  */
+
+import { getGermanDateParts, hasKnownGermanTime } from '../date/german-time.js';
 
 export interface EventSeoSentenceInput {
 	/** Event-ID, dient als Seed für die deterministische Variantenwahl. */
@@ -66,12 +73,12 @@ const WEEKDAYS_LONG = [
 ];
 
 /** Datumsphrase ohne führendes "am" (wird von den Satz-Templates ergänzt), 4 Stilvarianten. */
-function formatDateVariant(date: Date, variantIndex: number): string {
-	const weekday = WEEKDAYS_LONG[date.getDay()];
-	const day = date.getDate();
-	const month = MONTHS_LONG[date.getMonth()];
-	const year = date.getFullYear();
-	const monthPadded = String(date.getMonth() + 1).padStart(2, '0');
+function formatDateVariant(parts: ReturnType<typeof getGermanDateParts>, variantIndex: number): string {
+	const weekday = WEEKDAYS_LONG[parts.weekday];
+	const day = parts.day;
+	const month = MONTHS_LONG[parts.month - 1];
+	const year = parts.year;
+	const monthPadded = String(parts.month).padStart(2, '0');
 	const dayPadded = String(day).padStart(2, '0');
 
 	switch (variantIndex) {
@@ -87,10 +94,9 @@ function formatDateVariant(date: Date, variantIndex: number): string {
 }
 
 /** Uhrzeit inklusive Präposition, z.B. "um 20 Uhr" / "ab 20:30 Uhr". */
-function formatTimeClause(date: Date, variantIndex: number): string {
-	const hours = date.getHours();
-	const minutes = date.getMinutes();
-	const time = minutes === 0 ? `${hours} Uhr` : `${hours}:${String(minutes).padStart(2, '0')} Uhr`;
+function formatTimeClause(parts: ReturnType<typeof getGermanDateParts>, variantIndex: number): string {
+	const { hour, minute } = parts;
+	const time = minute === 0 ? `${hour} Uhr` : `${hour}:${String(minute).padStart(2, '0')} Uhr`;
 	const preposition = variantIndex % 2 === 0 ? 'um' : 'ab';
 	return `${preposition} ${time}`;
 }
@@ -164,9 +170,12 @@ export function buildEventSeoSentence(input: EventSeoSentenceInput): string {
 	}
 
 	const date = new Date(startDate);
-	const withTime = hasTimeComponent(startDate);
-	const dateVariant = formatDateVariant(date, seededIndex(id, 'dateFormat', 4));
-	const timeClause = withTime ? formatTimeClause(date, seededIndex(id, 'timeFormat', 2)) : '';
+	const parts = getGermanDateParts(date);
+	// 00:00 Uhr gilt als "Uhrzeit unbekannt" (hasKnownGermanTime) - z.B. wenn
+	// eine Quelle nur ein Datum ohne Uhrzeit liefert (siehe AGENTS.md Ingestion).
+	const withTime = hasTimeComponent(startDate) && hasKnownGermanTime(date);
+	const dateVariant = formatDateVariant(parts, seededIndex(id, 'dateFormat', 4));
+	const timeClause = withTime ? formatTimeClause(parts, seededIndex(id, 'timeFormat', 2)) : '';
 
 	if (withTime && location) {
 		const builder = pick(id, 'structure', TEMPLATES_DATE_TIME_LOCATION);

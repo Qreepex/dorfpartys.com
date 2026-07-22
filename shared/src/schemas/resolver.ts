@@ -9,3 +9,15 @@ export const resolverInputSchema = z.object({
 });
 
 export type ResolverInput = z.infer<typeof resolverInputSchema>;
+
+// Pagination für die "Mehr laden"-Funktion auf Filter-/Suchseiten (nur
+// zukünftige Events, siehe backend/src/routers/resolver.ts loadMoreEvents) -
+// dieselben Segmente wie beim initialen resolve(), plus Offset für die
+// nächste Seite.
+export const resolverLoadMoreInputSchema = z.object({
+	country: z.enum(COUNTRIES),
+	segments: z.array(z.string().trim().min(1)).max(4),
+	offset: z.number().int().min(0)
+});
+
+export type ResolverLoadMoreInput = z.infer<typeof resolverLoadMoreInputSchema>;

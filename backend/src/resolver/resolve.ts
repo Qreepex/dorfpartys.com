@@ -4,7 +4,7 @@ import {
   type ResolveOutcome,
 } from "@dorfpartys/shared";
 import { canonicalSegmentList, canonicalSlugsFor } from "./canonicalize.js";
-import { classifySegments } from "./classify.js";
+import { classifySegments, filterIdsFromClassified } from "./classify.js";
 import type { TaxonomyRepository } from "./types.js";
 
 /**
@@ -42,12 +42,7 @@ export async function resolve(
     };
   }
 
-  const filterIds = {
-    bundeslandId:
-      classified.bundeslandIdExplicit ?? classified.bundeslandIdImplied,
-    kreisId: classified.kreisId,
-    partyArtId: classified.partyArtId,
-  };
+  const filterIds = filterIdsFromClassified(classified);
 
   const totalFuture = await repo.countApprovedEvents(country, filterIds);
   const futureResults =
@@ -61,7 +56,11 @@ export async function resolve(
   );
 
   const allResults = [...futureResults, ...pastResults];
-  const total = futureResults.length + pastResults.length;
+  // Echte Gesamtzahl (nicht auf die geladene erste Seite gedeckelt) - wird u.a.
+  // für die SEO-Copy (backend/src/seo/search-copy.ts, "X Termine eingetragen")
+  // und die Trefferanzeige im Frontend genutzt, damit die Zahl auch auf Seiten
+  // mit mehr als 50 zukünftigen Events (siehe "Mehr laden") stimmt.
+  const total = totalFuture + pastResults.length;
   const hasAnyEvents = total > 0;
 
   // Konstruiere OG-Image-URL basierend auf Filters
@@ -90,6 +89,7 @@ export async function resolve(
     results: allResults,
     total,
     futureCount: futureResults.length,
+    totalFutureCount: totalFuture,
     pastCount: pastResults.length,
     // noindex für absolut leere Filter (0 zukünftig + 0 archiv), außer Country-/Bundesland-Ebene (immer indexierbar)
     indexable: hasAnyEvents || (!classified.kreisId && !classified.partyArtId),

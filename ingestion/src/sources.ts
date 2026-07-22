@@ -42,6 +42,25 @@ export const SOURCES: SourceConfig[] = [
 		defaultOrganizer: 'Landesfeuerwehrverband Brandenburg'
 	},
 	{
+		// Aus der Bundesländer-Recherche (siehe ingestion/urls.txt, Abschnitt
+		// Mecklenburg-Vorpommern): Die Seite selbst zeigt nur einen "Kalender
+		// abonnieren"-Button ohne sichtbare URL. Der echte Feed-Link steckt im
+		// `openIcsPopUp`-Handler des Portal-CMS (nonCritical.min.js:
+		// `link = additionals.link + '?ics=1'`) - per curl verifiziert, liefert
+		// echte VEVENTs mit realen Schützenfest-Terminen (z.B. "Schützenverein
+		// Vier Tore e.V. Neubrandenburg", "Schützenverein Greif e.V. Blumenthal").
+		// Achtung: Die VEVENTs selbst haben KEIN URL-Feld (anders als z.B.
+		// lfv-brandenburg unten) - ohne `fallbackLink` würde `normalizeItem`
+		// jedes Item mangels Link verwerfen (per curl gegengeprüft).
+		connector: 'ics',
+		id: 'lsv-mv-schuetzenfeste',
+		label: 'Landesschützenverband Mecklenburg-Vorpommern (ICS-Feed)',
+		url: 'https://www.lsv-mv.de/veranstaltungen/index.php?ics=1',
+		fallbackLink: 'https://www.lsv-mv.de/veranstaltungen/index.php',
+		defaultBundesland: 'MV',
+		defaultOrganizer: 'Landesschützenverband Mecklenburg-Vorpommern'
+	},
+	{
 		// Gefunden über den govdata-national-CKAN-Connector (Suchtreffer "Grevenbroich:
 		// Volks- und Heimatfeste 2026"), aber dort als generisch bezeichnete Quelle mit
 		// zu granularer Stadtteil-Ortsangabe (z.B. "Münchrath"), die unsere

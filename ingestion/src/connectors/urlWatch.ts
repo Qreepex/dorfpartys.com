@@ -65,13 +65,12 @@ export const urlWatchConnector: Connector<UrlWatchSourceConfig> = {
 						items.push({
 							sourceId: `${source.id}:llm`,
 							title: extracted.title ?? undefined,
-							description: extracted.description ?? undefined,
 							link: entry.url,
 							dateRaw: extracted.date ?? undefined,
 							location: extracted.location ?? undefined,
 							organizer: extracted.organizer ?? undefined,
-							bundeslandHint: entry.bundeslandHint,
-							kreisHint: entry.kreisHint
+							bundeslandHint: extracted.bundesland ?? entry.bundeslandHint,
+							kreisHint: extracted.kreis ?? entry.kreisHint
 						});
 						console.log(`[url-watch:${source.id}] ${entry.url}: Event via LLM erkannt - bitte gegenprüfen ("${extracted.title}").`);
 					} else {

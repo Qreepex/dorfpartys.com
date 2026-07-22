@@ -21,7 +21,10 @@ async function verifyUser(
 ) {
   // Lade User + Profil
   let userRow, profileRow;
-  [userRow] = await db.select().from(schema.user).where(eq(schema.user.id, userId));
+  [userRow] = await db
+    .select()
+    .from(schema.user)
+    .where(eq(schema.user.id, userId));
 
   if (!userRow) {
     console.error(`User not found: ${userId}`);

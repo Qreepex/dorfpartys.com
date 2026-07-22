@@ -72,6 +72,13 @@ export interface RssSourceConfig extends SourceBase {
 export interface IcsSourceConfig extends SourceBase {
 	connector: 'ics';
 	url: string;
+	/**
+	 * Fallback-Link für Termine, deren VEVENT selbst keine URL mitliefert (z.B.
+	 * Vereins-/Verbands-CMS ohne Per-Event-Detailseiten, nur eine allgemeine
+	 * Kalenderseite) - ohne das würde `normalizeItem` das Item mangels Link
+	 * verwerfen (siehe `pipeline/normalize.ts`).
+	 */
+	fallbackLink?: string;
 }
 
 /** Mapping von normalisierten Feldnamen auf Dot-Paths relativ zu einem Item-Objekt. */

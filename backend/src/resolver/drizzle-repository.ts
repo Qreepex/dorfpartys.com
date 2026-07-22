@@ -104,6 +104,7 @@ export function createDrizzleTaxonomyRepository(
       country,
       filters,
       limit = 50,
+      offset = 0,
     ): Promise<EventListItem[]> {
       const rows = await db
         .select({
@@ -134,7 +135,8 @@ export function createDrizzleTaxonomyRepository(
         // Frontend ([country]/[...segments]/+page.svelte), die Reihenfolge hier
         // ist daher nur für nicht-dateless Events relevant.
         .orderBy(sql`${event.startDate} asc nulls last`)
-        .limit(limit);
+        .limit(limit)
+        .offset(offset);
 
       return rows.map((row) => ({
         slug: row.slug,

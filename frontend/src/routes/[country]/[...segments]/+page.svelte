@@ -21,6 +21,52 @@
 		result ? `${SITE_URL}${buildFilterUrl(result.filters.country, result.filters)}` : ''
 	);
 
+	// "Mehr laden"-Pagination für zukünftige Events (AGENTS.md-Feature: initial
+	// werden max. 50 zukünftige Events geladen, backend/src/resolver/resolve.ts).
+	// Wird bei jedem Filterwechsel (neue `outcome`) zurückgesetzt, da die
+	// Page-Komponente bei client-seitiger Navigation innerhalb derselben Route
+	// nicht neu gemountet wird.
+	let additionalFutureEvents = $state<NonNullable<typeof result>['results']>([]);
+	let loadingMore = $state(false);
+	let loadMoreFailed = $state(false);
+
+	$effect(() => {
+		outcome;
+		additionalFutureEvents = [];
+		loadMoreFailed = false;
+	});
+
+	const loadedFutureCount = $derived((result?.futureCount ?? 0) + additionalFutureEvents.length);
+	const canLoadMore = $derived(
+		result != null && (result.totalFutureCount ?? result.futureCount ?? 0) > loadedFutureCount
+	);
+	const allResults = $derived(result ? [...result.results, ...additionalFutureEvents] : []);
+
+	async function loadMoreEvents() {
+		if (!result || loadingMore) return;
+		loadingMore = true;
+		loadMoreFailed = false;
+		try {
+			const params = new URLSearchParams({
+				country: result.filters.country,
+				segments: segmentsPath(
+					result.filters.bundeslandSlug,
+					result.filters.kreisSlug,
+					result.filters.artSlug
+				),
+				offset: String(loadedFutureCount)
+			});
+			const response = await fetch(`/mehr-veranstaltungen?${params}`);
+			if (!response.ok) throw new Error('load-more failed');
+			const { results } = await response.json();
+			additionalFutureEvents = [...additionalFutureEvents, ...results];
+		} catch {
+			loadMoreFailed = true;
+		} finally {
+			loadingMore = false;
+		}
+	}
+
 	// Gruppiere Events nach Monat (+ Jahr, sobald abweichend vom aktuellen Jahr) + Archiv-Status
 	// für semantische H2/H3-Überschriften. Jahr wird angehängt sobald ein Event nicht im
 	// aktuellen Kalenderjahr liegt (nicht nur bei tatsächlicher Kollision), siehe monthGroup().
@@ -46,7 +92,7 @@
 		const archiveGroups = new SvelteMap<string, MonthBucket>();
 		const dateless: NonNullable<typeof result>['results'] = [];
 
-		for (const event of result.results) {
+		for (const event of allResults) {
 			if (!event.startDate) {
 				dateless.push(event);
 				continue;
@@ -233,10 +279,10 @@
 					<p class="mt-2 text-muted">{paragraph}</p>
 				{/each}
 				<p class="mt-2 text-[0.85rem] text-muted">
-					{#if result.futureCount && result.pastCount}
-						{result.futureCount} kommend, {result.pastCount} archiviert
-					{:else if result.futureCount}
-						{result.futureCount} Treffer (kommend)
+					{#if result.totalFutureCount && result.pastCount}
+						{result.totalFutureCount} kommend, {result.pastCount} archiviert
+					{:else if result.totalFutureCount}
+						{result.totalFutureCount} Treffer (kommend)
 					{:else if result.pastCount}
 						{result.pastCount} Treffer (archiviert)
 					{:else}
@@ -270,6 +316,34 @@
 					</div>
 				{/each}
 			</section>
+
+			<!--
+				"Mehr laden": nur sichtbar, wenn mehr zukünftige Events existieren als
+				bereits geladen wurden (initial max. 50, siehe `resolve.ts`/AGENTS.md) -
+				bewusst zwischen "Kommend" und "Ohne Termin"/Archiv platziert, da nur
+				zukünftige Events nachgeladen werden.
+			-->
+			{#if canLoadMore}
+				<div class="mb-12 flex flex-col items-center gap-2">
+					<button
+						type="button"
+						class="hover:bg-accent rounded-full border border-border px-5 py-2 text-sm transition-colors disabled:opacity-50"
+						onclick={loadMoreEvents}
+						disabled={loadingMore}
+					>
+						{loadingMore ? 'Lädt…' : 'Mehr laden'}
+					</button>
+					{#if loadMoreFailed}
+						<p class="text-sm text-red-600">
+							Laden fehlgeschlagen. <button
+								type="button"
+								class="text-primary underline"
+								onclick={loadMoreEvents}>Erneut versuchen</button
+							>
+						</p>
+					{/if}
+				</div>
+			{/if}
 
 			<!--
 				Dateless Events ("Termin noch nicht bekannt"): bewusst zwischen den

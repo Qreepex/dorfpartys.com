@@ -47,6 +47,7 @@ export interface TaxonomyRepository {
     country: Country,
     filters: EventFilterIds,
     limit?: number,
+    offset?: number,
   ): Promise<EventListItem[]>;
   listApprovedEventsPast12Months(
     country: Country,

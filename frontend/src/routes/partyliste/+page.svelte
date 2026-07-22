@@ -32,7 +32,8 @@
 										weekday: 'short',
 										day: '2-digit',
 										month: 'short',
-										year: 'numeric'
+										year: 'numeric',
+										timeZone: 'Europe/Berlin'
 									})}
 								{:else}
 									Termin folgt

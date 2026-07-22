@@ -1,3 +1,5 @@
+import { getGermanDateParts } from '../date/german-time.js';
+
 export const COUNTRIES = ['de', 'at', 'ch'] as const;
 export type Country = (typeof COUNTRIES)[number];
 
@@ -38,9 +40,10 @@ export const MONTH_SLUGS = MONTHS.map((m) => m.slug) as [string, ...string[]];
  * bleibt statt von den übrigen Events auf der Seite abzuhängen.
  */
 export function monthGroup(date: Date, now: Date = new Date()): { slug: string; label: string } {
-	const month = MONTHS[date.getMonth()];
-	const year = date.getFullYear();
-	if (year === now.getFullYear()) {
+	const parts = getGermanDateParts(date);
+	const month = MONTHS[parts.month - 1];
+	const year = parts.year;
+	if (year === getGermanDateParts(now).year) {
 		return { slug: month.slug, label: month.name };
 	}
 	return { slug: `${month.slug}-${year}`, label: `${month.name} ${year}` };

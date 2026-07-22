@@ -113,7 +113,10 @@
 
 	function resultHref(result: Result) {
 		if (result.type === 'event') {
-			return resolve('/[country]/veranstaltung/[slug]', { country: result.country, slug: result.slug });
+			return resolve('/[country]/veranstaltung/[slug]', {
+				country: result.country,
+				slug: result.slug
+			});
 		}
 		if (result.type === 'organizer') {
 			return resolve('/veranstalter/[slug]', { slug: result.slug });
@@ -172,7 +175,11 @@
 
 	function day(iso: string | null) {
 		return iso
-			? new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+			? new Date(iso).toLocaleDateString('de-DE', {
+					day: '2-digit',
+					month: '2-digit',
+					timeZone: 'Europe/Berlin'
+				})
 			: 'Ohne Termin';
 	}
 </script>
@@ -255,7 +262,9 @@
 										>
 											{COUNTRY_LABELS[item.country]}
 										</span>
-										<span class="min-w-0 flex-1 truncate text-[0.92rem] text-text">{item.label}</span>
+										<span class="min-w-0 flex-1 truncate text-[0.92rem] text-text"
+											>{item.label}</span
+										>
 									</a>
 								</li>
 							{/each}

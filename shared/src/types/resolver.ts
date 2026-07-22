@@ -62,6 +62,13 @@ export interface ResolveResult {
 	indexable: boolean;
 	futureCount?: number;
 	pastCount?: number;
+	/**
+	 * Gesamtzahl zukünftiger Events (ungedeckelt) - im Gegensatz zu `futureCount`
+	 * (Länge der bereits geladenen ersten Seite, siehe `resolve.ts`). Frontend
+	 * zeigt den "Mehr laden"-Button, solange `totalFutureCount` größer ist als
+	 * die Anzahl bereits geladener zukünftiger Events.
+	 */
+	totalFutureCount?: number;
 	/** Social-Media Preview-Bild für diese Filter-Kombination (optional, falls OG-Image generiert wurde) */
 	ogImageUrl?: string;
 	/** Navigation tree: available sub-categories with event counts */

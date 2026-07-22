@@ -1,14 +1,15 @@
 import type { LlmConfig } from '../types.js';
 
-const SYSTEM_PROMPT = `Du bekommst den sichtbaren Textinhalt einer Webseite. Prüfe, ob die Seite eine konkrete, in der Zukunft stattfindende lokale Veranstaltung ankündigt - insbesondere Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten, Dorffeste, Osterfeuer, Oktoberfeste, Karneval/Fasching, Sportfeste, Feuerwehrfeste, Erntefeste, Maifeste, Trecker-Treck/Tractorpulling, Open Airs oder ähnliche Dorf-/Vereinsfeste. Große kommerzielle Festivals, Stadtfeste großer Städte, Weihnachtsmärkte, reine Vereinssitzungen oder allgemeine Newsartikel ohne konkretes Datum zählen NICHT.
+const SYSTEM_PROMPT = `Du bekommst den sichtbaren Textinhalt einer Webseite. Prüfe, ob die Seite eine oder mehrere konkrete, in der Zukunft stattfindendene lokale Veranstaltungen ankündigt - insbesondere Schützenfeste, Zeltfeten, Scheunenfeten, Stoppelfeten, Dorffeste, Osterfeuer, Oktoberfeste, Karneval/Fasching, Sportfeste, Feuerwehrfeste, Erntefeste, Maifeste, Trecker-Treck/Tractorpulling, Open Airs oder ähnliche Dorf-/Vereinsfeste. Große kommerzielle Festivals, Stadtfeste großer Städte, Weihnachtsmärkte, reine Vereinssitzungen oder allgemeine Newsartikel ohne konkretes Datum zählen NICHT.
 
 Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt, ohne Markdown-Codeblock, ohne weiteren Text, in genau diesem Format:
-{"found": true oder false, "title": string oder null, "date": string oder null, "location": string oder null, "organizer": string oder null, "description": string oder null}
+[{"found": true oder false, "title": string oder null, "date": string oder null, "location": string oder null, "organizer": string oder null, "bundesland": string oder null, "kreis": string oder null, "description": string oder null}]
 
 - "date": wenn möglich als ISO 8601 (z.B. "2026-08-15T19:00:00"), sonst so genau wie im Text angegeben (z.B. "15.08.2026").
-- "location": Ort/Kreis/Adresse, so konkret wie im Text vorhanden.
-- Wenn keine konkrete Veranstaltung mit erkennbarem Datum vorhanden ist, antworte exakt {"found": false, "title": null, "date": null, "location": null, "organizer": null, "description": null}.
-- Erfinde keine Informationen, die nicht im Text stehen.`;
+- Bundesland als 2-stellige Abkürzung (z.B. "NW" für Nordrhein-Westfalen, "BY" für Bayern, "HE" für Hessen, "SH" für Schleswig-Holstein, etc.), Kreis als offizieller Name (z.B. "Rhein-Sieg-Kreis", "Landkreis Emsland", etc.) - wenn im Text nicht vorhanden, dann null.
+- "location": Ort/Kreis/Adresse, so konkret wie im Text vorhanden. Wenn du von einem Ort genau weißt, in welchem Bundesland und Kreis er liegt, kannst du das ergänzen.
+- Wenn keine konkrete Veranstaltung mit erkennbarem Datum vorhanden ist, antworte exakt [].
+- Erfinde keine anderen Informationen, die nicht im Text stehen.`;
 
 export interface LlmExtractionResult {
 	found: boolean;
@@ -16,8 +17,9 @@ export interface LlmExtractionResult {
 	date: string | null;
 	location: string | null;
 	organizer: string | null;
-	description: string | null;
-}
+	bundesland: string | null;
+	kreis: string | null;
+}[]
 
 interface OpenWebUiChatResponse {
 	choices?: Array<{ message?: { content?: string } }>;

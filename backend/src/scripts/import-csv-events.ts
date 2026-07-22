@@ -6,9 +6,20 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { db, queryClient } from "../db/index.js";
-import { bundesland, event, eventLink, kreis, partyArt, user, userProfile } from "../db/schema.js";
+import {
+  bundesland,
+  event,
+  eventLink,
+  kreis,
+  partyArt,
+  user,
+  userProfile,
+} from "../db/schema.js";
 import { sanitizeText } from "../sanitization/index.js";
-import { generateUniqueEventSlug, generateUniqueOrganizerSlug } from "../slug/index.js";
+import {
+  generateUniqueEventSlug,
+  generateUniqueOrganizerSlug,
+} from "../slug/index.js";
 
 /**
  * Importiert Events aus der CSV-Pipeline (siehe `ingestion/`, Format
@@ -48,21 +59,21 @@ const BUNDESLAND_CODE_TO_SLUG: Record<string, string> = {
   ST: "sachsen-anhalt",
   TH: "thueringen",
   "SCHLESWIG-HOLSTEIN": "schleswig-holstein",
-  "NIEDERSACHSEN": "niedersachsen",
-  "HAMBURG": "hamburg",
-  "BREMEN": "bremen",
+  NIEDERSACHSEN: "niedersachsen",
+  HAMBURG: "hamburg",
+  BREMEN: "bremen",
   "NORDRHEIN-WESTFALEN": "nordrhein-westfalen",
-  "HESSEN": "hessen",
+  HESSEN: "hessen",
   "RHEINLAND-PFALZ": "rheinland-pfalz",
   "BADEN-WÜRTTEMBERG": "baden-wuerttemberg",
-  "BAYERN": "bayern",
-  "SAARLAND": "saarland",
-  "BERLIN": "berlin",
-  "BRANDENBURG": "brandenburg",
+  BAYERN: "bayern",
+  SAARLAND: "saarland",
+  BERLIN: "berlin",
+  BRANDENBURG: "brandenburg",
   "MECKLENBURG-VORPOMMERN": "mecklenburg-vorpommern",
-  "SACHSEN": "sachsen",
+  SACHSEN: "sachsen",
   "SACHSEN-ANHALT": "sachsen-anhalt",
-  "THÜRINGEN": "thueringen"
+  THÜRINGEN: "thueringen",
 };
 
 interface CsvRow {
@@ -133,12 +144,16 @@ async function ensureImportBotUser(): Promise<string> {
  * statt bei jeder Zeile neu anzulegen (sonst bekäme z.B. "Freiwillige
  * Feuerwehr Wardow" bei jedem Import ein neues Ghost-Profil).
  */
-async function findOrCreateGhostOrganizer(displayName: string): Promise<string> {
+async function findOrCreateGhostOrganizer(
+  displayName: string,
+): Promise<string> {
   const [existingGhost] = await db
     .select({ userId: userProfile.userId })
     .from(userProfile)
     .innerJoin(user, eq(user.id, userProfile.userId))
-    .where(and(eq(user.isGhost, true), eq(userProfile.displayName, displayName)));
+    .where(
+      and(eq(user.isGhost, true), eq(userProfile.displayName, displayName)),
+    );
   if (existingGhost) return existingGhost.userId;
 
   const [ghost] = await db
@@ -177,7 +192,9 @@ async function importRow(
   const organizerName = sanitizeText(row.Veranstalter?.trim() ?? "") || null;
 
   if (!title || !dateRaw || !bundeslandCode || !kreisName || !partyArtSlug) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - Pflichtfeld fehlt ("${title || row.Titel}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - Pflichtfeld fehlt ("${title || row.Titel}")`,
+    );
     stats.skippedInvalidRow += 1;
     return;
   }
@@ -190,14 +207,18 @@ async function importRow(
 
   const startDate = new Date(dateRaw);
   if (Number.isNaN(startDate.getTime())) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - Datum "${dateRaw}" nicht parsbar ("${title}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - Datum "${dateRaw}" nicht parsbar ("${title}")`,
+    );
     stats.skippedInvalidRow += 1;
     return;
   }
 
   const bundeslandSlug = BUNDESLAND_CODE_TO_SLUG[bundeslandCode];
   if (!bundeslandSlug) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - unbekannter Bundesland-Code "${bundeslandCode}" ("${title}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - unbekannter Bundesland-Code "${bundeslandCode}" ("${title}")`,
+    );
     stats.skippedUnknownTaxonomy += 1;
     return;
   }
@@ -207,7 +228,9 @@ async function importRow(
     .from(bundesland)
     .where(eq(bundesland.slug, bundeslandSlug));
   if (!bundeslandRow) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - Bundesland "${bundeslandSlug}" nicht in DB ("${title}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - Bundesland "${bundeslandSlug}" nicht in DB ("${title}")`,
+    );
     stats.skippedUnknownTaxonomy += 1;
     return;
   }
@@ -226,19 +249,36 @@ async function importRow(
     kreisName = "Stormarn";
   }
 
+  if (kreisName.startsWith("Landkreis ")) {
+    kreisName = kreisName.slice("Landkreis ".length);
+  }
+
+  if (kreisName.startsWith("Kreis ")) {
+    kreisName = kreisName.slice("Kreis ".length);
+  }
+
   const [kreisRow] = await db
     .select({ id: kreis.id, name: kreis.name })
     .from(kreis)
-    .where(and(eq(kreis.name, kreisName), eq(kreis.bundeslandId, bundeslandRow.id)));
+    .where(
+      and(eq(kreis.name, kreisName), eq(kreis.bundeslandId, bundeslandRow.id)),
+    );
   if (!kreisRow) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - Kreis "${kreisName}" (${bundeslandCode}) nicht in DB ("${title}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - Kreis "${kreisName}" (${bundeslandCode}) nicht in DB ("${title}")`,
+    );
     stats.skippedUnknownTaxonomy += 1;
     return;
   }
 
-  const [partyArtRow] = await db.select({ id: partyArt.id }).from(partyArt).where(eq(partyArt.slug, partyArtSlug));
+  const [partyArtRow] = await db
+    .select({ id: partyArt.id })
+    .from(partyArt)
+    .where(eq(partyArt.slug, partyArtSlug));
   if (!partyArtRow) {
-    console.warn(`  Zeile ${rowIndex}: übersprungen - Partyart "${partyArtSlug}" nicht in DB ("${title}")`);
+    console.warn(
+      `  Zeile ${rowIndex}: übersprungen - Partyart "${partyArtSlug}" nicht in DB ("${title}")`,
+    );
     stats.skippedUnknownTaxonomy += 1;
     return;
   }
@@ -248,7 +288,10 @@ async function importRow(
   // stabilste natürliche Schlüssel - die Ingestion-Pipeline dedupliziert
   // selbst schon darüber (siehe ingestion/src/pipeline/dedupe.ts).
   if (link) {
-    const [existingLink] = await db.select({ eventId: eventLink.eventId }).from(eventLink).where(eq(eventLink.url, link));
+    const [existingLink] = await db
+      .select({ eventId: eventLink.eventId })
+      .from(eventLink)
+      .where(eq(eventLink.url, link));
     if (existingLink) {
       stats.alreadyImported += 1;
       return;
@@ -256,7 +299,9 @@ async function importRow(
   }
 
   if (dryRun) {
-    console.log(`  [DRY-RUN] würde importieren: "${title}" (${kreisRow.name}, ${partyArtSlug}) - Veranstalter: ${organizerName ?? "(unbekannt)"}`);
+    console.log(
+      `  [DRY-RUN] würde importieren: "${title}" (${kreisRow.name}, ${partyArtSlug}) - Veranstalter: ${organizerName ?? "(unbekannt)"}`,
+    );
     stats.imported += 1;
     return;
   }
@@ -265,7 +310,9 @@ async function importRow(
   // routers/events.ts - dort laufen Organizer-Resolution und Event-Insert
   // ebenfalls als einfache sequenzielle awaits.
   try {
-    const organizerUserId = organizerName ? await findOrCreateGhostOrganizer(organizerName) : null;
+    const organizerUserId = organizerName
+      ? await findOrCreateGhostOrganizer(organizerName)
+      : null;
     const slug = await generateUniqueEventSlug(db, title, kreisRow.name);
 
     const [eventRow] = await db
@@ -297,19 +344,28 @@ async function importRow(
       });
     }
 
-    console.log(`  Importiert: ${title} (/${bundeslandRow.country}/veranstaltung/${slug}/)`);
+    console.log(
+      `  Importiert: ${title} (/${bundeslandRow.country}/veranstaltung/${slug}/)`,
+    );
     stats.imported += 1;
   } catch (error) {
-    console.error(`  Zeile ${rowIndex}: Fehler beim Import von "${title}":`, error);
+    console.error(
+      `  Zeile ${rowIndex}: Fehler beim Import von "${title}":`,
+      error,
+    );
     stats.errors += 1;
   }
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const csvPath = args.file ? resolve(process.cwd(), args.file) : resolve(__dirname, "../../../data.csv");
+  const csvPath = args.file
+    ? resolve(process.cwd(), args.file)
+    : resolve(__dirname, "../../../data.csv");
 
-  console.log(`CSV-Import startet${args.dryRun ? " (Trockenlauf, es wird nichts geschrieben)" : ""}...`);
+  console.log(
+    `CSV-Import startet${args.dryRun ? " (Trockenlauf, es wird nichts geschrieben)" : ""}...`,
+  );
   console.log(`Quelle: ${csvPath}\n`);
 
   const rows = readCsvRows(csvPath);
@@ -330,10 +386,18 @@ async function main() {
 
   console.log("\nZusammenfassung:");
   console.log(`  ${stats.total} Zeilen in der CSV`);
-  console.log(`  ${stats.imported} ${args.dryRun ? "würden importiert" : "importiert"}`);
-  console.log(`  ${stats.alreadyImported} bereits vorher importiert (übersprungen)`);
-  console.log(`  ${stats.skippedInvalidRow} übersprungen (Pflichtfeld/Datum fehlt oder ungültig)`);
-  console.log(`  ${stats.skippedUnknownTaxonomy} übersprungen (Bundesland/Kreis/Partyart nicht in DB)`);
+  console.log(
+    `  ${stats.imported} ${args.dryRun ? "würden importiert" : "importiert"}`,
+  );
+  console.log(
+    `  ${stats.alreadyImported} bereits vorher importiert (übersprungen)`,
+  );
+  console.log(
+    `  ${stats.skippedInvalidRow} übersprungen (Pflichtfeld/Datum fehlt oder ungültig)`,
+  );
+  console.log(
+    `  ${stats.skippedUnknownTaxonomy} übersprungen (Bundesland/Kreis/Partyart nicht in DB)`,
+  );
   console.log(`  ${stats.errors} Fehler beim Schreiben`);
 }
 

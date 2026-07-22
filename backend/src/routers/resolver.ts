@@ -1,16 +1,28 @@
+import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import {
   buildCountryRootUrl,
   buildFilterUrl,
   resolverInputSchema,
+  resolverLoadMoreInputSchema,
   type Country,
   type ResolvedFilterNames,
 } from "@dorfpartys/shared";
 import { bundesland, kreis, partyArt } from "../db/schema.js";
-import { createDrizzleTaxonomyRepository, resolve } from "../resolver/index.js";
+import {
+  classifySegments,
+  createDrizzleTaxonomyRepository,
+  filterIdsFromClassified,
+  resolve,
+} from "../resolver/index.js";
 import { buildBreadcrumbJsonLd, buildSearchSeoCopy } from "../seo/index.js";
 import { publicProcedure, router } from "../trpc/trpc.js";
 import type { Database } from "../db/index.js";
+
+// Feste Seitengröße für "Mehr laden" - deckungsgleich mit dem Default-Limit
+// von `listApprovedEvents` (backend/src/resolver/drizzle-repository.ts), damit
+// Offsets zwischen initialem Load und Nachlade-Seiten konsistent bleiben.
+const LOAD_MORE_PAGE_SIZE = 50;
 
 const COUNTRY_LABELS: Record<Country, string> = {
   de: "Deutschland",
@@ -203,5 +215,33 @@ export const resolverRouter = router({
       );
 
       return { ...outcome, names, seo, breadcrumbJsonLd, navigationTree };
+    }),
+
+  // "Mehr laden" auf Filter-/Suchseiten (nur zukünftige Events, siehe
+  // AGENTS.md 1.6/Sidebar-Todo) - dieselben Segmente wie `resolve`, aber ohne
+  // die Namen/SEO/Navigation-Anreicherung, da nur die nächste Event-Seite
+  // gebraucht wird.
+  loadMoreEvents: publicProcedure
+    .input(resolverLoadMoreInputSchema)
+    .query(async ({ ctx, input }) => {
+      const repo = createDrizzleTaxonomyRepository(ctx.db);
+      const classifyResult = await classifySegments(
+        input.country,
+        input.segments,
+        repo,
+      );
+      if (!classifyResult.ok) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      const filterIds = filterIdsFromClassified(classifyResult.classified);
+      const results = await repo.listApprovedEvents(
+        input.country,
+        filterIds,
+        LOAD_MORE_PAGE_SIZE,
+        input.offset,
+      );
+
+      return { results };
     }),
 });

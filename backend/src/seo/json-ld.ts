@@ -1,4 +1,18 @@
-import { SITE_URL } from "@dorfpartys/shared";
+import {
+  SITE_URL,
+  hasKnownGermanTime,
+  toGermanIsoDateString,
+  toGermanIsoString,
+} from "@dorfpartys/shared";
+
+/**
+ * 00:00 Uhr (Europe/Berlin) gilt als "Uhrzeit unbekannt" (siehe
+ * hasKnownGermanTime) - dafür geben wir nur das Datum aus, statt fälschlich
+ * Mitternacht als tatsächliche Startzeit zu behaupten.
+ */
+function toGermanIsoDateOrDateTime(date: Date): string {
+  return hasKnownGermanTime(date) ? toGermanIsoString(date) : toGermanIsoDateString(date);
+}
 
 export interface EventJsonLdInput {
   title: string;
@@ -44,8 +58,12 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
     "@type": "Event",
     name: input.title,
     ...(input.description ? { description: input.description } : {}),
-    startDate: input.startDate.toISOString(),
-    ...(input.endDate ? { endDate: input.endDate.toISOString() } : {}),
+    // Explizites Europe/Berlin-Offset statt `.toISOString()` (UTC/"Z") - siehe
+    // toGermanIsoString-Kommentar. Sonst zeigt Googles Rich-Result-Vorschau
+    // die Uhrzeit teils in einer anderen Zeitzone als der tatsächlichen
+    // Event-Zeitzone an (z.B. 20 Uhr wird zu 11 Uhr).
+    startDate: toGermanIsoDateOrDateTime(input.startDate),
+    ...(input.endDate ? { endDate: toGermanIsoDateOrDateTime(input.endDate) } : {}),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
     location: {

@@ -1,4 +1,5 @@
 export * from './constants/index.js';
+export * from './date/german-time.js';
 
 export * from './types/taxonomy.js';
 export * from './types/user.js';
