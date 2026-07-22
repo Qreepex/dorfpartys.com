@@ -28,7 +28,18 @@
 		eventCount: number;
 		countries: Country[];
 	};
-	type Result = EventResult | OrganizerResult;
+	// Treffer aus den Filter-Vokabularen (Bundesland/Kreis/Party-Art) + Land
+	// (backend/src/routers/search.ts `findTaxonomyMatch`) - z.B. "Schleswig
+	// Holstein" -> /de/schleswig-holstein/, "Open Air Niedersachsen" ->
+	// /de/niedersachsen/open-air/. `href` ist bereits eine fertige, absolute
+	// Pfad-URL (buildFilterUrl im Backend) - kein `resolve()` nötig.
+	type LocationResult = {
+		type: 'location';
+		href: string;
+		label: string;
+		country: Country;
+	};
+	type Result = LocationResult | EventResult | OrganizerResult;
 
 	interface Props {
 		value: string;
@@ -43,12 +54,13 @@
 
 	let events = $state<EventResult[]>([]);
 	let organizers = $state<OrganizerResult[]>([]);
+	let locations = $state<LocationResult[]>([]);
 	let loading = $state(false);
 	let activeIndex = $state(-1);
 	let focused = $state(false);
 	let containerEl: HTMLDivElement | undefined = $state();
 
-	const results = $derived<Result[]>([...events, ...organizers]);
+	const results = $derived<Result[]>([...locations, ...events, ...organizers]);
 	const hasQuery = $derived(value.trim().length > 0);
 	const hasResults = $derived(results.length > 0);
 	const showPanel = $derived(focused && hasQuery);
@@ -61,6 +73,7 @@
 		if (q.length < 1) {
 			events = [];
 			organizers = [];
+			locations = [];
 			loading = false;
 			return;
 		}
@@ -76,10 +89,12 @@
 				const json = await response.json();
 				events = json.events ?? [];
 				organizers = json.organizers ?? [];
+				locations = json.locations ?? [];
 			} catch (error) {
 				if ((error as Error).name !== 'AbortError') {
 					events = [];
 					organizers = [];
+					locations = [];
 				}
 			} finally {
 				if (abortController === controller) {
@@ -91,9 +106,13 @@
 	});
 
 	function resultHref(result: Result) {
-		return result.type === 'event'
-			? resolve('/[country]/veranstaltung/[slug]', { country: result.country, slug: result.slug })
-			: resolve('/veranstalter/[slug]', { slug: result.slug });
+		if (result.type === 'event') {
+			return resolve('/[country]/veranstaltung/[slug]', { country: result.country, slug: result.slug });
+		}
+		if (result.type === 'organizer') {
+			return resolve('/veranstalter/[slug]', { slug: result.slug });
+		}
+		return result.href;
 	}
 
 	function closePanel() {
@@ -215,6 +234,31 @@
 				{:else if !hasResults}
 					<p class="px-3.5 py-4 text-[0.85rem] text-muted">Keine Treffer für „{value}“.</p>
 				{:else}
+					{#if locations.length > 0}
+						<p
+							class="px-3.5 pt-3 pb-1 text-[0.72rem] font-bold tracking-[0.08em] text-muted uppercase"
+						>
+							Orte & Kategorien
+						</p>
+						<ul>
+							{#each locations as item, i (item.href)}
+								<li>
+									<a
+										class={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === i ? 'bg-border' : ''}`}
+										href={item.href}
+										onclick={closePanel}
+									>
+										<span
+											class="flex-0 shrink-0 border border-border px-1.5 py-0.5 text-[0.68rem] font-bold tracking-wider text-muted uppercase"
+										>
+											{COUNTRY_LABELS[item.country]}
+										</span>
+										<span class="min-w-0 flex-1 truncate text-[0.92rem] text-text">{item.label}</span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					{/if}
 					{#if events.length > 0}
 						<p
 							class="px-3.5 pt-3 pb-1 text-[0.72rem] font-bold tracking-[0.08em] text-muted uppercase"
@@ -225,7 +269,7 @@
 							{#each events as item, i (item.slug)}
 								<li>
 									<a
-										class={`flex items-start gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === i ? 'bg-border' : ''}`}
+										class={`flex items-start gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === locations.length + i ? 'bg-border' : ''}`}
 										href={resultHref(item)}
 										onclick={closePanel}
 									>
@@ -256,7 +300,7 @@
 							{#each organizers as item, i (item.slug)}
 								<li>
 									<a
-										class={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === events.length + i ? 'bg-border' : ''}`}
+										class={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline hover:bg-border ${activeIndex === locations.length + events.length + i ? 'bg-border' : ''}`}
 										href={resultHref(item)}
 										onclick={closePanel}
 									>

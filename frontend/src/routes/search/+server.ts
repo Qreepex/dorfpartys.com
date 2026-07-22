@@ -6,7 +6,7 @@ import type { RequestHandler } from './$types.js';
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const query = url.searchParams.get('q')?.trim() ?? '';
 	if (query.length < 1) {
-		return json({ events: [], organizers: [] });
+		return json({ events: [], organizers: [], locations: [] });
 	}
 
 	const results = await locals.trpc.search.global.query({ query });

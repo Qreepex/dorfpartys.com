@@ -12,6 +12,7 @@
 
 	type EventResult = PageData['events'][number];
 	type OrganizerResult = PageData['organizers'][number];
+	type LocationResult = PageData['locations'][number];
 
 	// Lokaler, mutabler State statt direkt `data.*` zu rendern - das
 	// Live-Suchfeld unten aktualisiert diese Werte client-seitig per Debounce
@@ -20,6 +21,7 @@
 	let query = $state(untrack(() => data.query));
 	let events = $state<EventResult[]>(untrack(() => data.events));
 	let organizers = $state<OrganizerResult[]>(untrack(() => data.organizers));
+	let locations = $state<LocationResult[]>(untrack(() => data.locations));
 	let loading = $state(false);
 
 	// Verhindert, dass der Debounce-Effekt unten unnötig nachlädt: einmal beim
@@ -37,6 +39,7 @@
 			query = data.query;
 			events = data.events;
 			organizers = data.organizers;
+			locations = data.locations;
 		}
 	});
 
@@ -52,6 +55,7 @@
 			abortController?.abort();
 			events = [];
 			organizers = [];
+			locations = [];
 			loading = false;
 			return;
 		}
@@ -67,10 +71,12 @@
 			const json = await response.json();
 			events = json.events ?? [];
 			organizers = json.organizers ?? [];
+			locations = json.locations ?? [];
 		} catch (error) {
 			if ((error as Error).name !== 'AbortError') {
 				events = [];
 				organizers = [];
+				locations = [];
 			}
 		} finally {
 			if (abortController === controller) {
@@ -98,7 +104,7 @@
 	}
 
 	const hasQuery = $derived(query.trim().length > 0);
-	const totalResults = $derived(events.length + organizers.length);
+	const totalResults = $derived(events.length + organizers.length + locations.length);
 
 	// SEO (Nutzer-Vorgabe): nur die kanonische Basis-URL /suche soll indexiert
 	// werden, nicht die einzelnen `?q=...`-Varianten (sonst potenziell beliebig
@@ -173,6 +179,29 @@
 			<section class="mt-8">
 				<h2>Veranstaltungen</h2>
 				<EventList {events} country={events[0]?.country ?? 'de'} />
+			</section>
+		{/if}
+
+		{#if locations.length > 0}
+			<section class="mt-8">
+				<h2>Orte & Kategorien</h2>
+				<ul class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+					{#each locations as item (item.href)}
+						<li>
+							<a
+								class="flex items-center gap-3 border border-border bg-bg-alt px-4 py-3 text-text no-underline hover:border-primary hover:text-primary"
+								href={item.href}
+							>
+								<span
+									class="flex-0 shrink-0 border border-border px-1.5 py-0.5 text-[0.68rem] font-bold tracking-wider text-muted uppercase"
+								>
+									{COUNTRY_LABELS[item.country as Country]}
+								</span>
+								<span class="min-w-0 flex-1 truncate text-[0.95rem]">{item.label}</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
 			</section>
 		{/if}
 

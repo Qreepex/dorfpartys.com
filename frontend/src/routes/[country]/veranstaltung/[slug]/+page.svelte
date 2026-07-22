@@ -144,7 +144,7 @@
 	// in backend/src/seo/search-copy.ts.
 	const pageTitle = $derived(
 		event.kreisName && event.bundeslandName
-			? `${event.title} in ${event.kreisName}, ${event.bundeslandName} | dorfpartys.com`
+			? `${event.title} in ${event.kreisName}, ${event.bundeslandName}`
 			: `${event.title} | dorfpartys.com`
 	);
 </script>

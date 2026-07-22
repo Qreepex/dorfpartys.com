@@ -10,9 +10,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const query = (url.searchParams.get('q')?.trim() ?? '').slice(0, 100);
 
 	if (query.length < 1) {
-		return { query, events: [], organizers: [] };
+		return { query, events: [], organizers: [], locations: [] };
 	}
 
-	const { events, organizers } = await locals.trpc.search.full.query({ query });
-	return { query, events, organizers };
+	const { events, organizers, locations } = await locals.trpc.search.full.query({ query });
+	return { query, events, organizers, locations };
 };
