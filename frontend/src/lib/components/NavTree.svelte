@@ -1,8 +1,24 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
 	import type { ResolveResult } from '@dorfpartys/shared';
 
 	let { result }: { result: ResolveResult } = $props();
+
+	let open = $state(true);
+
+	// Chrome (from v129) renders closed <details> content via a `::details-content` pseudo
+	// element with `content-visibility: hidden`, which CSS on the slotted children can no
+	// longer override (unlike the old `details:not([open]) > *:not(summary) { display: none }`
+	// UA rule). So instead of forcing visibility via CSS, the `open` attribute itself is driven
+	// from a media query: expanded by default (SSR/no-JS), collapsed on mobile once JS confirms it.
+	onMount(() => {
+		const mq = window.matchMedia('(min-width: 768px)');
+		const update = () => (open = mq.matches);
+		update();
+		mq.addEventListener('change', update);
+		return () => mq.removeEventListener('change', update);
+	});
 
 	function segmentsPath(...slugs: Array<string | null | undefined>) {
 		return slugs.filter((s): s is string => Boolean(s)).join('/');
@@ -12,12 +28,11 @@
 {#if result.navigationTree && (result.navigationTree.bundeslaender || result.navigationTree.kreise || result.navigationTree.partyArten)}
 	<nav class="mb-6" aria-label="Filter Navigation">
 		<!--
-			<details>/<summary> collapses this by default on mobile, so users don't have to
-			scroll past the whole nav tree before reaching the actual event list. On md+ it's a
-			fixed sidebar again: the summary click target is disabled and the content is forced
-			visible via `md:block!`, regardless of the (irrelevant there) open/closed state.
+			`open` is driven from a `min-width: 768px` (md) media query in onMount, not CSS: collapsed
+			by default on mobile, expanded as a fixed sidebar on md+. The summary click target is
+			disabled on md+ so users can't collapse the "sidebar" there.
 		-->
-		<details class="group bg-card rounded border border-border p-4">
+		<details {open} class="group bg-card rounded border border-border p-4">
 			<summary
 				class="flex list-none items-center justify-between font-semibold md:pointer-events-none md:cursor-default [&::-webkit-details-marker]:hidden"
 			>
@@ -37,7 +52,7 @@
 					<path d="m6 9 6 6 6-6" />
 				</svg>
 			</summary>
-			<div class="mt-4 md:block!">
+			<div class="mt-4">
 				{#if result.navigationTree.bundeslaender && result.navigationTree.bundeslaender.length > 0}
 					<div class="mb-6">
 						<h4 class="text-md mb-2 font-medium text-muted">Regionen</h4>
