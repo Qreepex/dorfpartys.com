@@ -365,7 +365,16 @@
 				</div>
 				<div>
 					<dt class="text-[0.7rem] tracking-[0.08em] text-muted uppercase">Wo</dt>
-					<dd class="mt-0.5 font-semibold">{event.addressDescription ?? 'Adresse folgt'}</dd>
+					<dd class="mt-0.5 font-semibold">
+						{event.addressDescription ??
+							(event.kreisName || event.bundeslandName
+								? event.kreisName && event.bundeslandName
+									? `${event.kreisName}, ${event.bundeslandName}`
+									: event.kreisName
+										? event.kreisName
+										: event.bundeslandName
+								: 'Adresse folgt')}
+					</dd>
 				</div>
 				{#if event.priceInfo}
 					<div>

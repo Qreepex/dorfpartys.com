@@ -17,8 +17,11 @@
     "db:seed": "pnpm --filter ./backend db:seed",
     "lint": "pnpm --filter ./frontend lint",
     "format": "pnpm --filter ./frontend format",
-    "check": "pnpm --filter ./shared check && pnpm --filter ./backend check && pnpm --filter ./frontend check",
-    "test": "pnpm --filter ./backend test"
+    "check": "pnpm --filter ./shared check && pnpm --filter ./backend check && pnpm --filter ./frontend check && pnpm --filter ./ingestion check",
+    "test": "pnpm --filter ./backend test",
+    "ingest": "pnpm --filter ./ingestion start",
+    "watch-urls": "pnpm --filter ./ingestion watch-urls",
+    "import:csv": "pnpm --filter ./backend import:csv"
   },
   "repository": {
     "type": "git",

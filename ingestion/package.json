@@ -1,0 +1,24 @@
+{
+	"name": "@dorfpartys/ingestion",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"start": "tsx src/index.ts",
+		"watch-urls": "tsx src/watchUrls.ts",
+		"build": "tsc -p tsconfig.json",
+		"check": "tsc -p tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@dorfpartys/shared": "workspace:*",
+		"csv-parse": "^7.0.1",
+		"dotenv": "^17.2.3",
+		"fast-xml-parser": "^5.10.1",
+		"node-ical": "^0.27.1"
+	},
+	"devDependencies": {
+		"@types/node": "*",
+		"tsx": "^4.23.1",
+		"typescript": "^7.0.2"
+	}
+}

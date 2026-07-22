@@ -11,3 +11,7 @@ infra/k8s/**/*.local.yaml
 infra/k8s/**/credentials.yaml
 
 certs/
+
+data.csv
+urls.txt
+opendata-quellen.md

@@ -25,6 +25,7 @@
     "generate-og-images": "tsx --env-file=.env src/scripts/generate-og-images.ts",
     "generate-og-images:test": "tsx --env-file=.env src/scripts/generate-og-images.ts --test-only",
     "verify-user": "tsx --env-file=.env src/scripts/verify-user.ts",
+    "import:csv": "tsx src/scripts/import-csv-events.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -34,6 +35,7 @@
     "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
     "@trpc/server": "^11.0.0",
+    "csv-parse": "^7.0.1",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.10.0",
