@@ -9,7 +9,7 @@ import {
   updateEventInputSchema,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
 import type { Database } from "../db/index.js";
@@ -470,6 +470,11 @@ export const eventsRouter = router({
       return { id: input.id };
     }),
 
+  // Zeigt sowohl selbst eingereichte Events (createdBy) als auch Events, bei
+  // denen der Nutzer aktuell als Veranstalter hinterlegt ist (organizerUserId)
+  // - z.B. nach Übernahme eines Ghost-Accounts per Einladungscode
+  // (invite-codes/index.ts) oder nach einem genehmigten Event-Claim. Gleiche
+  // Eigentums-Definition wie bei `update`/`delete`/`getForEdit`.
   listMine: protectedProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db
       .select({
@@ -505,7 +510,12 @@ export const eventsRouter = router({
       .leftJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
       .leftJoin(kreis, eq(event.kreisId, kreis.id))
       .leftJoin(partyArt, eq(event.partyArtId, partyArt.id))
-      .where(eq(event.createdBy, ctx.user.id))
+      .where(
+        or(
+          eq(event.createdBy, ctx.user.id),
+          eq(event.organizerUserId, ctx.user.id),
+        ),
+      )
       .orderBy(desc(event.updatedAt));
 
     return rows;

@@ -104,10 +104,15 @@ export async function redeemInviteCode(
       .where(eq(userProfile.userId, invite.ghostUserId));
 
     // Der einlösende Account gilt ab sofort als verifizierter Veranstalter
-    // (auch für künftige Selbst-Einträge, AGENTS.md 5.5).
+    // (auch für künftige Selbst-Einträge, AGENTS.md 5.5). Profil wird direkt
+    // öffentlich gestellt (sonst normalerweise Standard "privat", AGENTS.md 3)
+    // - der Admin hat die Identität bereits geprüft, eine private Seite bringt
+    // dem frisch übernommenen Veranstalter nichts (keine öffentliche
+    // Veranstalter-Seite, Events wirken "herrenlos").
     await tx
       .update(userProfile)
       .set({
+        isPublic: true,
         verifiedAt: new Date(),
         verificationMethod: "invite_code",
         updatedAt: new Date(),
