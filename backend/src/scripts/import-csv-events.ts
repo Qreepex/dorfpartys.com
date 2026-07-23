@@ -414,7 +414,7 @@ async function importRow(
     }
 
     console.log(
-      `  Importiert: ${title} (/${bundeslandRow.country}/veranstaltung/${slug}/)`,
+      `  Importiert: ${title} (/${bundeslandRow.country}/veranstaltung/${slug})`,
     );
     stats.imported += 1;
   } catch (error) {

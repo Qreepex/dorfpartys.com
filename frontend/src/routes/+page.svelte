@@ -153,7 +153,7 @@
 			'Kostenlose, werbefreie Plattform zum Finden und Eintragen von Dorfpartys, Schützenfesten, Zeltfeten und mehr im DACH-Raum.',
 		potentialAction: {
 			'@type': 'SearchAction',
-			target: `${SITE_URL}/de/{search_term_string}/`,
+			target: `${SITE_URL}/de/{search_term_string}`,
 			'query-input': 'required name=search_term_string'
 		}
 	};

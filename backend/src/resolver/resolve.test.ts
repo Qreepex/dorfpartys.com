@@ -145,7 +145,7 @@ describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4 updated)", () => {
     const result = await resolve("de", ["ostholstein", "zeltfeten"], repo);
     expect(result).toEqual({
       kind: "redirect",
-      location: "/de/schleswig-holstein/ostholstein/zeltfeten/",
+      location: "/de/schleswig-holstein/ostholstein/zeltfeten",
       permanent: true,
     });
   });
@@ -158,7 +158,7 @@ describe("resolve - Kanonisierung/Redirects (AGENTS.md 1.4 updated)", () => {
     );
     expect(result).toEqual({
       kind: "redirect",
-      location: "/de/schleswig-holstein/schuetzenfeste/",
+      location: "/de/schleswig-holstein/schuetzenfeste",
       permanent: true,
     });
   });

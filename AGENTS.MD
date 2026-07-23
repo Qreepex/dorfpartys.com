@@ -64,9 +64,9 @@ Resolver-Logik läuft **im Backend** (braucht DB-Zugriff auf Slug-Registry). Fro
 ### 1.1 Länder-Root
 
 ```
-/de/
-/at/
-/ch/
+/de
+/at
+/ch
 ```
 
 Land ist immer das erste Pfadsegment. Eine Domain (`dorfpartys.com`) für den gesamten DACH-Raum - keine separaten ccTLDs.
@@ -76,25 +76,27 @@ Land ist immer das erste Pfadsegment. Eine Domain (`dorfpartys.com`) für den ge
 Nach dem Land-Segment folgen 0–3 weitere Segmente in fester kanonischer Reihenfolge (max 3 statt vorher 4):
 
 ```
-/{country}/{bundesland}/{kreis}/{art}/
+/{country}/{bundesland}/{kreis}/{art}
 ```
 
 Alle folgenden Varianten müssen auflösbar sein:
 
 ```
-/de/schleswig-holstein/ostholstein/schuetzenfeste/    # 3 Filter
-/de/schleswig-holstein/ostholstein/                   # 2 Filter
-/de/schleswig-holstein/schuetzenfeste/                # 2 Filter
-/de/schleswig-holstein/                               # 1 Filter
-/de/schuetzenfeste/                                   # 1 Filter
-/de/                                                   # Root (alle Filter)
+/de/schleswig-holstein/ostholstein/schuetzenfeste    # 3 Filter
+/de/schleswig-holstein/ostholstein                   # 2 Filter
+/de/schleswig-holstein/schuetzenfeste                # 2 Filter
+/de/schleswig-holstein                               # 1 Filter
+/de/schuetzenfeste                                   # 1 Filter
+/de                                                   # Root (alle Filter)
 ```
+
+Kein trailing Slash (kanonisch immer ohne abschließenden `/`) - deckt sich mit SvelteKits Default (`trailingSlash: 'never'`) und damit auch mit dem typisierten `resolve()`-Router aus `$app/paths`: dessen `(routeId, params)`-Overload liefert nie einen Trailing Slash (Route-IDs haben nie einen), war also mit der vorherigen "immer Trailing Slash"-Konvention permanent im Widerspruch zum Framework. Jede nicht-kanonische Variante (mit abschließendem `/`) → 301 zur kanonischen Variante ohne.
 
 **Monate werden nicht in Pfaden kodiert.** Stattdessen:
 
 - Seiten laden alle kommenden + letzten 12 Monate archivierter Events
 - Frontend gruppiert Events nach Monat mit semantischen `<h2 id="august">August</h2>` Überschriften
-- Nutzer clicfen auf Month-Badges → scrollen zu `#august` (Fragment wird in URL angehängt: `/de/schleswig-holstein/#august`)
+- Nutzer clicfen auf Month-Badges → scrollen zu `#august` (Fragment wird in URL angehängt: `/de/schleswig-holstein#august`)
 - Google indexiert die Main-URL und erkennt Sitelink-Opportunities über die Monat-Überschriften
 
 Kein literales `/art/`-Präfix. Welches Segment was bedeutet, wird über den Resolver anhand kontrollierter Vokabulare bestimmt, nicht über die Position.
@@ -138,7 +140,8 @@ if filters.bundesland present AND filters.bundesland_implied present:
 Ziel: pro Inhalt genau **eine** indexierbare URL.
 
 - **Kanonische Reihenfolge:** `bundesland → kreis → art` (Monate nicht in Reihenfolge). Jede andere Reihenfolge der vorhandenen Segmente → 301 zur kanonischen Reihenfolge.
-- **Kreis impliziert Bundesland:** Ist ein Kreis-Segment vorhanden, muss die kanonische URL immer auch das zugehörige Bundesland enthalten. `/de/ostholstein/zeltfeten/` → 301 → `/de/schleswig-holstein/ostholstein/zeltfeten/`.
+- **Kein trailing Slash:** kanonisch immer ohne abschließenden `/` (siehe 1.2). Eine URL mit abschließendem `/` → 301 ohne.
+- **Kreis impliziert Bundesland:** Ist ein Kreis-Segment vorhanden, muss die kanonische URL immer auch das zugehörige Bundesland enthalten. `/de/ostholstein/zeltfeten` → 301 → `/de/schleswig-holstein/ostholstein/zeltfeten`.
 - **Monate sind evergreen:** Alle Events der Saison (kommend + 12 Monate Archiv) auf einer URL; Fragment-Scrolling für Monat-Navigation.
 
 ### 1.5 Slug-Kollisionsvermeidung
@@ -156,10 +159,10 @@ Zentrale Slug-Registry (Backend, DB) mit Unique-Constraint über **drei Vokabula
 ### 1.7 Event-Detailseiten (eigener URL-Baum)
 
 ```
-/{country}/veranstaltung/{slug}/
+/{country}/veranstaltung/{slug}
 ```
 
-Beispiel: `/de/veranstaltung/steinhorst-open-air/`
+Beispiel: `/de/veranstaltung/steinhorst-open-air`
 
 Entkoppelt von den drei Filter-Vokabularen (kein Kollisionsrisiko), einfacheres Routing. Ranking läuft über interne Verlinkung, `BreadcrumbList`- und `schema.org/Event`-Markup, nicht über URL-Tiefe.
 
@@ -200,7 +203,7 @@ user (
 
 user_profile (
   user_id → user (1:1),
-  slug,                             -- vergeben aus display_name, öffentliche Seite /veranstalter/{slug}/
+  slug,                             -- vergeben aus display_name, öffentliche Seite /veranstalter/{slug}
   display_name,                    -- öffentlich sichtbarer Name als "Veranstalter"
   avatar_s3_key,
   website_url,
@@ -272,7 +275,7 @@ Constraints/Validierung im Backend (nicht nur UI):
 - Pflicht für Profil: keine (Profil ist optional, aber ohne `display_name` wird der User als Veranstalter nur mit generischem Platzhalter angezeigt - UI-Entscheidung, kein Blocker für Event-Einreichung).
 - Felder: `display_name`, `avatar_s3_key` (Upload über Backend `storage`-Modul, presigned URL zu IONOS S3), `website_url`, `instagram_url`, `bio`, plus beliebig viele weitere über `user_link`.
 - Profilbild-Upload läuft wie Event-Fotos über presigned Upload-URLs - kein direkter Client-Upload zu S3-Credentials.
-- **Öffentliche Veranstalter-Seite** unter `/veranstalter/{slug}/` (DACH-weit, nicht länderskaliert, da ein Veranstalter Events in mehreren Ländern eintragen kann) - zeigt Profil, Links sowie kommende/vergangene Events des Nutzers. `slug` wird beim Speichern des Profils aus `display_name` abgeleitet (Kollisions-Disambiguierung analog Event-Slugs, `backend/src/slug/index.ts`) und ist erst gesetzt, sobald ein `display_name` gepflegt wurde - ohne `display_name` existiert keine öffentliche Seite. Eigene Sitemap `/sitemap-veranstalter.xml`.
+- **Öffentliche Veranstalter-Seite** unter `/veranstalter/{slug}` (DACH-weit, nicht länderskaliert, da ein Veranstalter Events in mehreren Ländern eintragen kann) - zeigt Profil, Links sowie kommende/vergangene Events des Nutzers. `slug` wird beim Speichern des Profils aus `display_name` abgeleitet (Kollisions-Disambiguierung analog Event-Slugs, `backend/src/slug/index.ts`) und ist erst gesetzt, sobald ein `display_name` gepflegt wurde - ohne `display_name` existiert keine öffentliche Seite. Eigene Sitemap `/sitemap-veranstalter.xml`.
 
 ## 4. Event-Customization
 
@@ -358,7 +361,7 @@ Wenn ein **nicht-verifizierter Nutzer** selbst ein Event einträgt:
 - Beim ersten Request ohne `country`-Cookie wird das Land serverseitig aus dem `Accept-Language`-Header geraten (`de-AT`/`fr-CH`/... → `at`/`ch`, sonst `de`) und als Cookie (1 Jahr, nicht `httpOnly`) gesetzt - **bewusst ohne externen IP-Geolocation-Dienst**, um die "kein Tracking"-Positionierung der Seite nicht zu unterlaufen (Abwägung, falls doch ein Geolocation-Dienst gewünscht ist: das wäre ein externer Request pro Erstbesuch).
 - Clientseitig wird die Vermutung einmalig per `Intl.DateTimeFormat().resolvedOptions().timeZone` verfeinert (`Europe/Vienna`/`Europe/Zurich` → `at`/`ch`), solange die Nutzerin das Land noch nie explizit gewechselt hat (`country_explicit`-Cookie).
 - **Explizites Wechseln:** Land-Switcher in der Navbar (DE/AT/CH) verlinkt auf `/land/{country}` (als `+page.server.ts`-Load implementiert, nicht `+server.ts` - sonst behandelt SvelteKits clientseitiger Router den Klick fälschlich als 404, siehe Hinweis in Abschnitt 5c) und setzt beide Cookies dauerhaft.
-- Wirkung des bevorzugten Landes: Die Startseite (`/`) fokussiert Hero-Suchformular und "Nächste Partys"-Lineup auf dieses Land; ein Link ("Alle Länder anzeigen" / "Nur {Land} anzeigen") wechselt explizit dazwischen. Die Länder-Baum-URLs (`/de/`, `/at/`, `/ch/`, Abschnitt 1.1) bleiben davon unabhängig direkt browsbar - das bevorzugte Land ist nur der **Startseiten**-Default, keine Umleitung/Sperre der anderen Länder.
+- Wirkung des bevorzugten Landes: Die Startseite (`/`) fokussiert Hero-Suchformular und "Nächste Partys"-Lineup auf dieses Land; ein Link ("Alle Länder anzeigen" / "Nur {Land} anzeigen") wechselt explizit dazwischen. Die Länder-Baum-URLs (`/de`, `/at`, `/ch`, Abschnitt 1.1) bleiben davon unabhängig direkt browsbar - das bevorzugte Land ist nur der **Startseiten**-Default, keine Umleitung/Sperre der anderen Länder.
 
 ## 5c. Hinweis: `+server.ts` vs. `+page.server.ts` für interne Navigationsziele
 
@@ -371,7 +374,7 @@ SvelteKits clientseitiger Router behandelt einen Klick auf einen `<a href>` zu e
 - `schema.org/Event` JSON-LD auf jeder Event-Seite + auf Filter-Seiten für alle gelisteten Events.
 - `BreadcrumbList` JSON-LD auf Filter- und Event-Seiten (max 3 Items ohne Monat).
 - Filter-/Suchseiten verlinken Events als serverseitig gerenderte `<a href>`.
-- 301-Redirects für alle nicht-kanonischen Segment-Reihenfolgen (siehe 1.4).
+- 301-Redirects für alle nicht-kanonischen Segment-Reihenfolgen sowie für URLs mit abschließendem `/` (siehe 1.4).
 - **Month Badges in Frontend:** Semantic HTML mit `<h2 id="august">August</h2>` erzeugt Google Sitelink-Opportunities.
 
 ## 7. Domains & Storage

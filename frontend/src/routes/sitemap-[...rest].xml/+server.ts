@@ -23,7 +23,7 @@ ${entries
 // Detailseite ist außerdem in einer der anderen Sitemaps enthalten.
 const STATIC_PAGES = [
 	'/',
-	...COUNTRIES.map((country) => `/${country}/`),
+	...COUNTRIES.map((country) => `/${country}`),
 	'/impressum',
 	'/datenschutz',
 	'/nutzungsbedingungen',

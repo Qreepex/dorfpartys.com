@@ -24,18 +24,18 @@ export function buildFilterUrl(country: Country, filters: CanonicalFilterSlugs =
 		filters.artSlug
 	].filter((segment): segment is string => Boolean(segment));
 
-	return `/${[country, ...segments].join('/')}/`;
+	return `/${[country, ...segments].join('/')}`;
 }
 
 export function buildEventUrl(country: Country, slug: string): string {
-	return `/${country}/veranstaltung/${slug}/`;
+	return `/${country}/veranstaltung/${slug}`;
 }
 
 export function buildCountryRootUrl(country: Country): string {
-	return `/${country}/`;
+	return `/${country}`;
 }
 
 /** Veranstalter-Profile sind DACH-weit (nicht länderskaliert), siehe AGENTS.md Abschnitt 3/8. */
 export function buildOrganizerUrl(slug: string): string {
-	return `/veranstalter/${slug}/`;
+	return `/veranstalter/${slug}`;
 }

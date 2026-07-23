@@ -224,7 +224,7 @@ async function seedDemoEvents() {
     }
 
     console.log(
-      `Angelegt: ${demo.title} (/${demo.bundeslandSlug === "tirol" ? "at" : "de"}/veranstaltung/${slug}/)`,
+      `Angelegt: ${demo.title} (/${demo.bundeslandSlug === "tirol" ? "at" : "de"}/veranstaltung/${slug})`,
     );
   }
 }
