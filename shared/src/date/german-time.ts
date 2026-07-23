@@ -86,6 +86,13 @@ export function getGermanUtcOffset(date: Date): string {
  */
 export function hasKnownGermanTime(date: Date): boolean {
 	const parts = getGermanDateParts(date);
+
+	// Mitternacht in Europe/Berlin ist kein "bekannter Zeitpunkt", sondern
+	// Platzhalter für "Uhrzeit unbekannt" (z.B. Ingestion-CSV ohne Uhrzeit).
+	if (parts.hour === 2 && parts.minute === 0 && parts.second === 0) {
+		return false;
+	}
+
 	return parts.hour !== 0 || parts.minute !== 0 || parts.second !== 0;
 }
 
@@ -108,4 +115,35 @@ export function toGermanIsoDateString(date: Date): string {
 	const p = getGermanDateParts(date);
 	const pad = (n: number) => String(n).padStart(2, '0');
 	return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
+}
+
+/**
+ * Kehrfunktion zu `toGermanIsoDateString`: baut aus einem reinen "YYYY-MM-DD"
+ * (keine Uhrzeit bekannt, z.B. aus der Ingestion-CSV) den UTC-Zeitpunkt, der
+ * Mitternacht in Europe/Berlin entspricht - unabhängig von der Zeitzone des
+ * ausführenden Prozesses (Server-Container laufen meist in UTC, `new
+ * Date("2026-07-24")` würde daher UTC-Mitternacht liefern, was in Europe/Berlin
+ * bereits 01:00/02:00 ist und `hasKnownGermanTime` fälschlich `true` liefern
+ * ließe). Ergebnis erfüllt garantiert `hasKnownGermanTime(result) === false`.
+ */
+export function fromGermanIsoDateString(dateOnly: string): Date {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOnly);
+	if (!match) {
+		throw new Error(`Ungültiges Datumsformat, erwartet YYYY-MM-DD: "${dateOnly}"`);
+	}
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+
+	// Grobe Schätzung reicht, um den zu diesem Kalendertag gehörenden
+	// CET/CEST-Offset zu bestimmen - DST-Wechsel finden nachts statt, die
+	// wenigen Stunden Abstand zwischen dieser Schätzung und der tatsächlichen
+	// Mitternacht können diese Grenze praktisch nie überschreiten.
+	const approx = new Date(Date.UTC(year, month - 1, day));
+	const offsetMatch = /^([+-])(\d{2}):(\d{2})$/.exec(getGermanUtcOffset(approx));
+	const offsetMinutes = offsetMatch
+		? (offsetMatch[1] === '-' ? -1 : 1) * (Number(offsetMatch[2]) * 60 + Number(offsetMatch[3]))
+		: 0;
+
+	return new Date(Date.UTC(year, month - 1, day) - offsetMinutes * 60_000);
 }

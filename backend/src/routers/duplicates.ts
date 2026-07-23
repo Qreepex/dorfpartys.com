@@ -14,7 +14,7 @@ import { adminProcedure, router } from "../trpc/trpc.js";
 // backend/src/duplicates/similarity.ts) - lieber ein paar Grenzfälle
 // verpassen als die Liste mit offensichtlich unterschiedlichen Einträgen zu
 // fluten, die der Admin dann doch nur wegklickt.
-const GHOST_NAME_SIMILARITY_THRESHOLD = 0.82;
+const GHOST_NAME_SIMILARITY_THRESHOLD = 0.85;
 const EVENT_TITLE_SIMILARITY_THRESHOLD = 0.8;
 const EVENT_DATE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_PAIRS = 100;
@@ -132,7 +132,7 @@ export const duplicatesRouter = router({
           if (
             bothDated &&
             Math.abs(a.startDate!.getTime() - b.startDate!.getTime()) >
-              EVENT_DATE_WINDOW_MS
+            EVENT_DATE_WINDOW_MS
           ) {
             continue;
           }

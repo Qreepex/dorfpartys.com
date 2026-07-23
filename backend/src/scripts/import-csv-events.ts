@@ -1,4 +1,4 @@
-import { defaultEventLinkLabel } from "@dorfpartys/shared";
+import { defaultEventLinkLabel, fromGermanIsoDateString } from "@dorfpartys/shared";
 import { parse } from "csv-parse/sync";
 import "dotenv/config";
 import { and, eq } from "drizzle-orm";
@@ -74,6 +74,48 @@ const BUNDESLAND_CODE_TO_SLUG: Record<string, string> = {
   SACHSEN: "sachsen",
   "SACHSEN-ANHALT": "sachsen-anhalt",
   THÜRINGEN: "thueringen",
+  // AT/CH haben (anders als DE) keinen etablierten 2-Buchstaben-Code - offizielle
+  // AT-Bundesland-/CH-Kantonskürzel würden direkt mit deutschen Codes kollidieren
+  // (z.B. AT-Steiermark vs. DE-Sachsen-Anhalt beide "ST", CH-Bern vs. DE-Berlin
+  // beide "BE"). Die Ingestion-Pipeline (siehe `ingestion/src/reference/bundeslaender.ts`)
+  // schreibt für AT/CH deshalb den vollen Bundesland-/Kantonsnamen in die
+  // Bundesland-Spalte statt eines Codes - hier 1:1 auf den jeweiligen
+  // `bundesland.slug` aus `backend/src/db/seed/data.ts` gemappt.
+  WIEN: "wien",
+  NIEDERÖSTERREICH: "niederoesterreich",
+  OBERÖSTERREICH: "oberoesterreich",
+  STEIERMARK: "steiermark",
+  TIROL: "tirol",
+  KÄRNTEN: "kaernten",
+  SALZBURG: "salzburg",
+  VORARLBERG: "vorarlberg",
+  BURGENLAND: "burgenland",
+  ZÜRICH: "zuerich",
+  BERN: "bern",
+  LUZERN: "luzern",
+  URI: "uri",
+  SCHWYZ: "schwyz",
+  OBWALDEN: "obwalden",
+  NIDWALDEN: "nidwalden",
+  GLARUS: "glarus",
+  ZUG: "zug",
+  FREIBURG: "freiburg",
+  SOLOTHURN: "solothurn",
+  "BASEL-STADT": "basel-stadt",
+  "BASEL-LANDSCHAFT": "basel-landschaft",
+  SCHAFFHAUSEN: "schaffhausen",
+  "APPENZELL AUSSERRHODEN": "appenzell-ausserrhoden",
+  "APPENZELL INNERRHODEN": "appenzell-innerrhoden",
+  "ST. GALLEN": "st-gallen",
+  GRAUBÜNDEN: "graubuenden",
+  AARGAU: "aargau",
+  THURGAU: "thurgau",
+  TESSIN: "tessin",
+  WAADT: "waadt",
+  WALLIS: "wallis",
+  NEUENBURG: "neuenburg",
+  GENF: "genf",
+  JURA: "jura",
 };
 
 interface CsvRow {
@@ -199,13 +241,20 @@ async function importRow(
     return;
   }
 
-  // wenn datum in DD.MM.YYYY oder D.M.YYYY, dann in YYYY-MM-DD hh:mm konvertieren, sonst parse() wird NaN
+  // wenn datum in DD.MM.YYYY oder D.M.YYYY, dann in YYYY-MM-DD konvertieren, sonst parse() wird NaN
   if (dateRaw.includes(".")) {
     const [day, month, year] = dateRaw.split(".");
     dateRaw = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
-  const startDate = new Date(dateRaw);
+  // Die CSV-Pipeline liefert Datum ausschließlich als reines "YYYY-MM-DD"
+  // (keine Uhrzeit bekannt) - `new Date(dateRaw)` würde das als UTC-Mitternacht
+  // parsen, was in Europe/Berlin bereits 01:00/02:00 ist und `hasKnownGermanTime`
+  // im Frontend fälschlich "Uhrzeit bekannt" anzeigen ließe. Stattdessen über
+  // `fromGermanIsoDateString` explizit Mitternacht in Europe/Berlin bauen, damit
+  // diese Events dort korrekt als reines Datum (ohne Uhrzeit) erscheinen.
+  const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
+  const startDate = dateOnlyMatch ? fromGermanIsoDateString(dateRaw) : new Date(dateRaw);
   if (Number.isNaN(startDate.getTime())) {
     console.warn(
       `  Zeile ${rowIndex}: übersprungen - Datum "${dateRaw}" nicht parsbar ("${title}")`,
@@ -296,6 +345,26 @@ async function importRow(
       stats.alreadyImported += 1;
       return;
     }
+  }
+
+  // Fallback für Zeilen ohne Link (viele Quellen liefern keinen, siehe
+  // README "Bekannte Grenzen") - ohne diesen zweiten Schlüssel würde ein
+  // Re-Import bei jedem Lauf ein Duplikat für jede linklose Zeile anlegen,
+  // weil der Link-Check oben dafür gar nicht greift. Titel+Kreis+Datum ist
+  // in der Praxis eindeutig genug für dieselbe CSV-Zeile.
+  const [existingByNaturalKey] = await db
+    .select({ id: event.id })
+    .from(event)
+    .where(
+      and(
+        eq(event.title, title),
+        eq(event.kreisId, kreisRow.id),
+        eq(event.startDate, startDate),
+      ),
+    );
+  if (existingByNaturalKey) {
+    stats.alreadyImported += 1;
+    return;
   }
 
   if (dryRun) {
