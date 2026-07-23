@@ -1,6 +1,7 @@
 import { router } from "../trpc/trpc.js";
 import { accountClaimsRouter } from "./account-claims.js";
 import { adminVerificationRouter } from "./admin-verification.js";
+import { duplicatesRouter } from "./duplicates.js";
 import { eventClaimsRouter } from "./event-claims.js";
 import { eventsRouter } from "./events.js";
 import { ghostAccountsRouter } from "./ghost-accounts.js";
@@ -23,6 +24,7 @@ export const appRouter = router({
   organizerNominations: organizerNominationsRouter,
   accountClaims: accountClaimsRouter,
   ghostAccounts: ghostAccountsRouter,
+  duplicates: duplicatesRouter,
   taxonomy: taxonomyRouter,
   users: usersRouter,
   uploads: uploadsRouter,

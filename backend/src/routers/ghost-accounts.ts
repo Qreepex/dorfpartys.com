@@ -1,5 +1,6 @@
 import {
   createGhostAccountInputSchema,
+  deleteGhostAccountInputSchema,
   generateGhostInviteCodeInputSchema,
   listGhostEventsInputSchema,
   updateGhostAccountInputSchema,
@@ -219,6 +220,46 @@ export const ghostAccountsRouter = router({
         .where(eq(userProfile.userId, input.ghostUserId));
 
       return { userId: input.ghostUserId, displayName, slug: slug ?? null };
+    }),
+
+  // Ghost-Account endgültig löschen (z.B. nach Auflösen eines Duplikats über
+  // /review/duplicates). Blockiert, solange noch Veranstaltungen an ihm
+  // hängen (event.organizer_user_id hat KEIN onDelete: "cascade", siehe
+  // db/schema.ts - bewusst, damit ein Löschen nie still Veranstaltungen mit
+  // wegreißt) - die müssen vorher über /review/ghost-accounts/[userId]
+  // gelöscht oder über die normale Bearbeiten-Seite umgehängt werden.
+  // user_profile/user_link/nicht eingelöste Einladungscodes hängen dagegen
+  // per Cascade dran und werden automatisch mitgelöscht.
+  delete: adminProcedure
+    .input(deleteGhostAccountInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [ghost] = await ctx.db
+        .select({ isGhost: user.isGhost })
+        .from(user)
+        .where(eq(user.id, input.ghostUserId));
+
+      if (!ghost?.isGhost) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Kein Ghost-Account",
+        });
+      }
+
+      const [{ total }] = await ctx.db
+        .select({ total: count() })
+        .from(event)
+        .where(eq(event.organizerUserId, input.ghostUserId));
+      if (total > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Dieser Ghost-Account hat noch Veranstaltungen - erst umhängen oder löschen, bevor der Account selbst gelöscht werden kann.",
+        });
+      }
+
+      await ctx.db.delete(user).where(eq(user.id, input.ghostUserId));
+
+      return { userId: input.ghostUserId };
     }),
 
   generateInviteCode: adminProcedure

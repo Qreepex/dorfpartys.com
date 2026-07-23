@@ -36,3 +36,12 @@ export const updateGhostAccountInputSchema = z.object({
 });
 
 export type UpdateGhostAccountInput = z.infer<typeof updateGhostAccountInputSchema>;
+
+// /review/ghost-accounts/[userId] und /review/duplicates: einen Ghost-Account
+// endgültig löschen (nur möglich, wenn er keine Veranstaltungen mehr hat -
+// siehe backend/src/routers/ghost-accounts.ts `delete`).
+export const deleteGhostAccountInputSchema = z.object({
+	ghostUserId: z.string().uuid()
+});
+
+export type DeleteGhostAccountInput = z.infer<typeof deleteGhostAccountInputSchema>;
