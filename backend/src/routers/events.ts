@@ -379,11 +379,16 @@ export const eventsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       // Bearbeiten dürfen sowohl die einreichende Person als auch der aktuell
-      // hinterlegte Veranstalter (z.B. nach einem genehmigten Claim, AGENTS.md 5.4).
-      if (
-        existing.createdBy !== ctx.user.id &&
-        existing.organizerUserId !== ctx.user.id
-      ) {
+      // hinterlegte Veranstalter (z.B. nach einem genehmigten Claim, AGENTS.md 5.4)
+      // sowie Moderator/Admin (gleiche Ausnahme wie bei `delete` - u.a. nötig,
+      // damit Admins Events von Ghost-Accounts bearbeiten können, die sich per
+      // Definition nie selbst einloggen können, AGENTS.md 5 "Ghost-Accounts").
+      const isOwner =
+        existing.createdBy === ctx.user.id ||
+        existing.organizerUserId === ctx.user.id;
+      const isModerator =
+        ctx.user.role === "moderator" || ctx.user.role === "admin";
+      if (!isOwner && !isModerator) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
@@ -583,10 +588,14 @@ export const eventsRouter = router({
       if (!row) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      if (
-        row.createdBy !== ctx.user.id &&
-        row.organizerUserId !== ctx.user.id
-      ) {
+      // Gleiche Zugriffsregel wie `update` (s.o.): zusätzlich zu Eigentümer
+      // auch Moderator/Admin, damit z.B. /review/ghost-accounts Events eines
+      // Ghost-Accounts zur Bearbeitung laden kann.
+      const isOwner =
+        row.createdBy === ctx.user.id || row.organizerUserId === ctx.user.id;
+      const isModerator =
+        ctx.user.role === "moderator" || ctx.user.role === "admin";
+      if (!isOwner && !isModerator) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 

@@ -19,3 +19,20 @@ export const generateGhostInviteCodeInputSchema = z.object({
 });
 
 export type GenerateGhostInviteCodeInput = z.infer<typeof generateGhostInviteCodeInputSchema>;
+
+// /review/ghost-accounts/[userId]: Events eines einzelnen Ghost-Accounts, zum
+// gezielten Bearbeiten/Löschen durch den Admin.
+export const listGhostEventsInputSchema = z.object({
+	ghostUserId: z.string().uuid()
+});
+
+export type ListGhostEventsInput = z.infer<typeof listGhostEventsInputSchema>;
+
+// /review/ghost-accounts/[userId]: Anzeigename eines Ghost-Accounts nachträglich
+// ändern (z.B. Tippfehler korrigieren, bevor der Einladungscode verschickt wird).
+export const updateGhostAccountInputSchema = z.object({
+	ghostUserId: z.string().uuid(),
+	displayName: z.string().trim().min(1).max(80)
+});
+
+export type UpdateGhostAccountInput = z.infer<typeof updateGhostAccountInputSchema>;

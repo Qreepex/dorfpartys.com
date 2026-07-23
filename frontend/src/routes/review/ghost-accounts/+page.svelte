@@ -137,7 +137,19 @@
 									{ghost.displayName || 'Unbenannt'}
 								{/if}
 							</td>
-							<td class="px-4 py-3">{ghost.eventCount}</td>
+							<td class="px-4 py-3">
+								{#if ghost.eventCount > 0}
+									<a
+										href={resolve('/review/ghost-accounts/[userId]', { userId: ghost.userId })}
+										class="text-primary no-underline hover:underline"
+									>
+										{ghost.eventCount}
+										{ghost.eventCount === 1 ? 'Veranstaltung' : 'Veranstaltungen'}
+									</a>
+								{:else}
+									0
+								{/if}
+							</td>
 							<td class="px-4 py-3 text-xs">
 								{#if ghost.invite}
 									{#if ghost.invite.usedAt}

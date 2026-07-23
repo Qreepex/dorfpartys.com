@@ -1,10 +1,20 @@
 import {
   createGhostAccountInputSchema,
   generateGhostInviteCodeInputSchema,
+  listGhostEventsInputSchema,
+  updateGhostAccountInputSchema,
 } from "@dorfpartys/shared";
 import { TRPCError } from "@trpc/server";
 import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
-import { event, organizerInviteCode, user, userProfile } from "../db/schema.js";
+import {
+  bundesland as bundeslandTable,
+  event,
+  kreis,
+  organizerInviteCode,
+  partyArt,
+  user,
+  userProfile,
+} from "../db/schema.js";
 import { generateUniqueInviteCode } from "../invite-codes/index.js";
 import { sanitizeText } from "../sanitization/index.js";
 import { generateUniqueOrganizerSlug } from "../slug/index.js";
@@ -153,6 +163,64 @@ export const ghostAccountsRouter = router({
       return { userId: ghost.id, slug, displayName };
     }),
 
+  // Anzeigename eines bestehenden Ghost-Accounts ändern (z.B. Tippfehler vor
+  // Versand des Einladungscodes) - Slug wird wie bei `create` aus dem neuen
+  // Anzeigenamen neu abgeleitet, wenn er sich geändert hat.
+  update: adminProcedure
+    .input(updateGhostAccountInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const displayName = sanitizeText(input.displayName);
+      if (!displayName) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Anzeigename darf nicht leer sein",
+        });
+      }
+
+      const [ghost] = await ctx.db
+        .select({
+          isGhost: user.isGhost,
+          mergedIntoUserId: userProfile.mergedIntoUserId,
+          displayName: userProfile.displayName,
+        })
+        .from(user)
+        .innerJoin(userProfile, eq(userProfile.userId, user.id))
+        .where(eq(user.id, input.ghostUserId));
+
+      if (!ghost?.isGhost) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Kein Ghost-Account",
+        });
+      }
+      if (ghost.mergedIntoUserId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dieser Ghost-Account wurde bereits übernommen",
+        });
+      }
+
+      const slug =
+        ghost.displayName === displayName
+          ? undefined
+          : await generateUniqueOrganizerSlug(
+              ctx.db,
+              displayName,
+              input.ghostUserId,
+            );
+
+      await ctx.db
+        .update(userProfile)
+        .set({
+          displayName,
+          ...(slug ? { slug } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(userProfile.userId, input.ghostUserId));
+
+      return { userId: input.ghostUserId, displayName, slug: slug ?? null };
+    }),
+
   generateInviteCode: adminProcedure
     .input(generateGhostInviteCodeInputSchema)
     .mutation(async ({ ctx, input }) => {
@@ -198,5 +266,54 @@ export const ghostAccountsRouter = router({
       });
 
       return { code };
+    }),
+
+  // Events eines Ghost-Accounts für /review/ghost-accounts/[userId] -
+  // Grundlage, um sie von dort aus zu bearbeiten (events.update/getForEdit,
+  // beide mit Moderator/Admin-Bypass, backend/src/routers/events.ts) oder zu
+  // löschen (events.delete, hat diesen Bypass bereits).
+  listEventsForGhost: adminProcedure
+    .input(listGhostEventsInputSchema)
+    .query(async ({ ctx, input }) => {
+      const [ghost] = await ctx.db
+        .select({
+          isGhost: user.isGhost,
+          displayName: userProfile.displayName,
+          slug: userProfile.slug,
+        })
+        .from(user)
+        .innerJoin(userProfile, eq(userProfile.userId, user.id))
+        .where(eq(user.id, input.ghostUserId));
+
+      if (!ghost?.isGhost) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Kein Ghost-Account",
+        });
+      }
+
+      const events = await ctx.db
+        .select({
+          id: event.id,
+          slug: event.slug,
+          title: event.title,
+          status: event.status,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          bundeslandName: bundeslandTable.name,
+          kreisName: kreis.name,
+          partyArtName: partyArt.name,
+        })
+        .from(event)
+        .leftJoin(bundeslandTable, eq(event.bundeslandId, bundeslandTable.id))
+        .leftJoin(kreis, eq(event.kreisId, kreis.id))
+        .leftJoin(partyArt, eq(event.partyArtId, partyArt.id))
+        .where(eq(event.organizerUserId, input.ghostUserId))
+        .orderBy(desc(event.updatedAt));
+
+      return {
+        ghost: { displayName: ghost.displayName, slug: ghost.slug },
+        events,
+      };
     }),
 });
