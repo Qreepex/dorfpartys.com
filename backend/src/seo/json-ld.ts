@@ -11,7 +11,9 @@ import {
  * Mitternacht als tatsächliche Startzeit zu behaupten.
  */
 function toGermanIsoDateOrDateTime(date: Date): string {
-  return hasKnownGermanTime(date) ? toGermanIsoString(date) : toGermanIsoDateString(date);
+  return hasKnownGermanTime(date)
+    ? toGermanIsoString(date)
+    : toGermanIsoDateString(date);
 }
 
 export interface EventJsonLdInput {
@@ -63,7 +65,9 @@ export function buildEventJsonLd(input: EventJsonLdInput) {
     // die Uhrzeit teils in einer anderen Zeitzone als der tatsächlichen
     // Event-Zeitzone an (z.B. 20 Uhr wird zu 11 Uhr).
     startDate: toGermanIsoDateOrDateTime(input.startDate),
-    ...(input.endDate ? { endDate: toGermanIsoDateOrDateTime(input.endDate) } : {}),
+    ...(input.endDate
+      ? { endDate: toGermanIsoDateOrDateTime(input.endDate) }
+      : {}),
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     eventStatus: "https://schema.org/EventScheduled",
     location: {

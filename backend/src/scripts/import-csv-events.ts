@@ -1,4 +1,7 @@
-import { defaultEventLinkLabel, fromGermanIsoDateString } from "@dorfpartys/shared";
+import {
+  defaultEventLinkLabel,
+  fromGermanIsoDateString,
+} from "@dorfpartys/shared";
 import { parse } from "csv-parse/sync";
 import "dotenv/config";
 import { and, eq } from "drizzle-orm";
@@ -254,7 +257,9 @@ async function importRow(
   // `fromGermanIsoDateString` explizit Mitternacht in Europe/Berlin bauen, damit
   // diese Events dort korrekt als reines Datum (ohne Uhrzeit) erscheinen.
   const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
-  const startDate = dateOnlyMatch ? fromGermanIsoDateString(dateRaw) : new Date(dateRaw);
+  const startDate = dateOnlyMatch
+    ? fromGermanIsoDateString(dateRaw)
+    : new Date(dateRaw);
   if (Number.isNaN(startDate.getTime())) {
     console.warn(
       `  Zeile ${rowIndex}: übersprungen - Datum "${dateRaw}" nicht parsbar ("${title}")`,

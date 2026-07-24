@@ -132,7 +132,7 @@ export const duplicatesRouter = router({
           if (
             bothDated &&
             Math.abs(a.startDate!.getTime() - b.startDate!.getTime()) >
-            EVENT_DATE_WINDOW_MS
+              EVENT_DATE_WINDOW_MS
           ) {
             continue;
           }
